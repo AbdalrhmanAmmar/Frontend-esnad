@@ -119,9 +119,9 @@ const DocumentsManagement = () => {
 
 const downloadTemplate = () => {
   const data = [
-    ["CODE","PRODUCT","PRODUCT_TYPE", "PRICE" ,"BRAND","COMPANY","TEAM"],
-    ["545","Aspirin Tablets","Medicine","100","Bayer","PharmaCorp","Sales Team"],
-    ["","","","","",""],
+    ["CODE","PRODUCT","PRODUCT_TYPE", "PRICE" ,"BRAND","COMPANY","TEAM PRODUCTS"],
+    ["545","Aspirin Tablets","Medicine","100","Bayer","PharmaCorp","Team Products Example"],
+    ["","","","","","",""],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);
@@ -273,7 +273,7 @@ const downloadTemplate = () => {
                 <CardContent className="space-y-3 text-sm text-blue-800">
                   <div className="flex items-start gap-2">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                    <p>تأكد من أن الملف يحتوي على الأعمدة المطلوبة: CODE, PRODUCT, PRODUCT_TYPE, BRAND, COMPANY, TEAM</p>
+                    <p>تأكد من أن الملف يحتوي على الأعمدة المطلوبة: CODE, PRODUCT, PRODUCT_TYPE, BRAND, COMPANY, TEAM PRODUCTS</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>

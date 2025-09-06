@@ -18,6 +18,8 @@ import AddProduct from "./pages/AddProduct";
 import UpdateProduct from "./pages/UpdateProduct";
 import DocumentsManagement from "./pages/DocumentsManagement";
 import ProductMessagesUpload from "./pages/ProductMessagesUpload";
+import UsersUpload from "./pages/UsersUpload";
+import ClientsList from "./pages/ClientsList";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,7 @@ const App = () => (
                     <Route path="/visits" element={<Dashboard />} />
                     <Route path="/visits/clinic" element={<Dashboard />} />
                     <Route path="/visits/pharmacy" element={<Dashboard />} />
+                    <Route path="/clients" element={<ClientsList />} />
                     <Route path="/orders" element={<Dashboard />} />
                     <Route path="/orders/samples" element={<Dashboard />} />
                     <Route path="/orders/marketing" element={<Dashboard />} />
@@ -64,6 +67,7 @@ const App = () => (
             <Route path="/management/data/doctors" element={<DoctorsManagement />} />
                     <Route path="/management/documents" element={<DocumentsManagement />} />
                     <Route path="/management/product-messages" element={<ProductMessagesUpload />} />
+                    <Route path="/management/users-upload" element={<UsersUpload />} />
                     <Route path="/users" element={<Dashboard />} />
                     <Route path="/users/add" element={<Dashboard />} />
                     <Route path="/sample-form" element={<SamplesForm />} />

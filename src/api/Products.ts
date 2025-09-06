@@ -222,6 +222,7 @@ export async function deleteProductById(id: string) {
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 const IMPORT_PATH = "/api/products/import"; // change if your route is '/produt/import'
 const MESSAGES_IMPORT_PATH = "/api/products/messages/import"; // مسار رفع ملفات رسائل المنتجات
+const DOCTORS_IMPORT_PATH = "/api/doctors/import";
 
 export async function importProductMessages(file: File) {
   try {
@@ -260,6 +261,82 @@ export async function importProductMessages(file: File) {
   }
 }
 
+// Import doctors file
+export const importDoctorsFile = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE}${DOCTORS_IMPORT_PATH}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    console.log('Response content type:', contentType);
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.log('Non-JSON response:', textResponse);
+      return { success: false, message: 'الخادم لا يدعم رفع ملفات الأطباء حالياً' };
+    }
+
+    const result = await response.json();
+    console.log('Import doctors response:', result);
+
+    if (result.success) {
+      return {
+        success: true,
+        message: `تم رفع ملف الأطباء بنجاح. تم إدراج/تحديث ${result.insertedOrUpserted || 0} طبيب، وتحديث ${result.updated || 0} طبيب، وتجاهل ${result.skipped || 0} سجل.`
+      };
+    } else {
+      return { success: false, message: result.message || 'فشل في رفع ملف الأطباء' };
+    }
+  } catch (error) {
+    console.error('Error importing doctors file:', error);
+    return { success: false, message: 'حدث خطأ أثناء رفع ملف الأطباء' };
+  }
+};
+
+// Import users file
+export const importUsersFile = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE}/api/users/import`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    console.log('Response content type:', contentType);
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.log('Non-JSON response:', textResponse);
+      return { success: false, message: 'الخادم لا يدعم رفع ملفات المستخدمين حالياً' };
+    }
+
+    const result = await response.json();
+    console.log('Import users response:', result);
+
+    if (result.success) {
+      return {
+        success: true,
+        message: `تم رفع ملف المستخدمين بنجاح. تم إدراج/تحديث ${result.insertedOrUpserted || 0} مستخدم، وتحديث ${result.updated || 0} مستخدم، وتجاهل ${result.skipped || 0} سجل.`
+      };
+    } else {
+      return { success: false, message: result.message || 'فشل في رفع ملف المستخدمين' };
+    }
+  } catch (error) {
+    console.error('Error importing users file:', error);
+    return { success: false, message: 'حدث خطأ أثناء رفع ملف المستخدمين' };
+  }
+};
+
 export async function importProductsFile(file) {
   if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
     return { success: false, error: "Only .xlsx, .xls, or .csv files are allowed." };
@@ -281,4 +358,50 @@ export async function importProductsFile(file) {
   } catch (e) {
     return { success: false, error: e?.message || "Network error" };
   }
+}
+
+// API function لجلب بيانات الأطباء
+export type GetDoctorsParams = {
+  page?: number;
+  limit?: number;
+  city?: string;
+  specialty?: string;
+  brand?: string;
+  search?: string;
+};
+
+export async function getDoctors(params: GetDoctorsParams = {}) {
+  const base = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+  const url = new URL("/api/doctors", base);
+
+  const qp = new URLSearchParams();
+  if (params.page) qp.set("page", String(params.page));
+  if (params.limit) qp.set("limit", String(params.limit));
+  if (params.city) qp.set("city", params.city);
+  if (params.specialty) qp.set("specialty", params.specialty);
+  if (params.brand) qp.set("brand", params.brand);
+  if (params.search) qp.set("search", params.search);
+
+  url.search = qp.toString();
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`GET /doctors failed: ${res.status} ${text}`);
+  }
+
+  return res.json() as Promise<{
+    success: boolean;
+    data: any[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }>;
 }

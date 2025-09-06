@@ -81,6 +81,7 @@ const menuItems = [
       { id: "pharmacy-visit", title: "تسجيل زيارة صيدلية", url: "/visits/pharmacy", icon: Pill }
     ]
   },
+  { id: "clients", title: "قائمة العملاء", url: "/clients", icon: Users, color: "text-cyan-500" },
   { 
     id: "orders", 
     title: "الطلبات", 
@@ -122,6 +123,8 @@ const managementItems = [
       { id: "work-days", title: "إدارة أيام العمل", url: "/management/work-days", icon: Calendar },
       { id: "documents", title: "إدارة المستندات", url: "/management/documents", icon: FolderOpen },
       { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
+      { id: "doctors-upload", title: "رفع ملفات الأطباء", url: "/management/doctors-upload", icon: Stethoscope },
+      { id: "users-upload", title: "رفع ملفات المستخدمين", url: "/management/users-upload", icon: Users },
       { id: "lost-orders", title: "إدارة الطلبيات المفقودة", url: "/management/lost-orders", icon: Package },
       {
         id: "data-management",

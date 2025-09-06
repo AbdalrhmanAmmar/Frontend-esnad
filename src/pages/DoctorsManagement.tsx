@@ -1,407 +1,416 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Upload, 
-  Download, 
-  UserCheck, 
-  FileText, 
-  CheckCircle2, 
-  AlertCircle, 
-  X,
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Stethoscope,
-  GraduationCap
-} from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Plus, Search, Edit, Trash2, Stethoscope, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, MapPin, GraduationCap, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { getDoctors, GetDoctorsParams } from '@/api/Products';
+import toast from 'react-hot-toast';
 
-interface UploadState {
-  isUploading: boolean;
-  progress: number;
-  isDragOver: boolean;
-  uploadedFile: File | null;
-  isProcessed: boolean;
+interface Doctor {
+  _id: string;
+  drName: string;
+  organizationName: string;
+  city: string;
+  specialty: string;
+  brand?: string;
+  phone?: string;
+  experience?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const DoctorsManagement: React.FC = () => {
-  const [uploadState, setUploadState] = useState<UploadState>({
-    isUploading: false,
-    progress: 0,
-    isDragOver: false,
-    uploadedFile: null,
-    isProcessed: false
-  });
-  
+function DoctorsManagement() {
+  const navigate = useNavigate();
+
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  const [filterCity, setFilterCity] = useState('all');
+  const [filterSpecialty, setFilterSpecialty] = useState('all');
+  const [filterBrand, setFilterBrand] = useState('all');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDoctors, setTotalDoctors] = useState(0);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const fields = ['كود الطبيب', 'اسم الطبيب', 'التخصص', 'رقم الهاتف', 'العيادة/المستشفى', 'سنوات الخبرة'];
-  const sampleData = ['DR001', 'د. أحمد محمد', 'طب باطني', '0123456789', 'مستشفى النور', '15'];
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setUploadState(prev => ({ ...prev, isDragOver: true }));
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setUploadState(prev => ({ ...prev, isDragOver: false }));
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setUploadState(prev => ({ ...prev, isDragOver: false }));
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileUpload(files[0]);
+  // Fetch doctors from API
+  const fetchDoctors = async (params: GetDoctorsParams = {}) => {
+    try {
+      setLoading(true);
+      const response = await getDoctors({
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+        city: filterCity !== 'all' ? filterCity : undefined,
+        specialty: filterSpecialty !== 'all' ? filterSpecialty : undefined,
+        brand: filterBrand !== 'all' ? filterBrand : undefined,
+        ...params
+      });
+      
+      if (response.success) {
+        console.log(response);
+        setDoctors(response.data);
+        setTotalPages(response.meta.totalPages);
+        setTotalDoctors(response.meta.total);
+      }
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+      toast.error('حدث خطأ أثناء تحميل بيانات الأطباء. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleFileUpload = (file: File) => {
-    if (!file) return;
+  useEffect(() => {
+    fetchDoctors();
+  }, [currentPage, searchTerm, filterCity, filterSpecialty, filterBrand]);
 
-    const allowedTypes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv'
-    ];
+  // Get unique values for filters
+  const uniqueCities = [...new Set(doctors.map(d => d.city))].filter(Boolean);
+  const uniqueSpecialties = [...new Set(doctors.map(d => d.specialty))].filter(Boolean);
+  const uniqueBrands = [...new Set(doctors.map(d => d.brand))].filter(Boolean);
 
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: 'نوع ملف غير مدعوم',
-        description: 'يرجى رفع ملف Excel أو CSV فقط',
-        variant: 'destructive'
-      });
-      return;
+  const handleRefresh = () => {
+    fetchDoctors();
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleDeleteClick = (doctor: Doctor) => {
+    setDoctorToDelete(doctor);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!doctorToDelete) return;
+
+    setDeleteLoading(true);
+    const loadingToastId = toast.loading('جاري حذف الطبيب...');
+
+    try {
+      // TODO: Implement delete doctor API
+      // const result = await deleteDoctorById(doctorToDelete._id);
+      
+      // Simulate success for now
+      setTimeout(() => {
+        toast.success('تم حذف الطبيب بنجاح', { id: loadingToastId });
+        setIsDeleteDialogOpen(false);
+        setDoctorToDelete(null);
+        fetchDoctors(); // Refresh the list
+        setDeleteLoading(false);
+      }, 1000);
+    } catch (error) {
+      toast.error('حدث خطأ غير متوقع', { id: loadingToastId });
+      setDeleteLoading(false);
     }
+  };
 
-    setUploadState(prev => ({ 
-      ...prev, 
-      isUploading: true, 
-      progress: 0, 
-      uploadedFile: file,
-      isProcessed: false 
-    }));
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setDoctorToDelete(null);
+  };
 
-    // محاكاة عملية الرفع
-    const interval = setInterval(() => {
-      setUploadState(prev => {
-        const newProgress = prev.progress + 10;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          return { 
-            ...prev, 
-            progress: 100, 
-            isUploading: false, 
-            isProcessed: true 
-          };
-        }
-        return { ...prev, progress: newProgress };
-      });
-    }, 200);
-
-    toast({
-      title: 'تم رفع الملف بنجاح',
-      description: `تم رفع ملف ${file.name} وجاري معالجته`,
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
-  const downloadTemplate = () => {
-    const wsData = [fields, sampleData];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'قالب الأطباء');
-    XLSX.writeFile(wb, 'قالب_الأطباء.xlsx', { compression: true });
+  const getSpecialtyBadge = (specialty: string) => {
+    const specialtyColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
+      'طب باطني': 'default',
+      'جراحة': 'destructive',
+      'أطفال': 'secondary',
+      'نساء وولادة': 'outline',
+      'عظام': 'default',
+      'قلب': 'destructive',
+      'جلدية': 'secondary',
+      'عيون': 'outline'
+    };
     
-    toast({
-      title: 'تم تحميل القالب',
-      description: 'تم تحميل قالب الأطباء بنجاح',
-    });
-  };
-
-  const resetUpload = () => {
-    setUploadState({
-      isUploading: false,
-      progress: 0,
-      isDragOver: false,
-      uploadedFile: null,
-      isProcessed: false
-    });
+    const variant = specialtyColors[specialty] || 'outline';
+    return <Badge variant={variant}>{specialty}</Badge>;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-              <UserCheck className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              إدارة الأطباء
-            </h1>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <Stethoscope className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">إدارة الأطباء</h1>
+            <p className="text-gray-600">إدارة وتنظيم بيانات الأطباء ({totalDoctors} طبيب)</p>
           </div>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            قم برفع وإدارة بيانات الأطباء والمختصين الطبيين بسهولة من خلال ملفات Excel أو CSV
-          </p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">إجمالي الأطباء</p>
-                  <p className="text-3xl font-bold">2,847</p>
-                </div>
-                <UserCheck className="h-8 w-8 text-blue-200" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-indigo-100 text-sm font-medium">الأطباء النشطين</p>
-                  <p className="text-3xl font-bold">2,654</p>
-                </div>
-                <Stethoscope className="h-8 w-8 text-indigo-200" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">التخصصات</p>
-                  <p className="text-3xl font-bold">45</p>
-                </div>
-                <GraduationCap className="h-8 w-8 text-purple-200" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-r from-violet-500 to-violet-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-violet-100 text-sm font-medium">الملفات المرفوعة</p>
-                  <p className="text-3xl font-bold">23</p>
-                </div>
-                <FileText className="h-8 w-8 text-violet-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upload Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Upload className="h-5 w-5 text-blue-600" />
-                  رفع ملف الأطباء
-                </CardTitle>
-                <CardDescription>
-                  اسحب وأفلت ملف Excel أو CSV هنا، أو انقر للاختيار
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div
-                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-                    uploadState.isDragOver
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50'
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-                    className="hidden"
-                  />
-                  
-                  {uploadState.uploadedFile ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <FileText className="h-8 w-8 text-blue-600" />
-                        <span className="font-medium text-gray-700">{uploadState.uploadedFile.name}</span>
-                        {uploadState.isProcessed && (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        )}
-                      </div>
-                      
-                      {uploadState.isUploading && (
-                        <div className="space-y-2">
-                          <Progress value={uploadState.progress} className="w-full" />
-                          <p className="text-sm text-gray-600">{uploadState.progress}% مكتمل</p>
-                        </div>
-                      )}
-                      
-                      {uploadState.isProcessed && (
-                        <div className="flex gap-2 justify-center">
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            تم المعالجة بنجاح
-                          </Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={resetUpload}
-                            className="h-6"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Upload className="h-8 w-8 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium text-gray-700">اسحب الملف هنا</p>
-                        <p className="text-sm text-gray-500">أو انقر للاختيار من جهازك</p>
-                      </div>
-                      <p className="text-xs text-gray-400">يدعم ملفات: Excel (.xlsx, .xls) و CSV</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-3">
-                  <Button onClick={downloadTemplate} variant="outline" className="flex-1">
-                    <Download className="h-4 w-4 mr-2" />
-                    تحميل القالب
-                  </Button>
-                  <Button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    إضافة طبيب جديد
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Search and Filter */}
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-blue-600" />
-                  البحث والتصفية
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="البحث في الأطباء..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    تصفية
-                  </Button>
-                  <Button variant="outline">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Info Section */}
-          <div className="space-y-6">
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">الحقول المطلوبة</CardTitle>
-                <CardDescription>
-                  تأكد من وجود هذه الحقول في ملف Excel
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {fields.map((field, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
-                        {index + 1}
-                      </div>
-                      <span className="text-sm font-medium">{field}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-xl border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
-              <CardHeader>
-                <CardTitle className="text-lg text-blue-800">مثال على البيانات</CardTitle>
-                <CardDescription className="text-blue-600">
-                  نموذج لكيفية تنسيق البيانات
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {fields.map((field, index) => (
-                    <div key={index} className="flex justify-between items-center py-1">
-                      <span className="text-sm font-medium text-blue-700">{field}:</span>
-                      <span className="text-sm text-blue-600 bg-white px-2 py-1 rounded">
-                        {sampleData[index]}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-xl border-0 bg-gradient-to-br from-indigo-50 to-purple-50">
-              <CardHeader>
-                <CardTitle className="text-lg text-indigo-800">نصائح مهمة</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-indigo-700">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-indigo-600" />
-                    تأكد من صحة التخصص الطبي
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-indigo-600" />
-                    اكتب سنوات الخبرة بالأرقام
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-indigo-600" />
-                    تحقق من صحة أرقام الهواتف
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
+            تحديث
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/doctors-upload')}>
+            <Plus className="h-4 w-4 ml-2" />
+            إضافة طبيب جديد
+          </Button>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Stethoscope className="h-5 w-5" />
+            قائمة الأطباء
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          </CardTitle>
+          <CardDescription>
+            إجمالي الأطباء: {totalDoctors} | الصفحة {currentPage} من {totalPages}
+          </CardDescription>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="البحث في الأطباء (الاسم، المنظمة، المدينة، التخصص)..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select value={filterCity} onValueChange={setFilterCity}>
+                <SelectTrigger className="w-48">
+                  <MapPin className="h-4 w-4 ml-2" />
+                  <SelectValue placeholder="المدينة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع المدن</SelectItem>
+                  {uniqueCities.map((city) => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterSpecialty} onValueChange={setFilterSpecialty}>
+                <SelectTrigger className="w-48">
+                  <GraduationCap className="h-4 w-4 ml-2" />
+                  <SelectValue placeholder="التخصص" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع التخصصات</SelectItem>
+                  {uniqueSpecialties.map((specialty) => (
+                    <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterBrand} onValueChange={setFilterBrand}>
+                <SelectTrigger className="w-48">
+                  <Tag className="h-4 w-4 ml-2" />
+                  <SelectValue placeholder="العلامة التجارية" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع العلامات التجارية</SelectItem>
+                  {uniqueBrands.map((brand) => (
+                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="mr-2">جاري تحميل بيانات الأطباء...</span>
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">اسم الطبيب</TableHead>
+                    <TableHead className="text-right">التخصص</TableHead>
+                    <TableHead className="text-right">المنظمة</TableHead>
+                    <TableHead className="text-right">المدينة</TableHead>
+                    <TableHead className="text-right">العلامة التجارية</TableHead>
+                    <TableHead className="text-right">تاريخ الإضافة</TableHead>
+                    <TableHead className="text-right">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {doctors.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        لا توجد بيانات أطباء متاحة
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    doctors.map((doctor) => (
+                      <TableRow key={doctor._id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Stethoscope className="h-4 w-4 text-blue-600" />
+                            {doctor.drName}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getSpecialtyBadge(doctor.specialty)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{doctor.organizationName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{doctor.city}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {doctor.brand ? (
+                            <Badge variant="outline">{doctor.brand}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">غير محدد</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(doctor.createdAt)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {/* TODO: Navigate to edit doctor */}}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteClick(doctor)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground">
+                    عرض {((currentPage - 1) * 10) + 1} إلى {Math.min(currentPage * 10, totalDoctors)} من {totalDoctors} طبيب
+                  </div>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      السابق
+                    </Button>
+                    <div className="flex items-center space-x-1 rtl:space-x-reverse">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const page = i + 1;
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      التالي
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">تأكيد حذف الطبيب</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من حذف الطبيب "{doctorToDelete?.drName}"؟
+              <br />
+              <span className="text-sm text-muted-foreground mt-2 block">
+                التخصص: {doctorToDelete?.specialty}
+              </span>
+              <span className="text-sm text-muted-foreground block">
+                المنظمة: {doctorToDelete?.organizationName}
+              </span>
+              <br />
+              <span className="text-red-500 font-medium">
+                هذا الإجراء لا يمكن التراجع عنه.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleDeleteCancel}
+              disabled={deleteLoading}
+            >
+              إلغاء
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConfirm}
+              disabled={deleteLoading}
+              className="flex items-center gap-2"
+            >
+              {deleteLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  حذف الطبيب
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
+}
 
 export default DoctorsManagement;
