@@ -19,7 +19,7 @@ import {
   UserCheck,
   Stethoscope
 } from 'lucide-react';
-import { importDoctorsFile } from '@/api/Products';
+import { importDoctorsFile } from '../api/Doctors';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 

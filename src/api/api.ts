@@ -6,7 +6,7 @@ import { useAuthStore } from "../stores/authStore";
 const api = axios.create({
 //   baseURL: "https://back-api.evasaudi.com/api",
   baseURL:"http://localhost:4000/api",
-  timeout: 10000,
+  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },

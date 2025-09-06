@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, Edit, Trash2, Stethoscope, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, MapPin, GraduationCap, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getDoctors, GetDoctorsParams } from '@/api/Products';
+import { getDoctors, GetDoctorsParams } from '../api/Doctors';
 import toast from 'react-hot-toast';
 
 interface Doctor {

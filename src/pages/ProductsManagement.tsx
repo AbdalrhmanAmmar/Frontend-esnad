@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, Edit, Trash2, Package, Filter, Loader2, RefreshCw, Calendar, Building2, Tag } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getProducts, GetProductsParams, deleteProductById } from '@/api/Products';
+import { getProducts, GetProductsParams, deleteProductById, exportProducts } from '@/api/Products';
 import toast from 'react-hot-toast';
 
 
@@ -44,6 +44,7 @@ function ProductsManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Fetch products from API
   const fetchProducts = async (params: GetProductsParams = {}) => {
@@ -103,6 +104,24 @@ function ProductsManagement() {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
+  };
+
+  // تصدير المنتجات كملف Excel
+  const handleExport = async () => {
+    try {
+      setExportLoading(true);
+      await exportProducts({
+        brand: filterBrand !== 'all' ? filterBrand : undefined,
+        company: filterCompany !== 'all' ? filterCompany : undefined,
+        type: filterType !== 'all' ? filterType : undefined,
+      });
+      toast.success('تم تصدير المنتجات بنجاح');
+    } catch (error) {
+      console.error('Error exporting products:', error);
+      toast.error('حدث خطأ أثناء تصدير المنتجات');
+    } finally {
+      setExportLoading(false);
+    }
   };
 
 
@@ -180,6 +199,10 @@ function ProductsManagement() {
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
             تحديث
+          </Button>
+          <Button variant="outline" onClick={handleExport} disabled={exportLoading}>
+            {exportLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
+            تصدير Excel
           </Button>
           <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/data/products/add')}>
             <Plus className="h-4 w-4 ml-2" />
