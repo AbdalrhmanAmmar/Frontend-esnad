@@ -10,9 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, Edit, Trash2, Package, Filter, Loader2, RefreshCw, Calendar, Building2, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { getProducts, GetProductsParams, deleteProduct } from '@/api/Products';
+import { getProducts, GetProductsParams, deleteProductById } from '@/api/Products';
 import toast from 'react-hot-toast';
+
 
 interface Product {
   _id: string;
@@ -29,7 +29,7 @@ interface Product {
 
 function ProductsManagement() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,7 +123,7 @@ function ProductsManagement() {
     const loadingToastId = toast.loading('جاري حذف المنتج...');
 
     try {
-      const result = await deleteProduct(productToDelete.CODE);
+      const result = await deleteProductById(productToDelete._id);
       
       if (result.success) {
         toast.success('تم حذف المنتج بنجاح', { id: loadingToastId });

@@ -11,7 +11,7 @@ export type GetProductsParams = {
 };
 
 export async function getProducts(params: GetProductsParams = {}) {
-  const base = "http://localhost:4000";
+  const base = import.meta.env.VITE_API_BASE || "http://localhost:4000";
   const url = new URL("/api/products", base);
 
   const qp = new URLSearchParams();
@@ -47,44 +47,46 @@ export async function getProducts(params: GetProductsParams = {}) {
 }
 
 export interface AddProductData {
+
+  _id?:string
+
   CODE: string;
   PRODUCT: string;
-  PRODUCT_TYPE?: string;
-  BRAND?: string;
-  TEAM?: string;
-  COMPANY?: string;
+  PRODUCT_TYPE: string;
+  BRAND: string;
+  TEAM: string;
+  COMPANY: string;
 }
 
 export async function addProduct(productData: AddProductData) {
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+  const base = import.meta.env.VITE_API_BASE || "http://localhost:4000";
   const url = `${base}/api/products`;
 
-  let res: Response | null = null;
   try {
-    res = await fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(productData),
-      // credentials: "include", // لو بتستخدم كوكيز
     });
 
-    // جرّب تقرأ JSON، ولو فشل اقرأ نص عادي (عشان لو السيرفر رجّع HTML)
-    const raw = await res.text();
-    let data: any = null;
-    try { data = raw ? JSON.parse(raw) : null; } catch { /* ignore */ }
+    const data = await res.json();
 
-    if (!res.ok) {
-      const message = data?.message || data?.error || raw || `HTTP ${res.status}`;
-      return { success: false, data: null, error: message };
+    // تحقق من نجاح العملية (status 200-299 أو success: true)
+    if (res.ok || data.success) {
+      return {
+        success: true,
+        data: data?.data ?? data,
+        message: data?.message || "تم إضافة المنتج بنجاح",
+      };
+    } else {
+      return {
+        success: false,
+        data: null,
+        error: data?.message || data?.error || `HTTP ${res.status}`,
+      };
     }
-
-    return {
-      success: true,
-      data: data?.data ?? data,
-      message: data?.message || "تم إضافة المنتج بنجاح",
-    };
   } catch (err: any) {
-    // لو fetch نفسه فشل (CORS / Network)
+    console.error('Error in addProduct:', err);
     return {
       success: false,
       data: null,
@@ -94,7 +96,7 @@ export async function addProduct(productData: AddProductData) {
 }
 
 export const updateProduct = async (code: string, productData: AddProductData) => {
-  const base = "http://localhost:4000";
+  const base = import.meta.env.VITE_API_BASE || "http://localhost:4000";
   const url = `${base}/api/products/code/${code}`;
 
   try {
@@ -128,7 +130,7 @@ export const updateProduct = async (code: string, productData: AddProductData) =
 };
 
 export const deleteProduct = async (code: string) => {
-  const base = "http://localhost:4000";
+  const base = import.meta.env.VITE_API_BASE || "http://localhost:4000";
   const url = `${base}/api/products/code/${encodeURIComponent(code)}`;
 
   try {
@@ -139,16 +141,35 @@ export const deleteProduct = async (code: string) => {
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    console.log('Response status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+    
+    // التحقق من نوع المحتوى قبل تحليل JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.log('Non-JSON response:', text);
+      return {
+        success: false,
+        error: `الخادم أرجع استجابة غير صحيحة. Status: ${response.status}`
+      };
     }
 
     const data = await response.json();
-    return {
-      success: true,
-      message: data.message || 'تم حذف المنتج بنجاح'
-    };
+    console.log('Response data:', data);
+    
+    // التحقق من نجاح العملية بناءً على الاستجابة الجديدة من الباك إند
+    if (response.ok && data.success) {
+      return {
+        success: true,
+        message: data.message || 'تم حذف المنتج بنجاح',
+        data: data.data
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || `HTTP error! status: ${response.status}`
+      };
+    }
   } catch (error) {
     console.error('Error deleting product:', error);
     return {
@@ -158,8 +179,86 @@ export const deleteProduct = async (code: string) => {
   }
 };
 
+export async function deleteProductById(id: string) {
+  const base = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+  const url = `${base}/api/products/${id}`;
+
+  try {
+    const response = await fetch(url, { method: "DELETE" });
+
+    // اقرأ الـ body مرة واحدة
+    const text = await response.text();
+    let data: any = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+
+    if (response.ok && data.success) {
+      return {
+        success: true,
+        message: data.message || "تم حذف المنتج بنجاح",
+        data: data.data,
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || `HTTP error! status: ${response.status}`,
+      };
+    }
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "حدث خطأ غير معروف",
+    };
+  }
+}
+
+
+
+
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 const IMPORT_PATH = "/api/products/import"; // change if your route is '/produt/import'
+const MESSAGES_IMPORT_PATH = "/api/products/messages/import"; // مسار رفع ملفات رسائل المنتجات
+
+export async function importProductMessages(file: File) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE}${MESSAGES_IMPORT_PATH}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      return {
+        success: true,
+        message: data.message || 'تم رفع ملف رسائل المنتجات بنجاح',
+        data: {
+          groups: data.groups,
+          updated: data.updated,
+          notFoundCount: data.notFoundCount
+        }
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || `HTTP error! status: ${response.status}`
+      };
+    }
+  } catch (error) {
+    console.error('Error importing product messages:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'حدث خطأ غير معروف'
+    };
+  }
+}
 
 export async function importProductsFile(file) {
   if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {

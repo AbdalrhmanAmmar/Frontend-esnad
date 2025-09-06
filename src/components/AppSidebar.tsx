@@ -28,7 +28,8 @@ import {
   Activity,
   Database,
   ShoppingBag,
-  UserMinus
+  UserMinus,
+  MessageSquare
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
@@ -120,6 +121,7 @@ const managementItems = [
     subItems: [
       { id: "work-days", title: "إدارة أيام العمل", url: "/management/work-days", icon: Calendar },
       { id: "documents", title: "إدارة المستندات", url: "/management/documents", icon: FolderOpen },
+      { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
       { id: "lost-orders", title: "إدارة الطلبيات المفقودة", url: "/management/lost-orders", icon: Package },
       {
         id: "data-management",

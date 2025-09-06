@@ -53,7 +53,7 @@ const AddProduct = () => {
         // Wait a bit before navigation to show success message
         setTimeout(() => {
           navigate('/management/data/products');
-        }, 1000);
+        }, 1500);
       } else {
         toast.error(result.error || 'حدث خطأ أثناء إضافة المنتج', {
           id: loadingToast,

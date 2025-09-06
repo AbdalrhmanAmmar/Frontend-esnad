@@ -17,6 +17,7 @@ import DoctorsManagement from "./pages/DoctorsManagement";
 import AddProduct from "./pages/AddProduct";
 import UpdateProduct from "./pages/UpdateProduct";
 import DocumentsManagement from "./pages/DocumentsManagement";
+import ProductMessagesUpload from "./pages/ProductMessagesUpload";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/management/data/products/update/:code" element={<UpdateProduct />} />
             <Route path="/management/data/doctors" element={<DoctorsManagement />} />
                     <Route path="/management/documents" element={<DocumentsManagement />} />
+                    <Route path="/management/product-messages" element={<ProductMessagesUpload />} />
                     <Route path="/users" element={<Dashboard />} />
                     <Route path="/users/add" element={<Dashboard />} />
                     <Route path="/sample-form" element={<SamplesForm />} />
