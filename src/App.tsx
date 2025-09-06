@@ -7,9 +7,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/AppSidebar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 import SamplesForm from "./pages/requests/SamplesForm";
 import MarketingForm from "./pages/requests/MarketingForm";
 import ProductsManagement from "./pages/ProductsManagement";
@@ -19,6 +21,7 @@ import UpdateProduct from "./pages/UpdateProduct";
 import DocumentsManagement from "./pages/DocumentsManagement";
 import ProductMessagesUpload from "./pages/ProductMessagesUpload";
 import UsersUpload from "./pages/UsersUpload";
+import DoctorsUpload from "./pages/DoctorsUpload";
 import ClientsList from "./pages/ClientsList";
 
 const queryClient = new QueryClient();
@@ -40,38 +43,175 @@ const App = () => (
                 
                 <main className="flex-1 p-6 overflow-auto">
                   <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/dashboards" element={<Dashboard />} />
-                    <Route path="/dashboards/clinics" element={<Dashboard />} />
-                    <Route path="/dashboards/pharmacies" element={<Dashboard />} />
-                    <Route path="/reports" element={<Dashboard />} />
-                    <Route path="/reports/clinics" element={<Dashboard />} />
-                    <Route path="/visits" element={<Dashboard />} />
-                    <Route path="/visits/clinic" element={<Dashboard />} />
-                    <Route path="/visits/pharmacy" element={<Dashboard />} />
-                    <Route path="/clients" element={<ClientsList />} />
-                    <Route path="/orders" element={<Dashboard />} />
-                    <Route path="/orders/samples" element={<Dashboard />} />
-                    <Route path="/orders/marketing" element={<Dashboard />} />
-                    <Route path="/collections" element={<Dashboard />} />
-                    <Route path="/collections/financial" element={<Dashboard />} />
-                    <Route path="/collections/orders" element={<Dashboard />} />
-                    <Route path="/evaluations" element={<Dashboard />} />
-                    <Route path="/evaluations/representatives" element={<Dashboard />} />
-                    <Route path="/management" element={<Dashboard />} />
-                    <Route path="/management/work-days" element={<Dashboard />} />
-                    <Route path="/management/lost-orders" element={<Dashboard />} />
-                    <Route path="/management/data/products" element={<ProductsManagement />} />
-            <Route path="/management/data/products/add" element={<AddProduct />} />
-            <Route path="/management/data/products/update/:code" element={<UpdateProduct />} />
-            <Route path="/management/data/doctors" element={<DoctorsManagement />} />
-                    <Route path="/management/documents" element={<DocumentsManagement />} />
-                    <Route path="/management/product-messages" element={<ProductMessagesUpload />} />
-                    <Route path="/management/users-upload" element={<UsersUpload />} />
-                    <Route path="/users" element={<Dashboard />} />
-                    <Route path="/users/add" element={<Dashboard />} />
-                    <Route path="/sample-form" element={<SamplesForm />} />
-                    <Route path="/marketing-form" element={<MarketingForm />} />
+                    {/* Public Routes */}
+                    <Route path="/login" element={<Login />} />
+                    
+                    {/* Protected Routes */}
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboards" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboards/clinics" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboards/pharmacies" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/reports" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/reports/clinics" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/visits" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/visits/clinic" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/visits/pharmacy" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/clients" element={
+                      <ProtectedRoute>
+                        <ClientsList />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/orders" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/orders/samples" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/orders/marketing" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/collections" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/collections/financial" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/collections/orders" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/evaluations" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/evaluations/representatives" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/work-days" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/lost-orders" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/data/products" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <ProductsManagement />
+                      </ProtectedRoute>
+                    } />
+            <Route path="/management/data/products/add" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <AddProduct />
+              </ProtectedRoute>
+            } />
+            <Route path="/management/data/products/update/:code" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <UpdateProduct />
+              </ProtectedRoute>
+            } />
+            <Route path="/management/data/doctors" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <DoctorsManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/management/doctors-upload" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <DoctorsUpload />
+              </ProtectedRoute>
+            } />
+                    <Route path="/management/documents" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <DocumentsManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/product-messages" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <ProductMessagesUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/users-upload" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin']}>
+                        <UsersUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/users" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/users/add" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin']}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/sample-form" element={
+                      <ProtectedRoute>
+                        <SamplesForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/marketing-form" element={
+                      <ProtectedRoute>
+                        <MarketingForm />
+                      </ProtectedRoute>
+                    } />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

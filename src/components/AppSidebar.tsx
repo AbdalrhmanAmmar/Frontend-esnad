@@ -29,10 +29,14 @@ import {
   Database,
   ShoppingBag,
   UserMinus,
-  MessageSquare
+  MessageSquare,
+  LogOut,
+  User
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuthStore } from "@/stores/authStore";
+import toast from "react-hot-toast";
 
 import {
   Sidebar,
@@ -151,7 +155,9 @@ const managementItems = [
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuthStore();
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
@@ -164,6 +170,12 @@ export function AppSidebar() {
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success('تم تسجيل الخروج بنجاح');
+    navigate('/login');
   };
 
   return (
@@ -189,6 +201,25 @@ export function AppSidebar() {
             {isCollapsed ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </Button>
         </div>
+        
+        {/* User Info */}
+        {user && !isCollapsed && (
+          <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center space-x-3 rtl:space-x-reverse">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user.role}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">
@@ -630,7 +661,8 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <SidebarFooter className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+        {/* Theme Toggle */}
         <Button
           variant="ghost"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -652,6 +684,24 @@ export function AppSidebar() {
           {!isCollapsed && (
             <span className="font-medium">
               {theme === "dark" ? "الوضع المضيء" : "الوضع المظلم"}
+            </span>
+          )}
+        </Button>
+        
+        {/* Logout Button */}
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className={`
+            w-full flex items-center space-x-3 rtl:space-x-reverse p-3 
+            rounded-lg transition-colors text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20
+          `}
+          size="default"
+        >
+          <LogOut size={20} className="text-red-500" />
+          {!isCollapsed && (
+            <span className="font-medium">
+              تسجيل الخروج
             </span>
           )}
         </Button>

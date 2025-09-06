@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../stores/authStore";
 
 
 // إعداد Axios
@@ -34,8 +34,23 @@ api.interceptors.request.use((config) => {
 //   }
 // );
 
-// واجهات البيانات
+// Login API function
+export const loginUser = async (username: string, password: string) => {
+  try {
+    const response = await api.post('/auth/login', { username, password });
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
+// Verify token API function
 
 
+// Add your other API functions here
+export const fetchData = async () => {
+  // Implementation here
+};
 
 export default api;
