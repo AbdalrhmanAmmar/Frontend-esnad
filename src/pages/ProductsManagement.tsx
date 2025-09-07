@@ -21,7 +21,9 @@ interface Product {
   PRODUCT_TYPE: string;
   BRAND: string;
   TEAM: string;
+  teamProducts: string;
   COMPANY: string;
+  messages?: Array<{text: string} | string>;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -315,7 +317,7 @@ function ProductsManagement() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{product.TEAM}</Badge>
+                          <Badge variant="secondary">{product.teamProducts}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">

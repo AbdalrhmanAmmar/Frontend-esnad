@@ -1,5 +1,6 @@
 // lib/api/products.ts
 import api from './api';
+import { useAuthStore } from '@/stores/authStore';
 
 export type GetProductsParams = {
   page?: number;
@@ -48,12 +49,22 @@ export interface AddProductData {
   PRODUCT_TYPE: string;
   BRAND: string;
   TEAM: string;
+  teamProducts: string;
   COMPANY: string;
+  messages?: Array<{text: string} | string>; // الرسائل الثلاث للمنتج
 }
 
 export async function addProduct(productData: AddProductData) {
   try {
-    const response = await api.post('/products', productData);
+    // الحصول على معرف المستخدم المسجل
+    const { user } = useAuthStore.getState();
+    
+    const dataWithAdminId = {
+      ...productData,
+      adminId: user?._id
+    };
+    
+    const response = await api.post('/products', dataWithAdminId);
 
     return {
       success: true,
@@ -71,9 +82,17 @@ export async function addProduct(productData: AddProductData) {
   }
 }
 
-export const updateProduct = async (code: string, productData: AddProductData) => {
+export async function updateProduct(code: string, productData: AddProductData) {
   try {
-    const response = await api.put(`/products/code/${encodeURIComponent(code)}`, productData);
+    // الحصول على معرف المستخدم المسجل
+    const { user } = useAuthStore.getState();
+    
+    const dataWithAdminId = {
+      ...productData,
+      adminId: user?._id
+    };
+    
+    const response = await api.put(`/products/code/${code}`, dataWithAdminId);
 
     return {
       success: true,

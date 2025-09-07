@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, Save, X } from 'lucide-react';
 import { updateProduct, getProducts } from '@/api/Products';
 import toast from 'react-hot-toast';
@@ -16,6 +17,8 @@ interface Product {
   BRAND: string;
   COMPANY: string;
   TEAM: string;
+  teamProducts: string;
+  messages?: Array<{text: string} | string>;
 }
 
 const UpdateProduct = () => {
@@ -29,7 +32,9 @@ const UpdateProduct = () => {
     PRODUCT_TYPE: '',
     BRAND: '',
     COMPANY: '',
-    TEAM: ''
+    TEAM: '',
+    teamProducts: '',
+    messages: ['', '', '']
   });
 
   useEffect(() => {
@@ -51,7 +56,11 @@ const UpdateProduct = () => {
               PRODUCT_TYPE: product.PRODUCT_TYPE || '',
               BRAND: product.BRAND || '',
               COMPANY: product.COMPANY || '',
-              TEAM: product.TEAM || ''
+              TEAM: product.TEAM || '',
+              teamProducts: product.teamProducts || '',
+              messages: product.messages ? product.messages.map((msg: any) => 
+                typeof msg === 'string' ? msg : msg.text || ''
+              ) : ['', '', '']
             });
           } else {
             toast.error('المنتج غير موجود');
@@ -74,6 +83,13 @@ const UpdateProduct = () => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleMessageChange = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      messages: prev.messages?.map((msg, i) => i === index ? value : msg) || []
     }));
   };
 
@@ -218,6 +234,38 @@ const UpdateProduct = () => {
                   onChange={(e) => handleInputChange('TEAM', e.target.value)}
                   placeholder="أدخل اسم الفريق"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="teamProducts">فريق المنتجات</Label>
+                <Input
+                  id="teamProducts"
+                  value={formData.teamProducts}
+                  onChange={(e) => handleInputChange('teamProducts', e.target.value)}
+                  placeholder="أدخل فريق المنتجات"
+                />
+              </div>
+            </div>
+
+            {/* الرسائل */}
+            <div className="space-y-4">
+              <Label className="text-right text-lg font-semibold">رسائل المنتج</Label>
+              <div className="grid grid-cols-1 gap-4">
+                {formData.messages?.map((message, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label htmlFor={`message-${index}`} className="text-right">
+                      الرسالة {index + 1}
+                    </Label>
+                    <Textarea
+                      id={`message-${index}`}
+                      placeholder={`أدخل الرسالة ${index + 1}`}
+                      value={message}
+                      onChange={(e) => handleMessageChange(index, e.target.value)}
+                      className="text-right min-h-[80px]"
+                      rows={3}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 

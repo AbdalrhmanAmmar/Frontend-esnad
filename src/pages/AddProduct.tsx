@@ -19,13 +19,22 @@ const AddProduct = () => {
     PRODUCT_TYPE: '',
     BRAND: '',
     TEAM: '',
-    COMPANY: ''
+    teamProducts: '',
+    COMPANY: '',
+    messages: ['', '', ''] // الرسائل الثلاث
   });
 
   const handleInputChange = (field: keyof AddProductData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleMessageChange = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      messages: prev.messages?.map((msg, i) => i === index ? value : msg) || []
     }));
   };
 
@@ -43,7 +52,13 @@ const AddProduct = () => {
     const loadingToast = toast.loading('جاري إضافة المنتج...');
     
     try {
-      const result = await addProduct(formData);
+      // تحويل الرسائل إلى التنسيق الصحيح
+      const dataToSend = {
+        ...formData,
+        messages: formData.messages?.filter(msg => msg.trim() !== '').map(msg => ({ text: msg })) || []
+      };
+      
+      const result = await addProduct(dataToSend);
       
       if (result.success) {
         toast.success(result.message || 'تم إضافة المنتج بنجاح', {
@@ -202,6 +217,43 @@ const AddProduct = () => {
                   onChange={(e) => handleInputChange('TEAM', e.target.value)}
                   className="text-right"
                 />
+              </div>
+
+              {/* فريق المنتجات */}
+              <div className="space-y-2">
+                <Label htmlFor="teamProducts" className="text-right">
+                  فريق المنتجات
+                </Label>
+                <Input
+                  id="teamProducts"
+                  type="text"
+                  placeholder="أدخل فريق المنتجات"
+                  value={formData.teamProducts}
+                  onChange={(e) => handleInputChange('teamProducts', e.target.value)}
+                  className="text-right"
+                />
+              </div>
+            </div>
+
+            {/* الرسائل */}
+            <div className="space-y-4">
+              <Label className="text-right text-lg font-semibold">رسائل المنتج</Label>
+              <div className="grid grid-cols-1 gap-4">
+                {formData.messages?.map((message, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label htmlFor={`message-${index}`} className="text-right">
+                      الرسالة {index + 1}
+                    </Label>
+                    <Textarea
+                      id={`message-${index}`}
+                      placeholder={`أدخل الرسالة ${index + 1}`}
+                      value={message}
+                      onChange={(e) => handleMessageChange(index, e.target.value)}
+                      className="text-right min-h-[80px]"
+                      rows={3}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
