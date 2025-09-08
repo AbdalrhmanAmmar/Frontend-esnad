@@ -19,6 +19,7 @@ import {
   ClipboardList,
   UserPlus,
   Calendar,
+  CalendarPlus,
   FolderOpen,
   Package,
   CreditCard,
@@ -154,6 +155,8 @@ const managementItems = [
     color: "text-indigo-500",
     subItems: [
       { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User },
+      { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList, requiredRoles: ["MEDICAL REP", "medical rep"] },
+      { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
       { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
       { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] }
     ]
@@ -186,13 +189,37 @@ export function AppSidebar() {
     navigate('/login');
   };
 
-  // Filter items for SYSTEM_ADMIN - show only home and create admin
+  // Filter items based on user role
   const getFilteredMenuItems = () => {
     if (user?.role === "SYSTEM_ADMIN") {
       return [
         { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" }
       ];
     }
+    
+    if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
+      return [
+        { 
+          id: "dashboards", 
+          title: "لوحات التحكم", 
+          icon: BarChart3, 
+          color: "text-teal-500",
+          subItems: [
+            { id: "clinic-analytics", title: "تحليلات العيادات المتقدمة", url: "/analytics/clinics", icon: Building2 }
+          ]
+        },
+        { 
+          id: "reports", 
+          title: "التقارير", 
+          icon: FileText, 
+          color: "text-green-500",
+          subItems: [
+            { id: "clinic-reports", title: "تقرير العيادات", url: "/reports/clinics", icon: Building2 }
+          ]
+        }
+      ];
+    }
+    
     return menuItems;
   };
 
@@ -220,6 +247,23 @@ export function AppSidebar() {
         }
       ];
     }
+    
+    if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
+      return [
+        { 
+          id: "users", 
+          title: "إدارة المستخدمين", 
+          icon: UserCog, 
+          color: "text-indigo-500",
+          subItems: [
+            { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User },
+            { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList },
+            { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus }
+          ]
+        }
+      ];
+    }
+    
     return managementItems;
   };
 

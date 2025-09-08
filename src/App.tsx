@@ -34,6 +34,8 @@ import UpdateDoctor from "./pages/UpdateDoctor";
 import ClinicsManagement from "./pages/ClinicsManagement";
 import ClinicsAnalytics from "./pages/ClinicsAnalytics";
 import Profile from "./pages/Profile";
+import MyDataList from "./pages/MyDataList";
+import CreateVisit from "./pages/CreateVisit";
 
 const queryClient = new QueryClient();
 
@@ -256,6 +258,16 @@ const App = () => (
                     <Route path="/profile" element={
                       <ProtectedRoute>
                         <Profile />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/my-data" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
+                        <MyDataList />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/create-visit" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
+                        <CreateVisit />
                       </ProtectedRoute>
                     } />
                     <Route path="/users" element={
