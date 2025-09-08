@@ -23,16 +23,19 @@ api.interceptors.request.use((config) => {
 });
 
 // معالجة الأخطاء
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response?.status === 401) {
-//       localStorage.removeItem("token");
-//       window.location.href = "/auth/login";
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token from both localStorage and auth store
+      localStorage.removeItem("token");
+      useAuthStore.getState().logout();
+      // Redirect to login page
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Login API function
 export const loginUser = async (username: string, password: string) => {

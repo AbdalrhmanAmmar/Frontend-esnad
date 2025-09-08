@@ -1,5 +1,5 @@
 import React from "react";
-import { 
+import {
   Home, 
   BarChart3, 
   FileText, 
@@ -31,7 +31,8 @@ import {
   UserMinus,
   MessageSquare,
   LogOut,
-  User
+  User,
+  TrendingUp
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
@@ -61,6 +62,7 @@ const menuItems = [
     icon: BarChart3, 
     color: "text-teal-500",
     subItems: [
+      { id: "clinic-analytics", title: "تحليلات العيادات المتقدمة", url: "/analytics/clinics", icon: Building2 },
       { id: "clinic-dashboard", title: "لوحة تحكم العيادات", url: "/dashboards/clinics", icon: Building2 },
       { id: "pharmacy-dashboard", title: "لوحة تحكم الصيدليات", url: "/dashboards/pharmacies", icon: Pill }
     ]
@@ -129,14 +131,18 @@ const managementItems = [
       { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
       { id: "doctors-upload", title: "رفع ملفات الأطباء", url: "/management/doctors-upload", icon: Stethoscope },
       { id: "users-upload", title: "رفع ملفات المستخدمين", url: "/management/users-upload", icon: Users },
+      { id: "marketing-activities-upload", title: "رفع الأنشطة التسويقية", url: "/management/marketing-activities-upload", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] },
       { id: "lost-orders", title: "إدارة الطلبيات المفقودة", url: "/management/lost-orders", icon: Package },
+      { id: "site-analytics", title: "إحصائيات الموقع", url: "/management/site-analytics", icon: TrendingUp, requiredRoles: ["SYSTEM_ADMIN"] },
       {
         id: "data-management",
         title: "إدارة البيانات",
         icon: Database,
         subItems: [
           { id: "products-management", title: "إدارة المنتجات", url: "/management/data/products", icon: ShoppingBag },
-          { id: "doctors-management", title: "إدارة الأطباء", url: "/management/data/doctors", icon: UserMinus }
+          { id: "doctors-management", title: "إدارة الأطباء", url: "/management/data/doctors", icon: UserMinus },
+          { id: "clinics-management", title: "إدارة العيادات", url: "/management/clinics", icon: Building2 },
+          { id: "marketing-activities-management", title: "إدارة الأنشطة التسويقية", url: "/management/marketing-activities", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] }
         ]
       }
     ]
@@ -147,7 +153,8 @@ const managementItems = [
     icon: UserCog, 
     color: "text-indigo-500",
     subItems: [
-      { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus }
+      { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
+      { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] }
     ]
   },
 ];
@@ -176,6 +183,43 @@ export function AppSidebar() {
     logout();
     toast.success('تم تسجيل الخروج بنجاح');
     navigate('/login');
+  };
+
+  // Filter items for SYSTEM_ADMIN - show only home and create admin
+  const getFilteredMenuItems = () => {
+    if (user?.role === "SYSTEM_ADMIN") {
+      return [
+        { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" }
+      ];
+    }
+    return menuItems;
+  };
+
+  const getFilteredManagementItems = () => {
+    if (user?.role === "SYSTEM_ADMIN") {
+      return [
+        { 
+          id: "management", 
+          title: "الإدارة العامة", 
+          icon: Settings, 
+          color: "text-gray-500",
+          subItems: [
+            { id: "site-analytics", title: "إحصائيات الموقع", url: "/management/site-analytics", icon: TrendingUp, requiredRoles: ["SYSTEM_ADMIN"] }
+          ]
+        },
+        { 
+          id: "users", 
+          title: "إدارة المستخدمين", 
+          icon: UserCog, 
+          color: "text-indigo-500",
+          subItems: [
+            { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] },
+            { id: "all-admins", title: "جميع عملائي (الادمن)", url: "/management/all-admins", icon: Users, requiredRoles: ["SYSTEM_ADMIN"] }
+          ]
+        }
+      ];
+    }
+    return managementItems;
   };
 
   return (
@@ -225,7 +269,7 @@ export function AppSidebar() {
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarMenu className="space-y-2">
-            {menuItems.map((item) => {
+            {getFilteredMenuItems().map((item) => {
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedItems.includes(item.id);
               const active = item.url ? isActive(item.url) : false;
@@ -275,7 +319,13 @@ export function AppSidebar() {
                       
                       {isExpanded && !isCollapsed && (
                         <div className="mr-6 mt-1 space-y-1">
-                          {item.subItems.map((subItem) => {
+                          {item.subItems.filter((subItem) => {
+                            // التحقق من الأدوار المطلوبة
+                            if (subItem.requiredRoles && user) {
+                              return subItem.requiredRoles.includes(user.role);
+                            }
+                            return true;
+                          }).map((subItem) => {
                             const subActive = subItem.url ? isActive(subItem.url) : false;
                             const hasNestedSubItems = subItem.subItems && subItem.subItems.length > 0;
                             const isNestedExpanded = expandedItems.includes(subItem.id);
@@ -445,7 +495,7 @@ export function AppSidebar() {
             {!isCollapsed && "الإدارة"}
           </SidebarGroupLabel>
           <SidebarMenu className="space-y-2">
-            {managementItems.map((item) => {
+            {getFilteredManagementItems().map((item) => {
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedItems.includes(item.id);
               const active = item.url ? isActive(item.url) : false;

@@ -23,6 +23,16 @@ import ProductMessagesUpload from "./pages/ProductMessagesUpload";
 import UsersUpload from "./pages/UsersUpload";
 import DoctorsUpload from "./pages/DoctorsUpload";
 import ClientsList from "./pages/ClientsList";
+import CreateAdmin from "./pages/CreateAdmin";
+import AllAdmins from "./pages/AllAdmins";
+import SiteAnalytics from "./pages/SiteAnalytics";
+import MarketingActivitiesUpload from "./pages/MarketingActivitiesUpload";
+import MarketingActivitiesManagement from "./pages/MarketingActivitiesManagement";
+import AddMarketingActivity from "./pages/AddMarketingActivity";
+import AddDoctor from "./pages/AddDoctor";
+import UpdateDoctor from "./pages/UpdateDoctor";
+import ClinicsManagement from "./pages/ClinicsManagement";
+import ClinicsAnalytics from "./pages/ClinicsAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -190,6 +200,56 @@ const App = () => (
                     <Route path="/management/users-upload" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin']}>
                         <UsersUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/create-admin" element={
+                      <ProtectedRoute requiredRoles={['SYSTEM_ADMIN']}>
+                        <CreateAdmin />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/all-admins" element={
+                      <ProtectedRoute requiredRoles={['SYSTEM_ADMIN']}>
+                        <AllAdmins />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/site-analytics" element={
+                      <ProtectedRoute requiredRoles={['SYSTEM_ADMIN']}>
+                        <SiteAnalytics />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/marketing-activities-upload" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'SYSTEM_ADMIN']}>
+                        <MarketingActivitiesUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/marketing-activities" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'SYSTEM_ADMIN']}>
+                        <MarketingActivitiesManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/marketing-activities/add" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'SYSTEM_ADMIN']}>
+                        <AddMarketingActivity />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/doctors/add" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <AddDoctor />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/doctors/update/:id" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <UpdateDoctor />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/clinics" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <ClinicsManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/analytics/clinics" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <ClinicsAnalytics />
                       </ProtectedRoute>
                     } />
                     <Route path="/users" element={

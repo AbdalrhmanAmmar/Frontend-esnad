@@ -67,6 +67,7 @@ export const useAuthStore = create<AuthState>()(persist(
           isLoading: false
         });
         // Clear token from localStorage
+        localStorage.removeItem('token');
         localStorage.removeItem('auth-token');
       },
 

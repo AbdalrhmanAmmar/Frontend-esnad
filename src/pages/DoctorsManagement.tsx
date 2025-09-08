@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, Edit, Trash2, Stethoscope, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, MapPin, GraduationCap, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Stethoscope, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, MapPin, GraduationCap, Phone, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getDoctors, GetDoctorsParams } from '../api/Doctors';
+import { getDoctors, GetDoctorsParams, exportDoctors } from '../api/Doctors';
 import toast from 'react-hot-toast';
 
 interface Doctor {
@@ -39,6 +39,7 @@ function DoctorsManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalDoctors, setTotalDoctors] = useState(0);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Fetch doctors from API
   const fetchDoctors = async (params: GetDoctorsParams = {}) => {
@@ -120,6 +121,29 @@ function DoctorsManagement() {
     setDoctorToDelete(null);
   };
 
+  const handleExportDoctors = async () => {
+    setExportLoading(true);
+    const loadingToastId = toast.loading('جاري تصدير ملف الأطباء...');
+
+    try {
+      // تمرير معاملات الفلترة الحالية
+      const exportParams: GetDoctorsParams = {
+        search: searchTerm || undefined,
+        city: filterCity !== 'all' ? filterCity : undefined,
+        specialty: filterSpecialty !== 'all' ? filterSpecialty : undefined,
+        brand: filterBrand !== 'all' ? filterBrand : undefined,
+      };
+      
+      await exportDoctors(exportParams);
+      toast.success('تم تصدير ملف الأطباء بنجاح', { id: loadingToastId });
+    } catch (error: any) {
+      console.error('Error exporting doctors:', error);
+      toast.error(error.message || 'حدث خطأ أثناء تصدير ملف الأطباء', { id: loadingToastId });
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ar-EG', {
       year: 'numeric',
@@ -159,7 +183,11 @@ function DoctorsManagement() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
             تحديث
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/doctors-upload')}>
+          <Button variant="outline" onClick={handleExportDoctors} disabled={exportLoading}>
+            {exportLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
+            تصدير Excel
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/doctors/add')}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة طبيب جديد
           </Button>
@@ -293,7 +321,7 @@ function DoctorsManagement() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {/* TODO: Navigate to edit doctor */}}
+                              onClick={() => navigate(`/management/doctors/update/${doctor._id}`)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
