@@ -33,6 +33,7 @@ import AddDoctor from "./pages/AddDoctor";
 import UpdateDoctor from "./pages/UpdateDoctor";
 import ClinicsManagement from "./pages/ClinicsManagement";
 import ClinicsAnalytics from "./pages/ClinicsAnalytics";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -250,6 +251,11 @@ const App = () => (
                     <Route path="/analytics/clinics" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
                         <ClinicsAnalytics />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <ProtectedRoute>
+                        <Profile />
                       </ProtectedRoute>
                     } />
                     <Route path="/users" element={

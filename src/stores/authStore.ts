@@ -7,7 +7,7 @@ interface User {
   lastName: string;
   username: string;
   role: string;
-  teamProducts?: string[];
+  teamProducts?: string;
   teamArea?: string;
   area?: string;
   city?: string;

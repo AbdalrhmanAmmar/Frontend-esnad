@@ -153,6 +153,7 @@ const managementItems = [
     icon: UserCog, 
     color: "text-indigo-500",
     subItems: [
+      { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User },
       { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
       { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] }
     ]
