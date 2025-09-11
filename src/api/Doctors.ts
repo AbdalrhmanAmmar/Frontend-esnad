@@ -86,6 +86,18 @@ export interface AddDoctorData {
   organizationType?: string;
   organizationName?: string;
   specialty?: string;
+  subSpecialty?: string;
+  classification?: string;
+  potential?: string;
+  decileSegment?: string;
+  brickCode?: string;
+  brickName?: string;
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
+  workingDays?: string;
+  workingHours?: string;
+  notes?: string;
   telNumber?: string;
   profile?: string;
   district?: string;
@@ -132,26 +144,41 @@ export const updateDoctor = async (doctorId: string, doctorData: Partial<AddDoct
   try {
     const { user } = useAuthStore.getState();
     if (!user) {
-      throw new Error('المستخدم غير مسجل الدخول');
+      return {
+        success: false,
+        error: 'المستخدم غير مسجل الدخول'
+      };
     }
 
     const response = await api.put(`/doctors/${doctorId}`, doctorData);
     
     if (response.data.success) {
-      return response.data.data;
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'تم تحديث الطبيب بنجاح'
+      };
     } else {
-      throw new Error(response.data.message || 'فشل في تحديث الطبيب');
+      return {
+        success: false,
+        error: response.data.message || 'فشل في تحديث الطبيب'
+      };
     }
   } catch (error: any) {
     console.error('Error updating doctor:', error);
-    throw error;
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'حدث خطأ أثناء تحديث الطبيب'
+    };
   }
 };
 
 // الحصول على بيانات طبيب واحد
 export const getDoctorById = async (doctorId: string) => {
   try {
+    console.log('Fetching doctor with ID:', doctorId);
     const response = await api.get(`/doctors/${doctorId}`);
+    console.log('Doctor API response:', response.data);
     
     if (response.data.success) {
       return response.data.data;
@@ -160,7 +187,35 @@ export const getDoctorById = async (doctorId: string) => {
     }
   } catch (error: any) {
     console.error('Error fetching doctor:', error);
+    console.error('Error details:', error.response?.data);
     throw error;
+  }
+};
+
+// حذف طبيب
+export const deleteDoctor = async (doctorId: string) => {
+  try {
+    const { user } = useAuthStore.getState();
+    if (!user) {
+      throw new Error('المستخدم غير مسجل الدخول');
+    }
+
+    const response = await api.delete(`/doctors/${doctorId}`);
+    
+    if (response.data.success) {
+      return {
+        success: true,
+        message: response.data.message || 'تم حذف الطبيب بنجاح'
+      };
+    } else {
+      throw new Error(response.data.message || 'فشل في حذف الطبيب');
+    }
+  } catch (error: any) {
+    console.error('Error deleting doctor:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'فشل في حذف الطبيب'
+    };
   }
 };
 

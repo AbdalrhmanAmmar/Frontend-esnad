@@ -17,9 +17,11 @@ import {
   MessageSquare,
   Filter,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Store
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
 
 interface User {
   _id: string;
@@ -58,11 +60,20 @@ interface Product {
   updatedAt: string;
 }
 
+interface Pharmacy {
+  _id: string;
+  customerSystemDescription: string;
+  area: string;
+  city: string;
+  district: string;
+}
+
 interface ApiResponse {
   success: boolean;
   user: User;
   doctors: Doctor[];
   products: Product[];
+  pharmacies: Pharmacy[];
 }
 
 const ClientsList: React.FC = () => {
@@ -110,6 +121,16 @@ const ClientsList: React.FC = () => {
     const matchesTeam = selectedTeam === 'all' || product.teamProducts === selectedTeam;
     return matchesSearch && matchesTeam;
   }) || [];
+
+  const filteredPharmacies = (data?.pharmacies || []).filter((pharmacy) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      pharmacy.customerSystemDescription?.toLowerCase().includes(searchLower) ||
+      pharmacy.area?.toLowerCase().includes(searchLower) ||
+      pharmacy.city?.toLowerCase().includes(searchLower) ||
+      pharmacy.district?.toLowerCase().includes(searchLower)
+    );
+  });
 
   const getTeamColor = (team: string) => {
     switch (team) {
@@ -230,7 +251,7 @@ const ClientsList: React.FC = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
             <TabsTrigger value="doctors" className="flex items-center gap-2">
               <Stethoscope className="w-4 h-4" />
               الأطباء ({filteredDoctors.length})
@@ -238,6 +259,10 @@ const ClientsList: React.FC = () => {
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Pill className="w-4 h-4" />
               المنتجات ({filteredProducts.length})
+            </TabsTrigger>
+            <TabsTrigger value="pharmacies" className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              الصيدليات ({filteredPharmacies.length})
             </TabsTrigger>
           </TabsList>
 
@@ -344,6 +369,46 @@ const ClientsList: React.FC = () => {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Pharmacies Tab */}
+          <TabsContent value="pharmacies" className="space-y-4">
+            {filteredPharmacies.length === 0 ? (
+              <Card className="border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+                <CardContent className="p-12 text-center">
+                  <Store className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">لا توجد صيدليات</h3>
+                  <p className="text-gray-600 dark:text-gray-300">لم يتم العثور على صيدليات مطابقة للبحث</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPharmacies.map((pharmacy) => (
+                  <Card key={pharmacy._id} className="border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-200">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Store className="w-5 h-5 text-orange-600" />
+                        {pharmacy.customerSystemDescription}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <MapPin className="w-4 h-4 text-red-600" />
+                        <span>{pharmacy.area}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <Building2 className="w-4 h-4 text-blue-600" />
+                        <span>{pharmacy.city}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <MapPin className="w-4 h-4 text-green-600" />
+                        <span>{pharmacy.district}</span>
                       </div>
                     </CardContent>
                   </Card>

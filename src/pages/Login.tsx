@@ -19,15 +19,14 @@ const Login: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuthStore();
+  const { login, isAuthenticated, user } = useAuthStore();
   
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      navigate('/profile', { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +55,8 @@ const Login: React.FC = () => {
         
         toast.success('تم تسجيل الدخول بنجاح!');
         
-        // Redirect to intended page or home
-        const from = (location.state as any)?.from?.pathname || '/';
-        navigate(from, { replace: true });
+        // Redirect to profile page
+        navigate('/profile', { replace: true });
       } else {
         setError(response.message || 'فشل في تسجيل الدخول');
       }
@@ -72,28 +70,28 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md space-y-8">
         {/* Logo and Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4">
-            <LogIn className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-full mb-4">
+            <LogIn className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             تسجيل الدخول
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             مرحباً بك في نظام إدارة المندوبين الطبيين
           </p>
         </div>
 
         {/* Login Card */}
-        <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
+        <Card className="border shadow-2xl bg-card/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-800">
+            <CardTitle className="text-2xl font-bold text-card-foreground">
               تسجيل الدخول
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription className="text-muted-foreground">
               أدخل بيانات الدخول الخاصة بك
             </CardDescription>
           </CardHeader>
@@ -102,9 +100,9 @@ const Login: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Error Alert */}
               {error && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-800">
+                <Alert className="border-destructive/50 bg-destructive/10">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <AlertDescription className="text-destructive">
                     {error}
                   </AlertDescription>
                 </Alert>
@@ -112,7 +110,7 @@ const Login: React.FC = () => {
 
               {/* Username Field */}
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-right text-gray-700 font-medium">
+                <Label htmlFor="username" className="text-right text-foreground font-medium">
                   اسم المستخدم
                 </Label>
                 <div className="relative">
@@ -121,18 +119,18 @@ const Login: React.FC = () => {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="pl-10 pr-4 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-right"
+                    className="pl-10 pr-4 h-12 border-input focus:border-primary focus:ring-primary text-right"
                     placeholder="أدخل اسم المستخدم"
                     disabled={isLoading}
                     required
                   />
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-right text-gray-700 font-medium">
+                <Label htmlFor="password" className="text-right text-foreground font-medium">
                   كلمة المرور
                 </Label>
                 <div className="relative">
@@ -141,16 +139,16 @@ const Login: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-right"
+                    className="pl-10 pr-10 h-12 border-input focus:border-primary focus:ring-primary text-right"
                     placeholder="أدخل كلمة المرور"
                     disabled={isLoading}
                     required
                   />
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     disabled={isLoading}
                   >
                     {showPassword ? (
@@ -165,7 +163,7 @@ const Login: React.FC = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -185,7 +183,7 @@ const Login: React.FC = () => {
         </Card>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-muted-foreground">
           <p>© 2024 نظام إدارة المندوبين الطبيين. جميع الحقوق محفوظة.</p>
         </div>
       </div>

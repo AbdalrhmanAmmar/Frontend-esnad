@@ -4,7 +4,7 @@ import { useAuthStore } from "../stores/authStore";
 
 // إعداد Axios
 const api = axios.create({
-//   baseURL: "https://back-api.evasaudi.com/api",
+  // baseURL: "https://back-api.evasaudi.com/api",
   baseURL:"http://localhost:4000/api",
   timeout: 20000,
   headers: {
@@ -56,4 +56,5 @@ export const fetchData = async () => {
   // Implementation here
 };
 
+export { api };
 export default api;

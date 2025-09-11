@@ -52,6 +52,7 @@ const MarketingActivitiesManagement: React.FC = () => {
       const response = await getAllMarketingActivities(page, limit, search, isActiveValue);
       
       if (response.success) {
+        console.log(`response.data` ,response.data)
         setActivities(response.data.activities);
         setPagination(response.data.pagination);
       } else {

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, Edit, Trash2, Stethoscope, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, MapPin, GraduationCap, Phone, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getDoctors, GetDoctorsParams, exportDoctors } from '../api/Doctors';
+import { getDoctors, GetDoctorsParams, exportDoctors, deleteDoctor } from '../api/Doctors';
 import toast from 'react-hot-toast';
 
 interface Doctor {
@@ -99,19 +99,20 @@ function DoctorsManagement() {
     const loadingToastId = toast.loading('جاري حذف الطبيب...');
 
     try {
-      // TODO: Implement delete doctor API
-      // const result = await deleteDoctorById(doctorToDelete._id);
+      const result = await deleteDoctor(doctorToDelete._id);
       
-      // Simulate success for now
-      setTimeout(() => {
-        toast.success('تم حذف الطبيب بنجاح', { id: loadingToastId });
+      if (result.success) {
+        toast.success(result.message || 'تم حذف الطبيب بنجاح', { id: loadingToastId });
         setIsDeleteDialogOpen(false);
         setDoctorToDelete(null);
         fetchDoctors(); // Refresh the list
-        setDeleteLoading(false);
-      }, 1000);
-    } catch (error) {
+      } else {
+        toast.error(result.error || 'فشل في حذف الطبيب', { id: loadingToastId });
+      }
+    } catch (error: any) {
+      console.error('Error deleting doctor:', error);
       toast.error('حدث خطأ غير متوقع', { id: loadingToastId });
+    } finally {
       setDeleteLoading(false);
     }
   };
@@ -187,7 +188,7 @@ function DoctorsManagement() {
             {exportLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
             تصدير Excel
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/doctors/add')}>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/data/doctors/add')}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة طبيب جديد
           </Button>
@@ -321,7 +322,7 @@ function DoctorsManagement() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => navigate(`/management/doctors/update/${doctor._id}`)}
+                              onClick={() => navigate(`/management/data/doctors/update/${doctor._id}`)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>

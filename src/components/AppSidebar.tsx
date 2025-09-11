@@ -78,6 +78,13 @@ const menuItems = [
       { id: "pharmacy-reports", title: "تقرير الصيدليات", url: "/reports/pharmacies", icon: Pill }
     ]
   },
+  {
+    id:"visits-pharmacy-reports",
+    title: " زيارات الصيدليات",
+    url: "visits/pharmacy",
+    icon: Pill,
+    color: "text-pink-500"
+  },
   { 
     id: "visits", 
     title: "الزيارات", 
@@ -89,6 +96,7 @@ const menuItems = [
     ]
   },
   { id: "clients", title: "قائمة العملاء", url: "/clients", icon: Users, color: "text-cyan-500" },
+  { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600", requiredRoles: ["SALES REP"] },
   { 
     id: "orders", 
     title: "الطلبات", 
@@ -96,7 +104,8 @@ const menuItems = [
     color: "text-orange-500",
     subItems: [
       { id: "sample-order", title: "طلب عينات", url: "/sample-form", icon: Package },
-      { id: "marketing-order", title: "طلب نشاط تسويقي", url: "/marketing-form", icon: Activity }
+      { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
+      { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp }
     ]
   },
   { 
@@ -107,6 +116,16 @@ const menuItems = [
     subItems: [
       { id: "financial-collection", title: "تحصيل مالي", url: "/collections/financial", icon: CreditCard },
       { id: "order-collection", title: "تحصيل طلب", url: "/collections/orders", icon: Receipt }
+    ]
+  },
+  { 
+    id: "financial-collector", 
+    title: "المحصل المالي", 
+    icon: Receipt, 
+    color: "text-green-600",
+    requiredRoles: ["ADMIN", "SYSTEM_ADMIN", "FINANCIAL OFFICER"],
+    subItems: [
+      { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign }
     ]
   },
   { 
@@ -126,11 +145,13 @@ const managementItems = [
     title: "الإدارة العامة", 
     icon: Settings, 
     color: "text-gray-500",
+    requiredRoles: ["ADMIN"],
     subItems: [
       { id: "work-days", title: "إدارة أيام العمل", url: "/management/work-days", icon: Calendar },
-      { id: "documents", title: "إدارة المستندات", url: "/management/documents", icon: FolderOpen },
+      { id: "documents", title: "رفع المنتجات", url: "/management/documents", icon: FolderOpen },
       { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
       { id: "doctors-upload", title: "رفع ملفات الأطباء", url: "/management/doctors-upload", icon: Stethoscope },
+      { id: "pharmacies-upload", title: "رفع ملفات الصيدليات", url: "/management/pharmacies-upload", icon: Pill },
       { id: "users-upload", title: "رفع ملفات المستخدمين", url: "/management/users-upload", icon: Users },
       { id: "marketing-activities-upload", title: "رفع الأنشطة التسويقية", url: "/management/marketing-activities-upload", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] },
       { id: "lost-orders", title: "إدارة الطلبيات المفقودة", url: "/management/lost-orders", icon: Package },
@@ -142,20 +163,22 @@ const managementItems = [
         subItems: [
           { id: "products-management", title: "إدارة المنتجات", url: "/management/data/products", icon: ShoppingBag },
           { id: "doctors-management", title: "إدارة الأطباء", url: "/management/data/doctors", icon: UserMinus },
+          { id: "pharmacies-management", title: "إدارة الصيدليات", url: "/management/data/pharmacies", icon: Pill },
           { id: "clinics-management", title: "إدارة العيادات", url: "/management/clinics", icon: Building2 },
+          { id: "employees-management", title: "إدارة الموظفين", url: "/management/employees", icon: Users, requiredRoles: ["ADMIN"] },
           { id: "marketing-activities-management", title: "إدارة الأنشطة التسويقية", url: "/management/marketing-activities", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] }
         ]
       }
     ]
   },
+  { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" },
+  { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList, color: "text-green-500", requiredRoles: ["MEDICAL REP", "medical rep"] },
   { 
     id: "users", 
     title: "إدارة المستخدمين", 
     icon: UserCog, 
     color: "text-indigo-500",
     subItems: [
-      { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User },
-      { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList, requiredRoles: ["MEDICAL REP", "medical rep"] },
       { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
       { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
       { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] }
@@ -215,6 +238,47 @@ export function AppSidebar() {
           color: "text-green-500",
           subItems: [
             { id: "clinic-reports", title: "تقرير العيادات", url: "/reports/clinics", icon: Building2 }
+          ]
+        },
+        { 
+          id: "orders", 
+          title: "الطلبات", 
+          icon: ShoppingCart, 
+          color: "text-orange-500",
+          subItems: [
+            { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
+            { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp, requiredRoles: ["MEDICAL REP", "medical rep"] }
+          ]
+        }
+      ];
+    }
+    
+    if (user?.role === "ADMIN") {
+      return [
+        { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
+        { 
+          id: "requests-list", 
+          title: "قائمة الطلبات", 
+          icon: ClipboardList, 
+          color: "text-purple-500",
+          subItems: [
+            { id: "sample-requests", title: "طلبات العينات", url: "/admin/sample-requests", icon: Package }
+          ]
+        }
+      ];
+    }
+    
+    if (user?.role === "SUPERVISOR") {
+      return [
+        { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
+        { 
+          id: "requests-list", 
+          title: "قائمة الطلبات", 
+          icon: ClipboardList, 
+          color: "text-purple-500",
+          subItems: [
+            { id: "sample-requests", title: "طلبات العينات", url: "/supervisor/sample-requests", icon: Package },
+            { id: "marketing-requests", title: "طلبات النشاط التسويقي", url: "/supervisor/marketing-requests", icon: TrendingUp }
           ]
         }
       ];

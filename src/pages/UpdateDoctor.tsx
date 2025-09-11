@@ -13,18 +13,30 @@ interface DoctorFormData {
   drName: string;
   organizationType: string;
   organizationName: string;
-  specialty: string;
-  telNumber: string;
-  profile: string;
-  district: string;
+  keyOpinionLeader: boolean;
   city: string;
   area: string;
   brand: string;
+  specialty: string;
+  subSpecialty: string;
+  classification: string;
+  potential: string;
+  decileSegment: string;
+  brickCode: string;
+  brickName: string;
+  address: string;
+  phoneNumber: string;
+  email: string;
+  workingDays: string;
+  workingHours: string;
+  telNumber: string;
+  profile: string;
+  district: string;
   segment: string;
   targetFrequency: number;
-  keyOpinionLeader: boolean;
   teamProducts: string;
   teamArea: string;
+  notes: string;
 }
 
 const UpdateDoctor = () => {
@@ -37,18 +49,30 @@ const UpdateDoctor = () => {
     drName: '',
     organizationType: '',
     organizationName: '',
-    specialty: '',
-    telNumber: '',
-    profile: '',
-    district: '',
+    keyOpinionLeader: false,
     city: '',
     area: '',
     brand: '',
+    specialty: '',
+    subSpecialty: '',
+    classification: '',
+    potential: '',
+    decileSegment: '',
+    brickCode: '',
+    brickName: '',
+    address: '',
+    phoneNumber: '',
+    email: '',
+    workingDays: '',
+    workingHours: '',
+    telNumber: '',
+    profile: '',
+    district: '',
     segment: '',
     targetFrequency: 0,
-    keyOpinionLeader: false,
     teamProducts: '',
-    teamArea: ''
+    teamArea: '',
+    notes: ''
   });
 
   useEffect(() => {
@@ -59,7 +83,7 @@ const UpdateDoctor = () => {
           description: "معرف الطبيب غير صحيح",
           variant: "destructive"
         });
-        navigate('/management/doctors');
+        navigate('/management/data/doctors');
         return;
       }
 
@@ -70,18 +94,30 @@ const UpdateDoctor = () => {
           drName: doctorData.drName || '',
           organizationType: doctorData.organizationType || '',
           organizationName: doctorData.organizationName || '',
-          specialty: doctorData.specialty || '',
-          telNumber: doctorData.telNumber || '',
-          profile: doctorData.profile || '',
-          district: doctorData.district || '',
+          keyOpinionLeader: doctorData.keyOpinionLeader || false,
           city: doctorData.city || '',
           area: doctorData.area || '',
           brand: doctorData.brand || '',
+          specialty: doctorData.specialty || '',
+          subSpecialty: doctorData.subSpecialty || '',
+          classification: doctorData.classification || '',
+          potential: doctorData.potential || '',
+          decileSegment: doctorData.decileSegment || '',
+          brickCode: doctorData.brickCode || '',
+          brickName: doctorData.brickName || '',
+          address: doctorData.address || '',
+          phoneNumber: doctorData.phoneNumber || '',
+          email: doctorData.email || '',
+          workingDays: doctorData.workingDays || '',
+          workingHours: doctorData.workingHours || '',
+          telNumber: doctorData.telNumber || '',
+          profile: doctorData.profile || '',
+          district: doctorData.district || '',
           segment: doctorData.segment || '',
           targetFrequency: doctorData.targetFrequency || 0,
-          keyOpinionLeader: doctorData.keyOpinionLeader || false,
           teamProducts: doctorData.teamProducts || '',
-          teamArea: doctorData.teamArea || ''
+          teamArea: doctorData.teamArea || '',
+          notes: doctorData.notes || ''
         });
       } catch (error) {
         toast({
@@ -89,7 +125,7 @@ const UpdateDoctor = () => {
           description: "فشل في جلب بيانات الطبيب",
           variant: "destructive"
         });
-        navigate('/management/doctors');
+        navigate('/management/data/doctors');
       } finally {
         setIsLoadingData(false);
       }
@@ -129,12 +165,51 @@ const UpdateDoctor = () => {
 
     setIsLoading(true);
     try {
-      await updateDoctor(id, formData);
-      toast({
-        title: "تم بنجاح",
-        description: "تم تحديث بيانات الطبيب بنجاح"
-      });
-      navigate('/management/doctors');
+      const dataToSend: AddDoctorData = {
+        drName: formData.drName.trim(),
+        organizationType: formData.organizationType,
+        organizationName: formData.organizationName.trim(),
+        keyOpinionLeader: formData.keyOpinionLeader,
+        city: formData.city.trim(),
+        area: formData.area.trim(),
+        brand: formData.brand.trim(),
+        specialty: formData.specialty.trim(),
+        subSpecialty: formData.subSpecialty.trim(),
+        classification: formData.classification,
+        potential: formData.potential,
+        decileSegment: formData.decileSegment,
+        brickCode: formData.brickCode.trim(),
+        brickName: formData.brickName.trim(),
+        address: formData.address.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
+        email: formData.email.trim(),
+        workingDays: formData.workingDays.trim(),
+        workingHours: formData.workingHours.trim(),
+        telNumber: formData.telNumber.trim(),
+        profile: formData.profile.trim(),
+        district: formData.district.trim(),
+        segment: formData.segment.trim(),
+        targetFrequency: formData.targetFrequency,
+        teamProducts: formData.teamProducts.trim(),
+        teamArea: formData.teamArea.trim(),
+        notes: formData.notes.trim()
+      };
+
+      const result = await updateDoctor(id, dataToSend);
+      
+      if (result.success) {
+        toast({
+          title: "تم بنجاح",
+          description: "تم تحديث بيانات الطبيب بنجاح"
+        });
+        navigate('/management/data/doctors');
+      } else {
+        toast({
+          title: "خطأ",
+          description: result.error || "حدث خطأ أثناء تحديث الطبيب",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       toast({
         title: "خطأ",
@@ -163,7 +238,7 @@ const UpdateDoctor = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/management/doctors')}
+          onClick={() => navigate('/management/data/doctors')}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -367,7 +442,7 @@ const UpdateDoctor = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/management/doctors')}
+                onClick={() => navigate('/management/data/doctors')}
                 className="flex-1"
                 disabled={isLoading}
               >

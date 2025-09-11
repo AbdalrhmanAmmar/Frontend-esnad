@@ -82,7 +82,7 @@ const AddDoctor = () => {
         });
         
         // العودة إلى صفحة إدارة الأطباء
-        navigate('/management/doctors');
+        navigate('/management/data/doctors');
       } else {
         toast({
           title: "خطأ",
@@ -102,7 +102,7 @@ const AddDoctor = () => {
   };
 
   const handleBack = () => {
-    navigate('/management/doctors');
+    navigate('/management/data/doctors');
   };
 
   return (

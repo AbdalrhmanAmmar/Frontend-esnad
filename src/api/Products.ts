@@ -51,7 +51,7 @@ export interface AddProductData {
   TEAM: string;
   teamProducts: string;
   COMPANY: string;
-  messages?: Array<{text: string} | string>; // الرسائل الثلاث للمنتج
+  messages?: Array<{text: string; lang?: string}>; // الرسائل الثلاث للمنتج
 }
 
 export async function addProduct(productData: AddProductData) {
@@ -64,6 +64,9 @@ export async function addProduct(productData: AddProductData) {
       adminId: user?._id
     };
     
+    console.log('Final data with adminId:', dataWithAdminId);
+    console.log('User from auth store:', user);
+    
     const response = await api.post('/products', dataWithAdminId);
 
     return {
@@ -73,6 +76,8 @@ export async function addProduct(productData: AddProductData) {
     };
   } catch (error: any) {
     console.error('Error adding product:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
     const errorMessage = error.response?.data?.message || 'فشل في إضافة المنتج';
     return {
       success: false,

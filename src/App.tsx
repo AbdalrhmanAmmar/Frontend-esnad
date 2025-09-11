@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SamplesForm from "./pages/requests/SamplesForm";
 import MarketingForm from "./pages/requests/MarketingForm";
+import MarketingRequestForm from "./pages/MarketingRequestForm";
 import ProductsManagement from "./pages/ProductsManagement";
 import DoctorsManagement from "./pages/DoctorsManagement";
 import AddProduct from "./pages/AddProduct";
@@ -22,6 +23,10 @@ import DocumentsManagement from "./pages/DocumentsManagement";
 import ProductMessagesUpload from "./pages/ProductMessagesUpload";
 import UsersUpload from "./pages/UsersUpload";
 import DoctorsUpload from "./pages/DoctorsUpload";
+import PharmaciesUpload from "./pages/PharmaciesUpload";
+import PharmaciesManagement from "./pages/PharmaciesManagement";
+import AddPharmacy from "./pages/AddPharmacy";
+import SampleRequestForm from "./pages/SampleRequestForm";
 import ClientsList from "./pages/ClientsList";
 import CreateAdmin from "./pages/CreateAdmin";
 import AllAdmins from "./pages/AllAdmins";
@@ -36,6 +41,16 @@ import ClinicsAnalytics from "./pages/ClinicsAnalytics";
 import Profile from "./pages/Profile";
 import MyDataList from "./pages/MyDataList";
 import CreateVisit from "./pages/CreateVisit";
+import SupervisorSampleRequests from "./pages/SupervisorSampleRequests";
+import SupervisorMarketingRequests from "./pages/SupervisorMarketingRequests";
+import AdminSampleRequests from "./pages/AdminSampleRequests";
+import EmployeesManagement from "./pages/EmployeesManagement";
+import AddEmployee from "./pages/AddEmployee";
+import EditEmployee from "./pages/EditEmployee";
+import PharmacyVisitForm from "./pages/PharmacyVisitForm";
+import MoneyCollection from "./pages/MoneyCollection";
+import SalesClients from "./pages/SalesClients";
+import PharmacyDashboard from "./pages/PharmacyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +92,7 @@ const App = () => (
                     } />
                     <Route path="/dashboards/pharmacies" element={
                       <ProtectedRoute>
-                        <Dashboard />
+                        <PharmacyDashboard />
                       </ProtectedRoute>
                     } />
                     <Route path="/reports" element={
@@ -102,12 +117,17 @@ const App = () => (
                     } />
                     <Route path="/visits/pharmacy" element={
                       <ProtectedRoute>
-                        <Dashboard />
+                        <PharmacyVisitForm />
                       </ProtectedRoute>
                     } />
                     <Route path="/clients" element={
                       <ProtectedRoute>
                         <ClientsList />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/sales-clients" element={
+                      <ProtectedRoute requiredRoles={['SALES REP']}>
+                        <SalesClients />
                       </ProtectedRoute>
                     } />
                     <Route path="/orders" element={
@@ -133,6 +153,11 @@ const App = () => (
                     <Route path="/collections/financial" element={
                       <ProtectedRoute>
                         <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/financial-collector/money-collection" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'FINANCIAL OFFICER']}>
+                        <MoneyCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/collections/orders" element={
@@ -190,6 +215,21 @@ const App = () => (
                 <DoctorsUpload />
               </ProtectedRoute>
             } />
+            <Route path="/management/pharmacies-upload" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <PharmaciesUpload />
+              </ProtectedRoute>
+            } />
+            <Route path="/management/data/pharmacies" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <PharmaciesManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/management/pharmacies/add" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                <AddPharmacy />
+              </ProtectedRoute>
+            } />
                     <Route path="/management/documents" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
                         <DocumentsManagement />
@@ -235,12 +275,12 @@ const App = () => (
                         <AddMarketingActivity />
                       </ProtectedRoute>
                     } />
-                    <Route path="/management/doctors/add" element={
+                    <Route path="/management/data/doctors/add" element={
                       <ProtectedRoute requiredRoles={['ADMIN']}>
                         <AddDoctor />
                       </ProtectedRoute>
                     } />
-                    <Route path="/management/doctors/update/:id" element={
+                    <Route path="/management/data/doctors/update/:id" element={
                       <ProtectedRoute requiredRoles={['ADMIN']}>
                         <UpdateDoctor />
                       </ProtectedRoute>
@@ -250,8 +290,23 @@ const App = () => (
                         <ClinicsManagement />
                       </ProtectedRoute>
                     } />
+                    <Route path="/management/employees" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <EmployeesManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/add-employee" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <AddEmployee />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/edit-employee/:id" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <EditEmployee />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/analytics/clinics" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'MEDICAL REP', 'medical rep', 'SUPERVISOR', 'supervisor']}>
                         <ClinicsAnalytics />
                       </ProtectedRoute>
                     } />
@@ -270,6 +325,21 @@ const App = () => (
                         <CreateVisit />
                       </ProtectedRoute>
                     } />
+                    <Route path="/supervisor/sample-requests" element={
+                      <ProtectedRoute requiredRoles={['SUPERVISOR']}>
+                        <SupervisorSampleRequests />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/supervisor/marketing-requests" element={
+                      <ProtectedRoute requiredRoles={['SUPERVISOR']}>
+                        <SupervisorMarketingRequests />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/admin/sample-requests" element={
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                        <AdminSampleRequests />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/users" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
                         <Dashboard />
@@ -285,9 +355,19 @@ const App = () => (
                         <SamplesForm />
                       </ProtectedRoute>
                     } />
+                    <Route path="/sample-request" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
+                        <SampleRequestForm />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/marketing-form" element={
                       <ProtectedRoute>
                         <MarketingForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/marketing-request" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
+                        <MarketingRequestForm />
                       </ProtectedRoute>
                     } />
                     <Route path="*" element={<NotFound />} />

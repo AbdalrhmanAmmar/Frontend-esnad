@@ -4,6 +4,7 @@ import api from './api';
 export interface VisitProduct {
   productId: string;
   messageId: string;
+  samplesCount: number;
 }
 
 export interface CreateVisitRequest {
@@ -62,10 +63,119 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+// Detailed Visits Interfaces
+export interface DetailedVisitProduct {
+  productId: {
+    _id: string;
+    CODE: string;
+    PRODUCT: string;
+    BRAND: string;
+    COMPANY: string;
+  };
+  samplesCount: number;
+}
+
+export interface DetailedVisitDoctor {
+  _id: string;
+  drName: string;
+  specialty: string;
+  organizationName: string;
+  organizationType: string;
+  telNumber: string;
+  profile: string;
+  district: string;
+  city: string;
+  area: string;
+  brand: string;
+  segment: string;
+  targetFrequency: number;
+  keyOpinionLeader: boolean;
+  teamProducts: string;
+  teamArea: string;
+}
+
+export interface DetailedVisitMedicalRep {
+  _id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  teamArea: string;
+  teamProducts: string;
+}
+
+export interface DetailedVisit {
+  _id: string;
+  medicalRepId: DetailedVisitMedicalRep;
+  adminId: string;
+  visitDate: string;
+  doctorId: DetailedVisitDoctor;
+  products: DetailedVisitProduct[];
+  notes: string;
+  withSupervisor: boolean;
+  supervisorId?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+  } | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VisitStatistics {
+  totalVisits: number;
+  uniqueDoctorsVisited: number;
+  totalSamplesDistributed: number;
+}
+
+export interface VisitFilters {
+  applied: {
+    dateRange: {
+      startDate: string | null;
+      endDate: string | null;
+    };
+    doctorName: string | null;
+    specialization: string | null;
+    segment: string | null;
+    clinic: string | null;
+    brand: string | null;
+    products: string | null;
+  };
+}
+
+export interface VisitPagination {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface DetailedVisitsResponse {
+  visits: DetailedVisit[];
+  pagination: VisitPagination;
+  statistics: VisitStatistics;
+  filters: VisitFilters;
+}
+
+export interface DetailedVisitsParams {
+  page?: number;
+  limit?: number;
+  startDate?: string;
+  endDate?: string;
+  doctorName?: string;
+  specialization?: string;
+  segment?: string;
+  clinic?: string;
+  brand?: string;
+  products?: string | string[];
+}
+
 // API Functions
 export const createVisit = async (medicalRepId: string, visitData: CreateVisitRequest): Promise<ApiResponse<VisitResponse>> => {
   try {
-    const response = await api.post(`/medical-rep/${medicalRepId}/visits`, visitData);
+    const response = await api.post(`/visit-forms/medical-rep/${medicalRepId}/visits`, visitData);
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'حدث خطأ أثناء إنشاء الزيارة');
@@ -105,5 +215,58 @@ export const deleteVisit = async (medicalRepId: string, visitId: string): Promis
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'حدث خطأ أثناء حذف الزيارة');
+  }
+};
+
+export const getDetailedVisits = async (medicalRepId: string, params?: DetailedVisitsParams): Promise<ApiResponse<DetailedVisitsResponse>> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = queryParams.toString();
+    const url = `/visit-forms/medical-rep/${medicalRepId}/detailed-visits${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await api.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'حدث خطأ أثناء جلب الزيارات التفصيلية');
+  }
+};
+
+export const exportVisitsToExcel = async (medicalRepId: string, params?: DetailedVisitsParams): Promise<Blob> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.doctorName) queryParams.append('doctorName', params.doctorName);
+    if (params?.specialization) queryParams.append('specialization', params.specialization);
+    if (params?.segment) queryParams.append('segment', params.segment);
+    if (params?.clinic) queryParams.append('clinic', params.clinic);
+    if (params?.brand) queryParams.append('brand', params.brand);
+    if (params?.products) {
+      if (Array.isArray(params.products)) {
+        params.products.forEach(product => {
+          queryParams.append('products', product);
+        });
+      } else {
+        queryParams.append('products', params.products);
+      }
+    }
+
+    const response = await api.get(`/visit-forms/medical-rep/${medicalRepId}/export-excel?${queryParams.toString()}`, {
+      responseType: 'blob'
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'حدث خطأ أثناء تصدير التقرير');
   }
 };

@@ -14,6 +14,7 @@ interface User {
   district?: string;
   supervisor?: {
     _id: string;
+    adminId: string;
     firstName: string;
     lastName: string;
     username: string;

@@ -55,6 +55,7 @@ const CreateVisit: React.FC = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedMessage, setSelectedMessage] = useState<string>('');
+  const [selectedSamplesCount, setSelectedSamplesCount] = useState<number>(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   // Load initial data from store only
@@ -98,6 +99,15 @@ const CreateVisit: React.FC = () => {
       return;
     }
 
+    if (selectedSamplesCount < 0) {
+      toast({
+        title: 'تنبيه',
+        description: 'عدد العينات يجب أن يكون أكبر من أو يساوي صفر',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // Check if product already added
     const existingProduct = formData.products.find(p => p.productId === selectedProduct && p.messageId === selectedMessage);
     if (existingProduct) {
@@ -111,11 +121,16 @@ const CreateVisit: React.FC = () => {
 
     setFormData(prev => ({
       ...prev,
-      products: [...prev.products, { productId: selectedProduct, messageId: selectedMessage }]
+      products: [...prev.products, { 
+        productId: selectedProduct, 
+        messageId: selectedMessage,
+        samplesCount: selectedSamplesCount
+      }]
     }));
     
     setSelectedProduct('');
     setSelectedMessage('');
+    setSelectedSamplesCount(0);
   };
 
   // Remove product from visit
@@ -279,7 +294,7 @@ const CreateVisit: React.FC = () => {
               
               {/* Add Product */}
               <Card className="p-4 border-2 border-border hover:border-primary/50 transition-colors rounded-lg shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-sm text-right block mb-2">اختر المنتج</Label>
                     <Select value={selectedProduct} onValueChange={handleProductSelect}>
@@ -316,6 +331,18 @@ const CreateVisit: React.FC = () => {
                     </Select>
                   </div>
                   
+                  <div>
+                    <Label className="text-sm text-right block mb-2">عدد العينات</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={selectedSamplesCount}
+                      onChange={(e) => setSelectedSamplesCount(parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg"
+                    />
+                  </div>
+                  
                   <div className="flex items-end">
                     <Button 
                       type="button" 
@@ -350,6 +377,9 @@ const CreateVisit: React.FC = () => {
                           <div className="font-medium">{getProductName(product.productId)}</div>
                           <div className="text-sm text-muted-foreground">
                             الرسالة: {getMessageTitle(product.productId, product.messageId)}
+                          </div>
+                          <div className="text-sm text-primary font-medium">
+                            عدد العينات: {product.samplesCount}
                           </div>
                         </div>
                       </div>

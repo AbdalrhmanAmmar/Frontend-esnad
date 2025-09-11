@@ -167,3 +167,196 @@ export const updateAdminStatus = async (data: UpdateAdminStatusData): Promise<Up
     throw new Error('فشل في تحديث حالة المدير');
   }
 };
+
+// Interface for employee/user data
+export interface Employee {
+  _id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  isActive: boolean;
+  teamArea: string;
+  teamProducts: string;
+  city?: string;
+  district?: string;
+  area: string[];
+  adminId: string;
+  supervisor?: {
+    _id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Interface for employees pagination
+export interface EmployeesPagination {
+  currentPage: number;
+  totalPages: number;
+  totalUsers: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+// Interface for role statistics
+export interface RoleStats {
+  _id: string;
+  count: number;
+}
+
+// Interface for employees response
+export interface GetEmployeesByAdminResponse {
+  success: boolean;
+  data: {
+    users: Employee[];
+    pagination: EmployeesPagination;
+    stats: {
+      totalUsers: number;
+      roleDistribution: RoleStats[];
+    };
+  };
+}
+
+// Interface for employees query parameters
+export interface GetEmployeesByAdminParams {
+  adminId: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  teamProducts?: string;
+  teamArea?: string;
+  city?: string;
+  district?: string;
+}
+
+// Get all employees by admin
+export const getEmployeesByAdmin = async (params: GetEmployeesByAdminParams): Promise<GetEmployeesByAdminResponse> => {
+  try {
+    const { adminId, ...queryParams } = params;
+    const response = await api.get(`/users/admin/${adminId}`, {
+      params: queryParams
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    }
+    throw new Error('حدث خطأ في جلب بيانات الموظفين');
+  }
+};
+
+// إنشاء موظف جديد
+export interface CreateEmployeeData {
+  firstName: string;
+  lastName: string;
+  username: string;
+  password: string;
+  role: string;
+  teamProducts?: string;
+  teamArea?: string;
+  area?: string[];
+  city?: string;
+  district?: string;
+  adminId: string;
+  supervisor?: string;
+}
+
+export interface CreateEmployeeResponse {
+  success: boolean;
+  message: string;
+  data?: Employee;
+}
+
+export const createEmployee = async (employeeData: CreateEmployeeData): Promise<CreateEmployeeResponse> => {
+  try {
+    const response = await api.post('/users', employeeData);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      throw new Error(error.response.data.message || 'حدث خطأ أثناء إنشاء الموظف');
+    }
+    throw new Error('حدث خطأ في الاتصال بالخادم');
+  }
+};
+
+// Update Employee Interfaces
+export interface UpdateEmployeeData {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  role?: string;
+  teamProducts?: string;
+  teamArea?: string;
+  area?: string[];
+  city?: string;
+  district?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateEmployeeResponse {
+  success: boolean;
+  message: string;
+  data?: Employee;
+}
+
+// Delete Employee Response Interface
+export interface DeleteEmployeeResponse {
+  success: boolean;
+  message: string;
+  deletedUser?: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  };
+  subordinatesCount?: number;
+}
+
+// Update Employee Function
+export const updateEmployee = async (id: string, data: UpdateEmployeeData): Promise<UpdateEmployeeResponse> => {
+  try {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+// Delete Employee Function
+export const deleteEmployee = async (id: string): Promise<DeleteEmployeeResponse> => {
+  try {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+// Get Employee By ID Function
+export const getEmployeeById = async (id: string): Promise<{ success: boolean; data: Employee; message?: string }> => {
+  try {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+// Export Employees to Excel
+export const exportEmployeesToExcel = async (adminId?: string): Promise<Blob> => {
+  try {
+    const params = adminId ? { adminId } : {};
+    const response = await api.get('/users/export', {
+      responseType: 'blob',
+      params
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'فشل في تصدير بيانات الموظفين');
+  }
+};

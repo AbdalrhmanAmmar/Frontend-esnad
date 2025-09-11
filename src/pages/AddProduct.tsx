@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import toast from 'react-hot-toast';
 import { addProduct, AddProductData } from '@/api/Products';
 import { ArrowRight, Package, Save, X } from 'lucide-react';
@@ -55,7 +55,10 @@ const AddProduct = () => {
       // تحويل الرسائل إلى التنسيق الصحيح
       const dataToSend = {
         ...formData,
-        messages: formData.messages?.filter(msg => msg.trim() !== '').map(msg => ({ text: msg })) || []
+        messages: formData.messages?.filter(msg => msg.trim() !== '').map(msg => ({
+          text: msg,
+          lang: 'ar' // يمكن تحديد اللغة حسب المحتوى لاحقاً
+        })) || []
       };
       
       const result = await addProduct(dataToSend);
@@ -65,10 +68,8 @@ const AddProduct = () => {
           id: loadingToast,
         });
         
-        // Wait a bit before navigation to show success message
-        setTimeout(() => {
-          navigate('/management/data/products');
-        }, 1500);
+        // Navigate immediately after success
+        navigate('/management/data/products');
       } else {
         toast.error(result.error || 'حدث خطأ أثناء إضافة المنتج', {
           id: loadingToast,
@@ -83,13 +84,7 @@ const AddProduct = () => {
     }
   };
 
-  const productTypes = [
-    'دواء',
-    'مكمل غذائي',
-    'جهاز طبي',
-    'مستلزمات طبية',
-    'أخرى'
-  ];
+
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -157,21 +152,14 @@ const AddProduct = () => {
                 <Label htmlFor="productType" className="text-right">
                   نوع المنتج
                 </Label>
-                <Select
+                <Input
+                  id="productType"
+                  type="text"
+                  placeholder="أدخل نوع المنتج"
                   value={formData.PRODUCT_TYPE}
-                  onValueChange={(value) => handleInputChange('PRODUCT_TYPE', value)}
-                >
-                  <SelectTrigger className="text-right">
-                    <SelectValue placeholder="اختر نوع المنتج" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {productTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(e) => handleInputChange('PRODUCT_TYPE', e.target.value)}
+                  className="text-right"
+                />
               </div>
 
               {/* العلامة التجارية */}
