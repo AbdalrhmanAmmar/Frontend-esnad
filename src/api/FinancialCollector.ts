@@ -42,6 +42,9 @@ export interface FinancialFilters {
   status?: string;
   startDate?: string;
   endDate?: string;
+  pharmacyName?: string;
+  pharmacyArea?: string;
+  repName?: string;
 }
 
 export const getFinancialPharmacyData = async (adminId: string, filters: FinancialFilters = {}): Promise<FinancialResponse> => {
@@ -53,6 +56,9 @@ export const getFinancialPharmacyData = async (adminId: string, filters: Financi
     if (filters.status && filters.status !== 'all') params.append('status', filters.status);
     if (filters.startDate) params.append('startDate', filters.startDate);
     if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.pharmacyName) params.append('pharmacyName', filters.pharmacyName);
+    if (filters.pharmacyArea) params.append('pharmacyArea', filters.pharmacyArea);
+    if (filters.repName) params.append('repName', filters.repName);
 
     const response = await api.get(`/financial-pharmacy/admin/${adminId}?${params.toString()}`);
     return response.data;

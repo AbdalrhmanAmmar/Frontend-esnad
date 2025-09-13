@@ -45,11 +45,12 @@ const MoneyCollection = () => {
   const [confirmAction, setConfirmAction] = useState<{show: boolean, action: string, item: FinancialData | null}>({show: false, action: '', item: null});
 
   const fetchData = async () => {
+    const id = user.adminId
     if (!user?._id) return;
     
     setLoading(true);
     try {
-      const response = await getFinancialPharmacyData(user._id, filters);
+      const response = await getFinancialPharmacyData(id, filters);
       console.log(response, 'response');
       setData(response.data);
       setStatistics(response.statistics);
@@ -108,7 +109,6 @@ const MoneyCollection = () => {
 
   const cancelStatusUpdate = () => {
     setConfirmAction({show: false, action: '', item: null});
-    setStatusNotes('');
   };
 
   const getStatusBadge = (status: string) => {
@@ -251,7 +251,7 @@ const MoneyCollection = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{formatCurrency(statistics.totalAmount)}</div>
+            <div className="text-2xl font-bold text-primary">{formatCurrency(statistics?.totalAmount || 0)}</div>
           </CardContent>
         </Card>
         
@@ -261,7 +261,7 @@ const MoneyCollection = () => {
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(statistics.pendingAmount)}</div>
+            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(statistics?.pendingAmount || 0)}</div>
           </CardContent>
         </Card>
         
@@ -271,7 +271,7 @@ const MoneyCollection = () => {
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(statistics.approvedAmount)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(statistics?.approvedAmount || 0)}</div>
           </CardContent>
         </Card>
         
@@ -281,7 +281,7 @@ const MoneyCollection = () => {
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(statistics.rejectedAmount)}</div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(statistics?.rejectedAmount || 0)}</div>
           </CardContent>
         </Card>
         
@@ -291,7 +291,7 @@ const MoneyCollection = () => {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{statistics.totalRecords}</div>
+            <div className="text-2xl font-bold">{statistics?.totalRecords || 0}</div>
           </CardContent>
         </Card>
       </div>
@@ -393,11 +393,11 @@ const MoneyCollection = () => {
                     <TableRow key={item.id}>
                       <TableCell>{formatDate(item.visitDate)}</TableCell>
                       <TableCell>
-                        <div>
-                          <div className="font-medium">{item.repName}</div>
-                          <div className="text-sm text-muted-foreground">{item.repEmail}</div>
-                        </div>
-                      </TableCell>
+                          <div>
+                            <div className="font-medium">{item.repName}</div>
+                            <div className="text-sm text-muted-foreground">{item.repEmail}</div>
+                          </div>
+                        </TableCell>
                       <TableCell>
                         <div>
                           <div className="font-medium">{item.pharmacyName}</div>

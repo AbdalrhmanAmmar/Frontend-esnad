@@ -22,15 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Search,
   Download,
@@ -421,44 +413,14 @@ const PharmaciesManagement = () => {
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
                   <div className="flex justify-center">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() => handlePageChange(pagination.currentPage - 1)}
-                            className={pagination.currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                          />
-                        </PaginationItem>
-                        
-                        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                          const pageNumber = i + 1;
-                          return (
-                            <PaginationItem key={pageNumber}>
-                              <PaginationLink
-                                onClick={() => handlePageChange(pageNumber)}
-                                isActive={pagination.currentPage === pageNumber}
-                                className="cursor-pointer"
-                              >
-                                {pageNumber}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        })}
-                        
-                        {pagination.totalPages > 5 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                        
-                        <PaginationItem>
-                          <PaginationNext
-                            onClick={() => handlePageChange(pagination.currentPage + 1)}
-                            className={pagination.currentPage === pagination.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
+                    <Pagination
+                      currentPage={pagination.currentPage}
+                      totalPages={pagination.totalPages}
+                      onPageChange={handlePageChange}
+                      showInfo={true}
+                      totalItems={pagination.totalItems}
+                      itemsPerPage={pagination.itemsPerPage}
+                    />
                   </div>
                 )}
               </div>

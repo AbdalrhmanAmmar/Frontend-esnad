@@ -125,7 +125,8 @@ const menuItems = [
     color: "text-green-600",
     requiredRoles: ["ADMIN", "SYSTEM_ADMIN", "FINANCIAL OFFICER"],
     subItems: [
-      { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign }
+      { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
+      { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart }
     ]
   },
   { 
@@ -214,9 +215,56 @@ export function AppSidebar() {
 
   // Filter items based on user role
   const getFilteredMenuItems = () => {
+    if (user?.role === "ORDERS OFFICERS") {
+      return [
+        { 
+          id: "orders-collector", 
+          title: "محصل الطلبيات", 
+          url: "/orders-collector",
+          icon: ShoppingCart, 
+          color: "text-orange-500"
+        }
+      ];
+    }
+    
+    if (user?.role === "FINANCIAL OFFICER") {
+      return [
+        { 
+          id: "financial-collector", 
+          title: "المحصل المالي", 
+          icon: Receipt, 
+          color: "text-green-600",
+          subItems: [
+            { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
+            { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart }
+          ]
+        }
+      ];
+    }
+    
     if (user?.role === "SYSTEM_ADMIN") {
       return [
         { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" }
+      ];
+    }
+    
+    if (user?.role === "SALES_REP" || user?.role === "SALES REP") {
+      return [
+        {
+          id:"visits-pharmacy-reports",
+          title: "زيارات الصيدليات",
+          url: "/visits/pharmacy",
+          icon: Pill,
+          color: "text-pink-500"
+        },
+        { 
+          id: "dashboards", 
+          title: "لوحة تحكم الصيدليات", 
+          url: "/dashboards/pharmacies",
+          icon: Pill, 
+          color: "text-teal-500"
+        },
+        { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600" }
       ];
     }
     
@@ -288,6 +336,22 @@ export function AppSidebar() {
   };
 
   const getFilteredManagementItems = () => {
+    if (user?.role === "SALES_REP" || user?.role === "SALES REP") {
+      return [
+        { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" }
+      ];
+    }
+    
+    if (user?.role === "ORDERS OFFICERS") {
+      return [
+        { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" }
+      ];
+    }
+    
+    if (user?.role === "FINANCIAL OFFICER") {
+      return [];
+    }
+    
     if (user?.role === "SYSTEM_ADMIN") {
       return [
         { 

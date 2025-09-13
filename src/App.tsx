@@ -49,8 +49,10 @@ import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 import PharmacyVisitForm from "./pages/PharmacyVisitForm";
 import MoneyCollection from "./pages/MoneyCollection";
+import OrdersCollection from "./pages/OrdersCollection";
 import SalesClients from "./pages/SalesClients";
 import PharmacyDashboard from "./pages/PharmacyDashboard";
+import OrdersCollector from "./pages/OrdersCollector";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +79,7 @@ const App = () => (
                     {/* Protected Routes */}
                     <Route path="/" element={
                       <ProtectedRoute>
-                        <Index />
+                        <Dashboard />
                       </ProtectedRoute>
                     } />
                     <Route path="/dashboards" element={
@@ -158,6 +160,16 @@ const App = () => (
                     <Route path="/financial-collector/money-collection" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'FINANCIAL OFFICER']}>
                         <MoneyCollection />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/financial-collector/orders-collection" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'FINANCIAL OFFICER']}>
+                        <OrdersCollection />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/orders-collector" element={
+                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS']}>
+                        <OrdersCollector />
                       </ProtectedRoute>
                     } />
                     <Route path="/collections/orders" element={
