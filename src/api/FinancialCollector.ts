@@ -100,8 +100,8 @@ export const updateOrderStatus = async (adminId: string, requestId: string, stat
   }
 };
 
-export const getSalesRepFinalOrders = async (salesRepId: string, page: number = 1, limit: number = 10) => {
-  const response = await api.get(`/pharmacy-requests/sales-rep/${salesRepId}/final-orders`, {
+export const getSalesRepFinalOrders = async (AdminId: string, page: number = 1, limit: number = 10) => {
+  const response = await api.get(`/pharmacy-requests/admin/all-final-orders`, {
     params: { page, limit }
   });
   return response.data;

@@ -167,7 +167,6 @@ const managementItems = [
           { id: "products-management", title: "إدارة المنتجات", url: "/management/data/products", icon: ShoppingBag },
           { id: "doctors-management", title: "إدارة الأطباء", url: "/management/data/doctors", icon: UserMinus },
           { id: "pharmacies-management", title: "إدارة الصيدليات", url: "/management/data/pharmacies", icon: Pill },
-          { id: "clinics-management", title: "إدارة العيادات", url: "/management/clinics", icon: Building2 },
           { id: "employees-management", title: "إدارة الموظفين", url: "/management/employees", icon: Users, requiredRoles: ["ADMIN"] },
           { id: "marketing-activities-management", title: "إدارة الأنشطة التسويقية", url: "/management/marketing-activities", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] }
         ]

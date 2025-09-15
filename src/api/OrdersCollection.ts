@@ -210,7 +210,7 @@ export const getOrdersWithFinalStatus = async (params: FilteredOrdersParams = {}
       }
     });
 
-    const response = await api.get(`/order-collector/final-orders?${queryParams.toString()}`);
+    const response = await api.get(`/pharmacy-requests/sales-rep/admin/final-orders?${queryParams.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching filtered orders:', error);

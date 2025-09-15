@@ -37,6 +37,8 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
+import { useAuthStore } from '@/stores/authStore';
+
 
 ChartJS.register(
   CategoryScale,
@@ -94,6 +96,7 @@ interface Filters {
 }
 
 const AdminDashboard: React.FC = () => {
+  const user = useAuthStore()
   const [ordersData, setOrdersData] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,10 +185,12 @@ const AdminDashboard: React.FC = () => {
   }, [ordersData]);
 
   // جلب البيانات من API
+  const AdminId = user.user._id
+  console.log(AdminId)
   const fetchOrders = async (page: number = 1) => {
     try {
       setLoading(true);
-      const result: ApiResponse = await getSalesRepFinalOrders('admin', page, 10);
+      const result: ApiResponse = await getSalesRepFinalOrders(AdminId, page, 10);
       
       if (result.success) {
         setOrdersData(result.data);
