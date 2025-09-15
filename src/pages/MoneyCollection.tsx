@@ -87,7 +87,7 @@ const MoneyCollection = () => {
     
     setUpdatingStatus(true);
     try {
-      await updateCollectionStatus(selectedItem.id, confirmAction.action, statusNotes);
+      await updateCollectionStatus(user.adminId, selectedItem.id, confirmAction.action, statusNotes);
       toast({
         title: "تم التحديث بنجاح ✅",
         description: `تم ${confirmAction.action === 'approved' ? 'قبول' : 'رفض'} التحصيل بنجاح`
@@ -137,7 +137,8 @@ const MoneyCollection = () => {
   };
 
   const handleExportToExcel = async () => {
-    if (!user?._id) {
+    const adminId = user?.adminId || user?._id;
+    if (!adminId) {
       toast({
         title: "خطأ في المصادقة",
         description: "يرجى تسجيل الدخول مرة أخرى",
@@ -155,7 +156,7 @@ const MoneyCollection = () => {
         description: "يتم تحضير ملف Excel، يرجى الانتظار...",
       });
       
-      const blob = await exportFinancialData(user._id, filters);
+      const blob = await exportFinancialData(adminId, filters);
       
       // التحقق من حجم الملف
       if (blob.size === 0) {

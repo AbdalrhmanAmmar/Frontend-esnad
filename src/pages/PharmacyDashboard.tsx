@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Filter, TrendingUp, TrendingDown, Package, DollarSign, Pill, BarChart3 } from 'lucide-react';
+import { Calendar, Filter, TrendingUp, TrendingDown, Package, DollarSign, Pill, BarChart3, Loader2, MapPin, Users, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { getSalesRepFinalOrders } from '@/api/FinancialCollector';
+import { useAuthStore } from '@/stores/authStore';
+import { toast } from '@/hooks/use-toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -36,159 +39,207 @@ ChartJS.register(
   Filler
 );
 
-// Mock Data
-const mockPharmacies = [
-  { id: 1, name: 'صيدلية النهضة', location: 'الرياض', type: 'مستقلة' },
-  { id: 2, name: 'صيدلية الدواء', location: 'جدة', type: 'سلسلة' },
-  { id: 3, name: 'صيدلية العافية', location: 'الدمام', type: 'مستقلة' },
-  { id: 4, name: 'صيدلية الشفاء', location: 'مكة', type: 'سلسلة' },
-  { id: 5, name: 'صيدلية الحياة', location: 'المدينة', type: 'مستقلة' }
-];
+// Types for API data
+interface Product {
+  productId: string;
+  productName: string;
+  productCode: string;
+  productBrand: string;
+  price: number;
+  quantity: number;
+  totalValue: number;
+}
 
-const mockBrands = [
-  { id: 1, name: 'فايزر', category: 'أدوية' },
-  { id: 2, name: 'نوفارتيس', category: 'أدوية' },
-  { id: 3, name: 'جونسون آند جونسون', category: 'منتجات صحية' },
-  { id: 4, name: 'روش', category: 'أدوية' },
-  { id: 5, name: 'سانوفي', category: 'أدوية' }
-];
+interface OrderData {
+  orderId: string;
+  visitDate: string;
+  pharmacyName: string;
+  pharmacyAddress: string;
+  pharmacyArea: string;
+  products: Product[];
+  totalOrderValue: number;
+  orderStatus: string;
+  FinalOrderStatusValue: string;
+  createdAt: string;
+}
 
-const mockProducts = [
-  { id: 1, name: 'باراسيتامول 500mg', brandId: 1, category: 'مسكنات' },
-  { id: 2, name: 'أموكسيسيلين 250mg', brandId: 2, category: 'مضادات حيوية' },
-  { id: 3, name: 'إيبوبروفين 400mg', brandId: 3, category: 'مسكنات' },
-  { id: 4, name: 'أوميبرازول 20mg', brandId: 4, category: 'أدوية المعدة' },
-  { id: 5, name: 'لوراتادين 10mg', brandId: 5, category: 'مضادات الحساسية' }
-];
-
-const mockSalesData = [
-  // يناير 2024
-  { pharmacyId: 1, productId: 1, brandId: 1, quantity: 150, revenue: 4500, date: '2024-01-15', month: 'يناير' },
-  { pharmacyId: 2, productId: 2, brandId: 2, quantity: 200, revenue: 8000, date: '2024-01-16', month: 'يناير' },
-  { pharmacyId: 3, productId: 3, brandId: 3, quantity: 120, revenue: 3600, date: '2024-01-17', month: 'يناير' },
-  { pharmacyId: 4, productId: 4, brandId: 4, quantity: 180, revenue: 5400, date: '2024-01-18', month: 'يناير' },
-  { pharmacyId: 5, productId: 5, brandId: 5, quantity: 90, revenue: 2700, date: '2024-01-19', month: 'يناير' },
-  { pharmacyId: 1, productId: 2, brandId: 2, quantity: 300, revenue: 12000, date: '2024-01-20', month: 'يناير' },
-  { pharmacyId: 2, productId: 1, brandId: 1, quantity: 250, revenue: 7500, date: '2024-01-21', month: 'يناير' },
-  { pharmacyId: 3, productId: 4, brandId: 4, quantity: 160, revenue: 4800, date: '2024-01-22', month: 'يناير' },
-  
-  // فبراير 2024
-  { pharmacyId: 1, productId: 3, brandId: 3, quantity: 220, revenue: 6600, date: '2024-02-05', month: 'فبراير' },
-  { pharmacyId: 2, productId: 4, brandId: 4, quantity: 180, revenue: 7200, date: '2024-02-08', month: 'فبراير' },
-  { pharmacyId: 3, productId: 1, brandId: 1, quantity: 190, revenue: 5700, date: '2024-02-12', month: 'فبراير' },
-  { pharmacyId: 4, productId: 2, brandId: 2, quantity: 240, revenue: 9600, date: '2024-02-15', month: 'فبراير' },
-  { pharmacyId: 5, productId: 3, brandId: 3, quantity: 130, revenue: 3900, date: '2024-02-18', month: 'فبراير' },
-  
-  // مارس 2024
-  { pharmacyId: 1, productId: 5, brandId: 5, quantity: 280, revenue: 8400, date: '2024-03-02', month: 'مارس' },
-  { pharmacyId: 2, productId: 3, brandId: 3, quantity: 320, revenue: 9600, date: '2024-03-05', month: 'مارس' },
-  { pharmacyId: 3, productId: 2, brandId: 2, quantity: 210, revenue: 8400, date: '2024-03-08', month: 'مارس' },
-  { pharmacyId: 4, productId: 1, brandId: 1, quantity: 350, revenue: 10500, date: '2024-03-12', month: 'مارس' },
-  { pharmacyId: 5, productId: 4, brandId: 4, quantity: 170, revenue: 5100, date: '2024-03-15', month: 'مارس' },
-  
-  // أبريل 2024
-  { pharmacyId: 1, productId: 4, brandId: 4, quantity: 400, revenue: 12000, date: '2024-04-03', month: 'أبريل' },
-  { pharmacyId: 2, productId: 5, brandId: 5, quantity: 290, revenue: 8700, date: '2024-04-07', month: 'أبريل' },
-  { pharmacyId: 3, productId: 3, brandId: 3, quantity: 260, revenue: 7800, date: '2024-04-10', month: 'أبريل' },
-  { pharmacyId: 4, productId: 5, brandId: 5, quantity: 310, revenue: 9300, date: '2024-04-14', month: 'أبريل' },
-  { pharmacyId: 5, productId: 1, brandId: 1, quantity: 200, revenue: 6000, date: '2024-04-18', month: 'أبريل' }
-];
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data: OrderData[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalRecords: number;
+    limit: number;
+  };
+}
 
 interface Filters {
-  fromDate: string;
-  toDate: string;
-  pharmacyId: string;
-  brandId: string;
-  productId: string;
+  page: number;
+  limit: number;
+  pharmacyName: string;
+  productName: string;
+  orderStatus: string;
 }
 
 const PharmacyDashboard = () => {
+  const { user } = useAuthStore();
   const [filters, setFilters] = useState<Filters>({
-    fromDate: '',
-    toDate: '',
-    pharmacyId: 'all',
-    brandId: 'all',
-    productId: 'all'
+    page: 1,
+    limit: 10,
+    pharmacyName: '',
+    productName: '',
+    orderStatus: 'all'
   });
 
-  const [filteredData, setFilteredData] = useState(mockSalesData);
+  const [ordersData, setOrdersData] = useState<OrderData[]>([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalRecords: 0,
+    limit: 10
+  });
+  const [loading, setLoading] = useState(false);
   const [statistics, setStatistics] = useState({
     totalRevenue: 0,
     totalQuantity: 0,
-    totalPharmacies: 0,
+    totalOrders: 0,
     averageOrderValue: 0
   });
 
-  // Filter data based on selected filters
+  // Fetch orders data from API
+  const fetchOrdersData = async () => {
+    if (!user?._id) return;
+    
+    setLoading(true);
+    try {
+      const response: ApiResponse = await getSalesRepFinalOrders(
+        user._id,
+        filters.page,
+        filters.limit
+      );
+      
+      if (response.success) {
+        let filteredOrders = response.data;
+        
+        // Apply client-side filters
+        if (filters.pharmacyName) {
+          filteredOrders = filteredOrders.filter(order => 
+            order.pharmacyName.toLowerCase().includes(filters.pharmacyName.toLowerCase())
+          );
+        }
+        
+        if (filters.productName) {
+          filteredOrders = filteredOrders.filter(order => 
+            order.products.some(product => 
+              product.productName.toLowerCase().includes(filters.productName.toLowerCase())
+            )
+          );
+        }
+        
+        if (filters.orderStatus !== 'all') {
+          filteredOrders = filteredOrders.filter(order => 
+            order.orderStatus === filters.orderStatus
+          );
+        }
+        
+        setOrdersData(filteredOrders);
+        setPagination(response.pagination);
+        
+        // Calculate statistics
+        const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalOrderValue, 0);
+        const totalQuantity = filteredOrders.reduce((sum, order) => 
+          sum + order.products.reduce((productSum, product) => productSum + product.quantity, 0), 0
+        );
+        const averageOrderValue = filteredOrders.length > 0 ? totalRevenue / filteredOrders.length : 0;
+        
+        setStatistics({
+          totalRevenue,
+          totalQuantity,
+          totalOrders: filteredOrders.length,
+          averageOrderValue
+        });
+      } else {
+        toast({
+          title: 'خطأ',
+          description: response.message || 'فشل في جلب البيانات',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء جلب البيانات',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    let filtered = mockSalesData;
+    fetchOrdersData();
+  }, [user?._id, filters.page, filters.limit]);
 
-    if (filters.fromDate) {
-      filtered = filtered.filter(item => item.date >= filters.fromDate);
+  const handleFilterChange = (key: keyof Filters, value: string | number) => {
+    if (key === 'page' || key === 'limit') {
+      setFilters(prev => ({ ...prev, [key]: Number(value) }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value as string }));
     }
-    if (filters.toDate) {
-      filtered = filtered.filter(item => item.date <= filters.toDate);
-    }
-    if (filters.pharmacyId && filters.pharmacyId !== 'all') {
-      filtered = filtered.filter(item => item.pharmacyId.toString() === filters.pharmacyId);
-    }
-    if (filters.brandId && filters.brandId !== 'all') {
-      filtered = filtered.filter(item => item.brandId.toString() === filters.brandId);
-    }
-    if (filters.productId && filters.productId !== 'all') {
-      filtered = filtered.filter(item => item.productId.toString() === filters.productId);
-    }
+  };
 
-    setFilteredData(filtered);
-
-    // Calculate statistics
-    const totalRevenue = filtered.reduce((sum, item) => sum + item.revenue, 0);
-    const totalQuantity = filtered.reduce((sum, item) => sum + item.quantity, 0);
-    const uniquePharmacies = new Set(filtered.map(item => item.pharmacyId)).size;
-    const averageOrderValue = filtered.length > 0 ? totalRevenue / filtered.length : 0;
-
-    setStatistics({
-      totalRevenue,
-      totalQuantity,
-      totalPharmacies: uniquePharmacies,
-      averageOrderValue
-    });
-  }, [filters]);
-
-  const handleFilterChange = (key: keyof Filters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const applyFilters = () => {
+    fetchOrdersData();
   };
 
   const clearFilters = () => {
     setFilters({
-      fromDate: '',
-      toDate: '',
-      pharmacyId: 'all',
-      brandId: 'all',
-      productId: 'all'
+      page: 1,
+      limit: 10,
+      pharmacyName: '',
+      productName: '',
+      orderStatus: 'all'
     });
   };
 
-  // Chart data preparation
+  // Chart data preparation from real API data
   const chartData = {
-    pharmacyRevenue: mockPharmacies.map(pharmacy => {
-      const revenue = filteredData
-        .filter(item => item.pharmacyId === pharmacy.id)
-        .reduce((sum, item) => sum + item.revenue, 0);
-      return { name: pharmacy.name, value: revenue };
-    }),
-    brandPerformance: mockBrands.map(brand => {
-      const revenue = filteredData
-        .filter(item => item.brandId === brand.id)
-        .reduce((sum, item) => sum + item.revenue, 0);
-      return { name: brand.name, value: revenue };
-    }),
-    productSales: mockProducts.map(product => {
-      const quantity = filteredData
-        .filter(item => item.productId === product.id)
-        .reduce((sum, item) => sum + item.quantity, 0);
-      return { name: product.name, value: quantity };
-    })
+    pharmacyRevenue: ordersData.reduce((acc, order) => {
+      const existing = acc.find(item => item.name === order.pharmacyName);
+      if (existing) {
+        existing.value += order.totalOrderValue;
+      } else {
+        acc.push({ name: order.pharmacyName, value: order.totalOrderValue });
+      }
+      return acc;
+    }, [] as { name: string; value: number }[]),
+    
+    brandPerformance: ordersData.reduce((acc, order) => {
+      order.products.forEach(product => {
+        const existing = acc.find(item => item.name === product.productBrand);
+        if (existing) {
+          existing.value += product.totalValue;
+        } else {
+          acc.push({ name: product.productBrand, value: product.totalValue });
+        }
+      });
+      return acc;
+    }, [] as { name: string; value: number }[]),
+    
+    productSales: ordersData.reduce((acc, order) => {
+      order.products.forEach(product => {
+        const existing = acc.find(item => item.name === product.productName);
+        if (existing) {
+          existing.value += product.quantity;
+        } else {
+          acc.push({ name: product.productName, value: product.quantity });
+        }
+      });
+      return acc;
+    }, [] as { name: string; value: number }[])
   };
 
   const formatCurrency = (amount: number) => {
@@ -209,7 +260,7 @@ const PharmacyDashboard = () => {
         <div className="flex items-center gap-2">
           <BarChart3 className="w-8 h-8 text-primary" />
           <Badge variant="secondary" className="text-sm">
-            {filteredData.length} عملية بيع
+            {loading ? 'جاري التحميل...' : `${ordersData.length} طلب نهائي`}
           </Badge>
         </div>
       </div>
@@ -226,81 +277,71 @@ const PharmacyDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fromDate">من تاريخ</Label>
+              <Label htmlFor="pharmacyName">اسم الصيدلية</Label>
               <Input
-                id="fromDate"
-                type="date"
-                value={filters.fromDate}
-                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                id="pharmacyName"
+                type="text"
+                placeholder="ابحث عن صيدلية..."
+                value={filters.pharmacyName}
+                onChange={(e) => handleFilterChange('pharmacyName', e.target.value)}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="toDate">إلى تاريخ</Label>
+              <Label htmlFor="productName">اسم المنتج</Label>
               <Input
-                id="toDate"
-                type="date"
-                value={filters.toDate}
-                onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                id="productName"
+                type="text"
+                placeholder="ابحث عن منتج..."
+                value={filters.productName}
+                onChange={(e) => handleFilterChange('productName', e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>الصيدلية</Label>
-              <Select value={filters.pharmacyId} onValueChange={(value) => handleFilterChange('pharmacyId', value)}>
+              <Label>حالة الطلب</Label>
+              <Select value={filters.orderStatus} onValueChange={(value) => handleFilterChange('orderStatus', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر الصيدلية" />
+                  <SelectValue placeholder="اختر حالة الطلب" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الصيدليات</SelectItem>
-                  {mockPharmacies.map(pharmacy => (
-                    <SelectItem key={pharmacy.id} value={pharmacy.id.toString()}>
-                      {pharmacy.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">قيد الانتظار</SelectItem>
+                  <SelectItem value="approved">موافق عليه</SelectItem>
+                  <SelectItem value="rejected">مرفوض</SelectItem>
+                  <SelectItem value="completed">مكتمل</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>العلامة التجارية</Label>
-              <Select value={filters.brandId} onValueChange={(value) => handleFilterChange('brandId', value)}>
+              <Label>عدد النتائج</Label>
+              <Select value={filters.limit.toString()} onValueChange={(value) => handleFilterChange('limit', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر العلامة التجارية" />
+                  <SelectValue placeholder="اختر العدد" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع العلامات التجارية</SelectItem>
-                  {mockBrands.map(brand => (
-                    <SelectItem key={brand.id} value={brand.id.toString()}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>المنتج</Label>
-              <Select value={filters.productId} onValueChange={(value) => handleFilterChange('productId', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر المنتج" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع المنتجات</SelectItem>
-                  {mockProducts.map(product => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           
           <div className="flex gap-2 mt-4">
-            <Button onClick={clearFilters} variant="outline" size="sm">
+            <Button onClick={applyFilters} disabled={loading}>
+               {loading ? (
+                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+               ) : (
+                 <Filter className="w-4 h-4 mr-2" />
+               )}
+               تطبيق الفلاتر
+             </Button>
+            <Button onClick={clearFilters} variant="outline" size="sm" disabled={loading}>
               مسح الفلاتر
             </Button>
           </div>
@@ -319,7 +360,7 @@ const PharmacyDashboard = () => {
               {formatCurrency(statistics.totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              من {filteredData.length} عملية بيع
+              من {ordersData.length} طلب نهائي
             </p>
           </CardContent>
         </Card>
@@ -341,15 +382,15 @@ const PharmacyDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">عدد الصيدليات</CardTitle>
+            <CardTitle className="text-sm font-medium">عدد الطلبات</CardTitle>
             <Pill className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {statistics.totalPharmacies}
+              {statistics.totalOrders}
             </div>
             <p className="text-xs text-muted-foreground">
-              صيدلية نشطة
+              طلب نهائي
             </p>
           </CardContent>
         </Card>
@@ -478,10 +519,10 @@ const PharmacyDashboard = () => {
                     {
                       label: 'الإيرادات (د.ل)',
                       data: [
-                        filteredData.filter(item => item.month === 'يناير').reduce((sum, item) => sum + item.revenue, 0),
-                        filteredData.filter(item => item.month === 'فبراير').reduce((sum, item) => sum + item.revenue, 0),
-                        filteredData.filter(item => item.month === 'مارس').reduce((sum, item) => sum + item.revenue, 0),
-                        filteredData.filter(item => item.month === 'أبريل').reduce((sum, item) => sum + item.revenue, 0)
+                        ordersData.filter(order => new Date(order.createdAt).getMonth() === 0).reduce((sum, order) => sum + order.totalOrderValue, 0),
+                        ordersData.filter(order => new Date(order.createdAt).getMonth() === 1).reduce((sum, order) => sum + order.totalOrderValue, 0),
+                        ordersData.filter(order => new Date(order.createdAt).getMonth() === 2).reduce((sum, order) => sum + order.totalOrderValue, 0),
+                        ordersData.filter(order => new Date(order.createdAt).getMonth() === 3).reduce((sum, order) => sum + order.totalOrderValue, 0)
                       ],
                       borderColor: 'rgb(59, 130, 246)',
                       backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -564,15 +605,11 @@ const PharmacyDashboard = () => {
             <div className="h-80">
               <Bar
                 data={{
-                  labels: mockPharmacies.map(pharmacy => pharmacy.name),
+                  labels: chartData.pharmacyRevenue.map(item => item.name),
                   datasets: [
                     {
                       label: 'إجمالي الإيرادات',
-                      data: mockPharmacies.map(pharmacy => 
-                        filteredData
-                          .filter(item => item.pharmacyId === pharmacy.id)
-                          .reduce((sum, item) => sum + item.revenue, 0)
-                      ),
+                      data: chartData.pharmacyRevenue.map(item => item.value),
                       backgroundColor: [
                         'rgba(34, 197, 94, 0.8)',
                         'rgba(59, 130, 246, 0.8)',
@@ -658,14 +695,32 @@ const PharmacyDashboard = () => {
             <div className="h-80 flex items-center justify-center">
               <Doughnut
                 data={{
-                  labels: mockProducts.map(product => product.name),
+                  labels: ordersData.flatMap(order => order.products)
+                    .reduce((acc, product) => {
+                      const existing = acc.find(p => p.productName === product.productName);
+                      if (existing) {
+                        existing.quantity += product.quantity;
+                      } else {
+                        acc.push({ productName: product.productName, quantity: product.quantity });
+                      }
+                      return acc;
+                    }, [] as { productName: string; quantity: number }[])
+                    .slice(0, 5)
+                    .map(product => product.productName),
                   datasets: [
                     {
-                      data: mockProducts.map(product => 
-                        filteredData
-                          .filter(item => item.productId === product.id)
-                          .reduce((sum, item) => sum + item.quantity, 0)
-                      ),
+                      data: ordersData.flatMap(order => order.products)
+                        .reduce((acc, product) => {
+                          const existing = acc.find(p => p.productName === product.productName);
+                          if (existing) {
+                            existing.quantity += product.quantity;
+                          } else {
+                            acc.push({ productName: product.productName, quantity: product.quantity });
+                          }
+                          return acc;
+                        }, [] as { productName: string; quantity: number }[])
+                        .slice(0, 5)
+                        .map(product => product.quantity),
                       backgroundColor: [
                         'rgba(239, 68, 68, 0.8)',
                         'rgba(245, 158, 11, 0.8)',
@@ -736,14 +791,10 @@ const PharmacyDashboard = () => {
             <div className="h-80 flex items-center justify-center">
               <Pie
                 data={{
-                  labels: mockBrands.map(brand => brand.name),
+                  labels: chartData.brandPerformance.map(item => item.name),
                   datasets: [
                     {
-                      data: mockBrands.map(brand => 
-                        filteredData
-                          .filter(item => item.brandId === brand.id)
-                          .reduce((sum, item) => sum + item.revenue, 0)
-                      ),
+                      data: chartData.brandPerformance.map(item => item.value),
                       backgroundColor: [
                         'rgba(16, 185, 129, 0.8)',
                         'rgba(59, 130, 246, 0.8)',
@@ -801,45 +852,417 @@ const PharmacyDashboard = () => {
         </Card>
       </div>
 
+      {/* Area Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Area Performance Overview */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-600" />
+              تحليل الأداء حسب المناطق
+            </CardTitle>
+            <CardDescription>
+              توزيع الطلبات والمبيعات عبر المناطق المختلفة
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <Bar
+                data={{
+                  labels: (() => {
+                    const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number } }, order) => {
+                      const area = order.pharmacyArea || 'غير محدد';
+                      if (!acc[area]) {
+                        acc[area] = { orders: 0, value: 0 };
+                      }
+                      acc[area].orders += 1;
+                      acc[area].value += order.totalOrderValue;
+                      return acc;
+                    }, {});
+                    return Object.keys(areaStats).slice(0, 8);
+                  })(),
+                  datasets: [
+                    {
+                      label: 'عدد الطلبات',
+                      data: (() => {
+                        const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number } }, order) => {
+                          const area = order.pharmacyArea || 'غير محدد';
+                          if (!acc[area]) {
+                            acc[area] = { orders: 0, value: 0 };
+                          }
+                          acc[area].orders += 1;
+                          acc[area].value += order.totalOrderValue;
+                          return acc;
+                        }, {});
+                        return Object.keys(areaStats).slice(0, 8).map(area => areaStats[area].orders);
+                      })(),
+                      backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                      borderColor: 'rgb(59, 130, 246)',
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      borderSkipped: false,
+                    },
+                    {
+                      label: 'قيمة المبيعات (بالآلاف)',
+                      data: (() => {
+                        const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number } }, order) => {
+                          const area = order.pharmacyArea || 'غير محدد';
+                          if (!acc[area]) {
+                            acc[area] = { orders: 0, value: 0 };
+                          }
+                          acc[area].orders += 1;
+                          acc[area].value += order.totalOrderValue;
+                          return acc;
+                        }, {});
+                        return Object.keys(areaStats).slice(0, 8).map(area => Math.round(areaStats[area].value / 1000));
+                      })(),
+                      backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                      borderColor: 'rgb(16, 185, 129)',
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      borderSkipped: false,
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'top' as const,
+                      labels: {
+                        font: {
+                          family: 'Cairo, sans-serif',
+                          size: 12
+                        },
+                        padding: 20,
+                        usePointStyle: true
+                      }
+                    },
+                    tooltip: {
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      titleColor: '#fff',
+                      bodyColor: '#fff',
+                      cornerRadius: 8,
+                      callbacks: {
+                        label: function(context) {
+                          if (context.datasetIndex === 1) {
+                            return `${context.dataset.label}: ${(context.parsed.y * 1000).toLocaleString('ar-LY')} د.ل`;
+                          }
+                          return `${context.dataset.label}: ${context.parsed.y.toLocaleString('ar-LY')}`;
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    x: {
+                      grid: {
+                        display: false
+                      },
+                      ticks: {
+                        font: {
+                          family: 'Cairo, sans-serif',
+                          size: 11
+                        },
+                        maxRotation: 45
+                      }
+                    },
+                    y: {
+                      grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                      },
+                      ticks: {
+                        font: {
+                          family: 'Cairo, sans-serif',
+                          size: 11
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Performing Areas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-green-600" />
+              أفضل المناطق أداءً
+            </CardTitle>
+            <CardDescription>
+              المناطق الأكثر نشاطاً في المبيعات
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(() => {
+                const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number; pharmacies: Set<string> } }, order) => {
+                  const area = order.pharmacyArea || 'غير محدد';
+                  if (!acc[area]) {
+                    acc[area] = { orders: 0, value: 0, pharmacies: new Set() };
+                  }
+                  acc[area].orders += 1;
+                  acc[area].value += order.totalOrderValue;
+                  acc[area].pharmacies.add(order.pharmacyName);
+                  return acc;
+                }, {});
+                
+                return Object.entries(areaStats)
+                  .sort(([,a], [,b]) => b.value - a.value)
+                  .slice(0, 5)
+                  .map(([area, stats], index) => (
+                    <div key={area} className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{area}</h4>
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <Package className="w-3 h-3" />
+                              {stats.orders} طلب
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {stats.pharmacies.size} صيدلية
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-600">
+                          {formatCurrency(stats.value)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          متوسط: {formatCurrency(stats.value / stats.orders)}
+                        </div>
+                      </div>
+                    </div>
+                  ));
+              })()}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Area Distribution Pie Chart */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-purple-600" />
+            توزيع المبيعات حسب المناطق
+          </CardTitle>
+          <CardDescription>
+            النسب المئوية لتوزيع المبيعات عبر المناطق
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="h-80">
+              <Doughnut
+                data={{
+                  labels: (() => {
+                    const areaStats = ordersData.reduce((acc: { [key: string]: number }, order) => {
+                      const area = order.pharmacyArea || 'غير محدد';
+                      acc[area] = (acc[area] || 0) + order.totalOrderValue;
+                      return acc;
+                    }, {});
+                    return Object.keys(areaStats).slice(0, 6);
+                  })(),
+                  datasets: [
+                    {
+                      data: (() => {
+                        const areaStats = ordersData.reduce((acc: { [key: string]: number }, order) => {
+                          const area = order.pharmacyArea || 'غير محدد';
+                          acc[area] = (acc[area] || 0) + order.totalOrderValue;
+                          return acc;
+                        }, {});
+                        return Object.keys(areaStats).slice(0, 6).map(area => areaStats[area]);
+                      })(),
+                      backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(168, 85, 247, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(6, 182, 212, 0.8)'
+                      ],
+                      borderColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(16, 185, 129)',
+                        'rgb(245, 158, 11)',
+                        'rgb(168, 85, 247)',
+                        'rgb(239, 68, 68)',
+                        'rgb(6, 182, 212)'
+                      ],
+                      borderWidth: 3,
+                      hoverOffset: 15
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'right' as const,
+                      labels: {
+                        font: {
+                          family: 'Cairo, sans-serif',
+                          size: 11
+                        },
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                      }
+                    },
+                    tooltip: {
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      titleColor: '#fff',
+                      bodyColor: '#fff',
+                      cornerRadius: 8,
+                      displayColors: false,
+                      callbacks: {
+                        label: function(context) {
+                          const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                          const percentage = ((context.parsed / total) * 100).toFixed(1);
+                          return `${context.label}: ${formatCurrency(context.parsed)} (${percentage}%)`;
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="font-semibold text-lg mb-4">إحصائيات تفصيلية للمناطق</h4>
+              {(() => {
+                const areaStats = ordersData.reduce((acc: { [key: string]: { value: number; orders: number; pharmacies: Set<string> } }, order) => {
+                  const area = order.pharmacyArea || 'غير محدد';
+                  if (!acc[area]) {
+                    acc[area] = { value: 0, orders: 0, pharmacies: new Set() };
+                  }
+                  acc[area].value += order.totalOrderValue;
+                  acc[area].orders += 1;
+                  acc[area].pharmacies.add(order.pharmacyName);
+                  return acc;
+                }, {});
+                
+                const totalValue = Object.values(areaStats).reduce((sum, stat) => sum + stat.value, 0);
+                
+                return Object.entries(areaStats)
+                  .sort(([,a], [,b]) => b.value - a.value)
+                  .slice(0, 6)
+                  .map(([area, stats]) => {
+                    const percentage = ((stats.value / totalValue) * 100).toFixed(1);
+                    return (
+                      <div key={area} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium text-gray-900">{area}</div>
+                          <div className="text-sm text-gray-600">
+                            {stats.orders} طلب • {stats.pharmacies.size} صيدلية
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-green-600">{formatCurrency(stats.value)}</div>
+                          <div className="text-sm text-gray-500">{percentage}%</div>
+                        </div>
+                      </div>
+                    );
+                  });
+              })()}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Data Table */}
       <Card>
         <CardHeader>
-          <CardTitle>تفاصيل المبيعات</CardTitle>
-          <CardDescription>جدول تفصيلي بجميع عمليات البيع</CardDescription>
+          <CardTitle>تفاصيل الطلبات النهائية</CardTitle>
+          <CardDescription>جدول تفصيلي بجميع الطلبات النهائية</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-right p-2 font-medium">التاريخ</th>
+                  <th className="text-right p-2 font-medium">تاريخ الزيارة</th>
                   <th className="text-right p-2 font-medium">الصيدلية</th>
-                  <th className="text-right p-2 font-medium">المنتج</th>
-                  <th className="text-right p-2 font-medium">العلامة التجارية</th>
-                  <th className="text-right p-2 font-medium">الكمية</th>
-                  <th className="text-right p-2 font-medium">الإيراد</th>
+                  <th className="text-right p-2 font-medium">المنطقة</th>
+                  <th className="text-right p-2 font-medium">عدد المنتجات</th>
+                  <th className="text-right p-2 font-medium">قيمة الطلب</th>
+                  <th className="text-right p-2 font-medium">حالة الطلب</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((item, index) => {
-                  const pharmacy = mockPharmacies.find(p => p.id === item.pharmacyId);
-                  const product = mockProducts.find(p => p.id === item.productId);
-                  const brand = mockBrands.find(b => b.id === item.brandId);
-                  
-                  return (
-                    <tr key={index} className="border-b hover:bg-muted/50">
-                      <td className="p-2">{format(new Date(item.date), 'dd/MM/yyyy', { locale: ar })}</td>
-                      <td className="p-2">{pharmacy?.name}</td>
-                      <td className="p-2">{product?.name}</td>
-                      <td className="p-2">{brand?.name}</td>
-                      <td className="p-2">{item.quantity}</td>
-                      <td className="p-2 font-medium text-green-600">{formatCurrency(item.revenue)}</td>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                      <p>جاري تحميل البيانات...</p>
+                    </td>
+                  </tr>
+                ) : ordersData.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      لا توجد طلبات نهائية
+                    </td>
+                  </tr>
+                ) : (
+                  ordersData.map((order, index) => (
+                    <tr key={order.orderId} className="border-b hover:bg-muted/50">
+                      <td className="p-2">{format(new Date(order.visitDate), 'dd/MM/yyyy', { locale: ar })}</td>
+                      <td className="p-2">{order.pharmacyName}</td>
+                      <td className="p-2">{order.pharmacyArea}</td>
+                      <td className="p-2">{order.products.length}</td>
+                      <td className="p-2 font-medium text-green-600">{formatCurrency(order.totalOrderValue)}</td>
+                      <td className="p-2">
+                        <Badge variant={order.orderStatus === 'approved' ? 'default' : order.orderStatus === 'pending' ? 'secondary' : 'destructive'}>
+                          {order.orderStatus === 'approved' ? 'موافق عليه' : order.orderStatus === 'pending' ? 'قيد الانتظار' : 'مرفوض'}
+                        </Badge>
+                      </td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                عرض {((pagination.currentPage - 1) * pagination.limit) + 1} إلى {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} من {pagination.totalRecords} نتيجة
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={pagination.currentPage === 1 || loading}
+                  onClick={() => handleFilterChange('page', pagination.currentPage - 1)}
+                >
+                  السابق
+                </Button>
+                <span className="text-sm">
+                  صفحة {pagination.currentPage} من {pagination.totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={pagination.currentPage === pagination.totalPages || loading}
+                  onClick={() => handleFilterChange('page', pagination.currentPage + 1)}
+                >
+                  التالي
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

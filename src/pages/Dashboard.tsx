@@ -870,7 +870,7 @@ const Dashboard: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                {/* <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">+15%</div>
@@ -898,7 +898,7 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 

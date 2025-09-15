@@ -68,17 +68,43 @@ export const getFinancialPharmacyData = async (adminId: string, filters: Financi
   }
 };
 
-export const updateCollectionStatus = async (requestId: string, status: string, notes?: string) => {
+export const updateCollectionStatus = async (adminId: string, requestId: string, status: string, notes?: string) => {
   try {
-    const response = await api.put(`/financial-pharmacy/collection-status/${requestId}`, {
-      status,
-      notes
-    });
+    const requestBody: any = {
+      status: status,
+    };
+    
+    if (notes) {
+      requestBody.notes = notes;
+    }
+    
+    const response = await api.put(`/financial-pharmacy/collection-status/${requestId}`, requestBody);
     return response.data;
   } catch (error: any) {
     console.error('Error updating collection status:', error);
     throw new Error(error.response?.data?.message || 'فشل في تحديث حالة التحصيل');
   }
+};
+
+// تحديث حالة الطلب النهائية
+export const updateOrderStatus = async (adminId: string, requestId: string, status: string, notes?: string) => {
+  try {
+    const response = await api.put(`/financial-pharmacy/order-status/${adminId}/${requestId}`, {
+      status,
+      ...(notes && { notes })
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating order status:', error);
+    throw new Error(error.response?.data?.message || 'فشل في تحديث حالة الطلب');
+  }
+};
+
+export const getSalesRepFinalOrders = async (salesRepId: string, page: number = 1, limit: number = 10) => {
+  const response = await api.get(`/pharmacy-requests/sales-rep/${salesRepId}/final-orders`, {
+    params: { page, limit }
+  });
+  return response.data;
 };
 
 // تصدير البيانات المالية إلى ملف Excel

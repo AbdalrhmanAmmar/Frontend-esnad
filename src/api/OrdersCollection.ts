@@ -1,5 +1,15 @@
 import { api } from './api';
 
+export interface ProductData {
+  productId: string;
+  productName: string;
+  productCode: string;
+  productBrand: string;
+  productPrice: number;
+  quantity: number;
+  totalValue: number;
+}
+
 export interface OrderData {
   id: string;
   orderId: string;
@@ -10,14 +20,11 @@ export interface OrderData {
   pharmacyName: string;
   pharmacyArea: string;
   pharmacyCity: string;
-  productId: string;
-  productName: string;
-  productCode: string;
-  productBrand: string;
-  productPrice: number;
-  quantity: number;
-  totalValue: number;
-  orderStatus?: 'pending' | 'approved' | 'rejected';
+  products: ProductData[];
+  totalOrderValue: number;
+  orderStatus: string;
+  finalOrderStatus: boolean;
+  finalOrderStatusValue: string;
 }
 
 export interface OrderStatistics {
@@ -27,6 +34,13 @@ export interface OrderStatistics {
     totalOrders: number;
     uniqueProductsCount: number;
     averageOrderValue: number;
+  };
+  statusBreakdown: {
+    totalAmount: number;
+    pendingAmount: number;
+    approvedAmount: number;
+    rejectedAmount: number;
+    totalRecords: number;
   };
   productBreakdown: Array<{
     productName: string;
@@ -71,6 +85,7 @@ export const getSalesRepProductsData = async (
   if (filters.salesRepId) params.append('salesRepId', filters.salesRepId);
   if (filters.startDate) params.append('startDate', filters.startDate);
   if (filters.endDate) params.append('endDate', filters.endDate);
+  if (filters.orderStatus) params.append('orderStatus', filters.orderStatus);
 
   const response = await api.get(`/financial-pharmacy/${adminId}/sales-products?${params.toString()}`);
   return response.data;
@@ -93,11 +108,11 @@ export const exportOrdersData = async (
   return response.data;
 };
 
-export const updateOrderStatus = async (orderId: string, orderStatus: string, adminId: string) => {
+export const updateOrderStatus = async (adminId: string, requestId: string, status: string, notes?: string) => {
   try {
-    const response = await api.put(`/financial-pharmacy/${orderId}`, {
-      orderStatus,
-      adminId
+    const response = await api.put(`/financial-pharmacy/order-status/${adminId}/${requestId}`, {
+      status,
+      notes
     });
     return response.data;
   } catch (error: any) {

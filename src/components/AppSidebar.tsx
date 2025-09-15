@@ -65,7 +65,8 @@ const menuItems = [
     subItems: [
       { id: "clinic-analytics", title: "تحليلات العيادات المتقدمة", url: "/analytics/clinics", icon: Building2 },
       { id: "clinic-dashboard", title: "لوحة تحكم العيادات", url: "/dashboards/clinics", icon: Building2 },
-      { id: "pharmacy-dashboard", title: "لوحة تحكم الصيدليات", url: "/dashboards/pharmacies", icon: Pill }
+      { id: "pharmacy-dashboard", title: "لوحة تحكم الصيدليات", url: "/dashboards/pharmacies", icon: Pill },
+      { id: "admin-dashboard", title: "لوحة تحكم الأدمن", url: "/dashboards/admin", icon: Settings, requiredRoles: ["ADMIN", "admin", "SYSTEM_ADMIN"] }
     ]
   },
   { 
@@ -126,7 +127,8 @@ const menuItems = [
     requiredRoles: ["ADMIN", "SYSTEM_ADMIN", "FINANCIAL OFFICER"],
     subItems: [
       { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
-      { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart }
+      { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart },
+      { id: "financial-orders-collection", title: "مجموعة الطلبات المالية", url: "/financial-collector/financial-orders-collection", icon: BarChart3 }
     ]
   },
   { 
@@ -182,7 +184,8 @@ const managementItems = [
     subItems: [
       { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
       { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
-      { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] }
+      { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] },
+      { id: "all-admins", title: "جميع الأدمن", url: "/management/all-admins", icon: Users, requiredRoles: ["SYSTEM_ADMIN"] }
     ]
   },
 ];
@@ -304,6 +307,13 @@ export function AppSidebar() {
     if (user?.role === "ADMIN") {
       return [
         { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
+        { 
+          id: "admin-dashboard", 
+          title: "لوحة تحكم الأدمن", 
+          url: "/dashboards/admin", 
+          icon: BarChart3, 
+          color: "text-teal-500"
+        },
         { 
           id: "requests-list", 
           title: "قائمة الطلبات", 

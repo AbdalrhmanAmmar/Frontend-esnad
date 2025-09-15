@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ar } from 'date-fns/locale';
+
+registerLocale('ar', ar);
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +25,7 @@ const PharmacyVisitForm = () => {
   const { toast } = useToast();
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   const {
     pharmacies,
@@ -207,14 +213,23 @@ const PharmacyVisitForm = () => {
                   <Calendar className="h-4 w-4" />
                   تاريخ الزيارة *
                 </Label>
-                <Input
-                  id="visitDate"
-                  type="date"
-                  value={currentVisit.visitDate}
-                  onChange={(e) => handleInputChange('visitDate', e.target.value)}
-                  required
-                  className="max-w-md"
-                />
+                <div className="relative max-w-md">
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={(date) => {
+                      setSelectedDate(date);
+                      handleInputChange('visitDate', date ? date.toISOString().split('T')[0] : '');
+                    }}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="اختر تاريخ الزيارة"
+                    className="w-full text-right pr-10 pl-4 py-2 bg-background border-2 border-primary/20 hover:border-primary focus:border-primary transition-all duration-200 rounded-lg shadow-sm focus:shadow-md focus:ring-2 focus:ring-primary/20 outline-none"
+                    calendarClassName="custom-datepicker"
+                    popperClassName="z-50"
+                    showPopperArrow={false}
+                    locale="ar"
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
+                </div>
               </div>
 
               {/* اسم الصيدلية */}
