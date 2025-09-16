@@ -150,7 +150,7 @@ const managementItems = [
     color: "text-gray-500",
     requiredRoles: ["ADMIN"],
     subItems: [
-      { id: "work-days", title: "إدارة أيام العمل", url: "/management/work-days", icon: Calendar },
+      { id: "work-days", title: "إدارة أيام العمل", url: "/work-day-calender", icon: Calendar },
       { id: "documents", title: "رفع المنتجات", url: "/management/documents", icon: FolderOpen },
       { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
       { id: "doctors-upload", title: "رفع ملفات الأطباء", url: "/management/doctors-upload", icon: Stethoscope },

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/AppSidebar";
+import FloatingChatbot from "@/components/FloatingChatbot";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -55,6 +56,8 @@ import PharmacyDashboard from "./pages/PharmacyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrdersCollector from "./pages/OrdersCollector";
 import FinancialOrdersCollection from "./pages/FinancialOrdersCollection";
+import WorkCalendar from "./pages/WorkdayCalender";
+
 
 const queryClient = new QueryClient();
 
@@ -139,6 +142,7 @@ const App = () => (
                         <SalesClients />
                       </ProtectedRoute>
                     } />
+
                     <Route path="/orders" element={
                       <ProtectedRoute>
                         <Dashboard />
@@ -339,6 +343,11 @@ const App = () => (
                         <Profile />
                       </ProtectedRoute>
                     } />
+                    <Route path="/work-day-calender" element={
+                      <ProtectedRoute>
+                        <WorkCalendar />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/my-data" element={
                       <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
                         <MyDataList />
@@ -443,6 +452,7 @@ const App = () => (
                },
              }}
            />
+          <FloatingChatbot />
         </TooltipProvider>
       </ThemeProvider>
     </BrowserRouter>
