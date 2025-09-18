@@ -90,11 +90,23 @@ const FinancialOrdersCollection: React.FC = () => {
   const [filters, setFilters] = useState({});
   const { toast } = useToast();
   const { user } = useAuthStore();
+  
+  const id = user?.adminId || user?._id;
 
   const fetchData = async (page = 1, filterParams = {}) => {
+    if (!user?._id) {
+      toast({
+        title: 'خطأ',
+        description: 'لم يتم العثور على معرف المستخدم',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      const response = await getSalesRepProductsData({
+      const response = await getSalesRepProductsData(user._id, {
         page,
         limit: 10,
         ...filterParams
@@ -124,8 +136,10 @@ const FinancialOrdersCollection: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData(currentPage, filters);
-  }, [currentPage]);
+    if (user) {
+      fetchData(currentPage, filters);
+    }
+  }, [currentPage, user]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

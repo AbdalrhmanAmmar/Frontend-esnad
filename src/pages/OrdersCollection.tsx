@@ -91,6 +91,7 @@ const OrdersCollection: React.FC = () => {
 
   const fetchData = async (page: number = 1, currentFilters: FilterOptions = filters) => {
     const id = user?.adminId || user?._id;
+    console.log(id)
     if (!id) return;
     
     setLoading(true);
