@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster as HotToaster } from 'react-hot-toast';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -63,7 +63,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
+    <HashRouter>
       <ThemeProvider defaultTheme="light" storageKey="medical-rep-theme">
         <TooltipProvider>
           <SidebarProvider defaultOpen={true}>
@@ -455,7 +455,7 @@ const App = () => (
           <FloatingChatbot />
         </TooltipProvider>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   </QueryClientProvider>
 );
 

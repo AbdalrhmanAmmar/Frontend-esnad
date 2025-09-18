@@ -464,7 +464,7 @@ const MoneyCollection = () => {
                                   <div>
                                     <Label>صورة الوصل</Label>
                                     <img 
-                                      src={`${import.meta.env.VITE_API_URL}/${selectedItem.receiptImage}`} 
+                                      src={`${import.meta.env.VITE_API_BASE}/${selectedItem.receiptImage}`} 
                                       alt="صورة الوصل" 
                                       className="mt-2 max-w-full h-auto rounded-lg border"
                                     />

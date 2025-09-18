@@ -320,9 +320,33 @@ export interface DeleteEmployeeResponse {
 // Update Employee Function
 export const updateEmployee = async (id: string, data: UpdateEmployeeData): Promise<UpdateEmployeeResponse> => {
   try {
+    console.log('Updating employee:', { id, data });
+    console.log('API Base URL:', api.defaults.baseURL);
     const response = await api.put(`/users/${id}`, data);
+    console.log('Employee update response:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('Error updating employee:', {
+      id,
+      data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.response?.data?.message || error.message,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL
+    });
+    
+    // Provide more specific error messages
+    if (error.response?.status === 404) {
+      throw new Error(`الموظف غير موجود أو تم حذفه (ID: ${id})`);
+    } else if (error.response?.status === 400) {
+      throw new Error(error.response?.data?.message || 'بيانات غير صحيحة');
+    } else if (error.response?.status === 500) {
+      throw new Error('خطأ في الخادم - يرجى المحاولة لاحقاً');
+    } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+      throw new Error('خطأ في الاتصال بالخادم - تحقق من الاتصال بالإنترنت');
+    }
+    
     throw error;
   }
 };
@@ -340,9 +364,30 @@ export const deleteEmployee = async (id: string): Promise<DeleteEmployeeResponse
 // Get Employee By ID Function
 export const getEmployeeById = async (id: string): Promise<{ success: boolean; data: Employee; message?: string }> => {
   try {
+    console.log('Fetching employee with ID:', id);
+    console.log('API Base URL:', api.defaults.baseURL);
     const response = await api.get(`/users/${id}`);
+    console.log('Employee fetch response:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('Error fetching employee:', {
+      id,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.response?.data?.message || error.message,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL
+    });
+    
+    // Provide more specific error messages
+    if (error.response?.status === 404) {
+      throw new Error(`الموظف غير موجود أو تم حذفه (ID: ${id})`);
+    } else if (error.response?.status === 500) {
+      throw new Error('خطأ في الخادم - يرجى المحاولة لاحقاً');
+    } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+      throw new Error('خطأ في الاتصال بالخادم - تحقق من الاتصال بالإنترنت');
+    }
+    
     throw error;
   }
 };
