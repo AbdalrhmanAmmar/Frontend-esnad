@@ -21,7 +21,6 @@ import {
   Store
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { api } from '@/api/api';
 
 
 interface User {
@@ -90,8 +89,8 @@ const ClientsList: React.FC = () => {
   const fetchUserResources = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/teamproducts/${userId}/resources`);
-      const result = response.data;
+      const response = await fetch(`http://localhost:4000/api/teamproducts/${userId}/resources`);
+      const result = await response.json();
       
       setData(result);
       toast.success('تم تحميل البيانات بنجاح');

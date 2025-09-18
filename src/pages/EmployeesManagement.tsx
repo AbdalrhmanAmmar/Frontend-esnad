@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import { getEmployeesByAdmin, deleteEmployee, exportEmployeesToExcel, Employee, 
 import { useAuthStore } from '@/stores/authStore';
 
 const EmployeesManagement: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuthStore();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -420,7 +422,7 @@ const EmployeesManagement: React.FC = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.location.href = `/edit-employee/${employee._id}`}
+                                onClick={() => navigate(`/edit-employee/${employee._id}`)}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>

@@ -7,10 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Save, Loader2 } from 'lucide-react';
 import { getEmployeeById, updateEmployee, UpdateEmployeeData } from '@/api/Users';
 import { Employee } from '@/api/Users';
-import { logApiDebugInfo, checkEmployeeEndpoint } from '@/utils/apiDebug';
 
 interface EditEmployeeFormData {
   firstName: string;
@@ -50,26 +49,12 @@ const EditEmployee: React.FC = () => {
   useEffect(() => {
     const fetchEmployee = async () => {
       if (!id) {
-        toast({
-          title: 'خطأ',
-          description: 'معرف الموظف مفقود',
-          variant: 'destructive'
-        });
         navigate('/management/employees');
         return;
       }
 
       try {
         setFetchingEmployee(true);
-        
-        // Log debug information
-        logApiDebugInfo();
-        
-        // Check if employee endpoint exists
-        console.log('Checking employee endpoint for ID:', id);
-        const endpointCheck = await checkEmployeeEndpoint(id);
-        console.log('Endpoint check result:', endpointCheck);
-        
         const response = await getEmployeeById(id);
         
         if (response.success && response.data) {
@@ -86,34 +71,15 @@ const EditEmployee: React.FC = () => {
             district: employee.district || '',
             isActive: employee.isActive ?? true
           });
-        } else {
-          throw new Error(response.message || 'فشل في جلب بيانات الموظف');
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error fetching employee:', error);
-        
-        let errorMessage = 'فشل في جلب بيانات الموظف';
-        
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.response?.status === 404) {
-          errorMessage = `الموظف غير موجود (ID: ${id})`;
-        } else if (error.response?.status === 500) {
-          errorMessage = 'خطأ في الخادم - يرجى المحاولة لاحقاً';
-        } else if (!error.response) {
-          errorMessage = 'خطأ في الاتصال بالخادم - تحقق من الاتصال بالإنترنت';
-        }
-        
         toast({
-          title: 'خطأ في جلب البيانات',
-          description: errorMessage,
+          title: 'خطأ',
+          description: 'فشل في جلب بيانات الموظف',
           variant: 'destructive'
         });
-        
-        // Don't navigate away immediately, give user option to retry
-        setTimeout(() => {
-          navigate('/management/employees');
-        }, 3000);
+        navigate('/management/employees');
       } finally {
         setFetchingEmployee(false);
       }
@@ -202,26 +168,9 @@ const EditEmployee: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error updating employee:', error);
-      
-      let errorMessage = 'حدث خطأ أثناء تحديث الموظف';
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.status === 404) {
-        errorMessage = `الموظف غير موجود أو تم حذفه (ID: ${id})`;
-      } else if (error.response?.status === 400) {
-        errorMessage = 'البيانات المدخلة غير صحيحة';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'خطأ في الخادم - يرجى المحاولة لاحقاً';
-      } else if (!error.response) {
-        errorMessage = 'خطأ في الاتصال بالخادم - تحقق من الاتصال بالإنترنت';
-      }
-      
       toast({
-        title: 'خطأ في التحديث',
-        description: errorMessage,
+        title: 'خطأ',
+        description: error.response?.data?.message || 'حدث خطأ أثناء تحديث الموظف',
         variant: 'destructive'
       });
     } finally {
