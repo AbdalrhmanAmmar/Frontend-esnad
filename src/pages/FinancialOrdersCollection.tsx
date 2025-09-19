@@ -424,7 +424,6 @@
 // export default FinancialOrdersCollection;
 
 import React from 'react'
-
 function FinancialOrdersCollection() {
   return (
     <div>FinancialOrdersCollection</div>

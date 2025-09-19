@@ -5,14 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Package, Calendar, User, Building2, RefreshCw, Edit3, TrendingUp, Users, Store, Download } from 'lucide-react';
 import { 
-  getOrdersWithFinalStatus, 
   getSalesReps, 
   getPharmacies, 
   exportFinalOrdersToExcel,
-  FinalOrderData, 
   FilteredOrdersParams,
   FilteredOrdersResponse 
 } from '@/api/OrdersCollection';
+import { getFinalOrders, FinalOrderData } from '@/api/OrdersOfficer';
 import { useToast } from '@/hooks/use-toast';
 import { OrderEditModal } from '@/components/ui/OrderEditModal';
 import { Pagination } from "@/components/ui/pagination";
@@ -54,30 +53,55 @@ const OrdersCollector: React.FC = () => {
     try {
       setLoading(true);
       
-      const params: FilteredOrdersParams = {
-        page,
-        limit: 10,
-        ...(currentFilters.search && { search: currentFilters.search }),
-        ...(currentFilters.status && currentFilters.status !== 'all' && { status: currentFilters.status as 'pending' | 'approved' | 'rejected' }),
-        ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRep: currentFilters.salesRep }),
-        ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacy: currentFilters.pharmacy }),
-        ...(currentFilters.startDate && { startDate: currentFilters.startDate.toISOString().split('T')[0] }),
-        ...(currentFilters.endDate && { endDate: currentFilters.endDate.toISOString().split('T')[0] })
-      };
-
-      const response = await getOrdersWithFinalStatus(params);
+      const response = await getFinalOrders();
       
-      setOrders(response.data);
-      setPagination({
-        currentPage: response.currentPage,
-        totalPages: response.totalPages,
-        totalCount: response.totalCount,
-        hasNextPage: response.hasNextPage,
-        hasPrevPage: response.hasPrevPage
-      });
+      // تطبيق الفلاتر محلياً
+      let filteredData = response.data;
+      
+      if (currentFilters.search) {
+        filteredData = filteredData.filter(order => 
+          order.salesRepName.toLowerCase().includes(currentFilters.search!.toLowerCase()) ||
+          order.pharmacyName.toLowerCase().includes(currentFilters.search!.toLowerCase()) ||
+          order.orderId.toLowerCase().includes(currentFilters.search!.toLowerCase())
+        );
+      }
+      
+      if (currentFilters.status && currentFilters.status !== 'all') {
+        filteredData = filteredData.filter(order => order.FinalOrderStatusValue === currentFilters.status);
+      }
+      
+      if (currentFilters.salesRep && currentFilters.salesRep !== 'all') {
+        filteredData = filteredData.filter(order => order.salesRepName === currentFilters.salesRep);
+      }
+      
+      if (currentFilters.pharmacy && currentFilters.pharmacy !== 'all') {
+        filteredData = filteredData.filter(order => order.pharmacyName === currentFilters.pharmacy);
+      }
+      
+      if (currentFilters.startDate) {
+        filteredData = filteredData.filter(order => new Date(order.visitDate) >= currentFilters.startDate!);
+      }
+      
+      if (currentFilters.endDate) {
+        filteredData = filteredData.filter(order => new Date(order.visitDate) <= currentFilters.endDate!);
+      }
+      
+      // تطبيق التصفح
+      const startIndex = (page - 1) * 10;
+      const endIndex = startIndex + 10;
+      const paginatedData = filteredData.slice(startIndex, endIndex);
+      
+      setOrders(paginatedData);
+       setPagination({
+         currentPage: page,
+         totalPages: Math.ceil(filteredData.length / 10),
+         totalCount: filteredData.length,
+         hasNextPage: endIndex < filteredData.length,
+         hasPrevPage: page > 1
+       });
 
-      // حساب الإحصائيات
-      const stats = response.data.reduce((acc, order) => {
+      // حساب الإحصائيات من البيانات المفلترة
+      const stats = filteredData.reduce((acc, order) => {
         const total = calculateOrderTotal(order.orderDetails);
         acc.totalValue += total;
         acc.totalOrders++;
