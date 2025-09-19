@@ -57,6 +57,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import OrdersCollector from "./pages/OrdersCollector";
 import FinancialOrdersCollection from "./pages/FinancialOrdersCollection";
 import WorkCalendar from "./pages/WorkdayCalender";
+import ProductDetailsView from "./pages/ProductDetailsView";
 
 
 const queryClient = new QueryClient();
@@ -401,6 +402,11 @@ const App = () => (
                     <Route path="/marketing-request" element={
                       <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
                         <MarketingRequestForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/product-details" element={
+                      <ProtectedRoute>
+                        <ProductDetailsView />
                       </ProtectedRoute>
                     } />
                     <Route path="*" element={<NotFound />} />

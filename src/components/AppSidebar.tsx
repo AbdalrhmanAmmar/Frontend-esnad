@@ -97,6 +97,7 @@ const menuItems = [
     ]
   },
   { id: "clients", title: "قائمة العملاء", url: "/clients", icon: Users, color: "text-cyan-500" },
+  { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
   { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600", requiredRoles: ["SALES REP"] },
   { 
     id: "orders", 
@@ -225,7 +226,8 @@ export function AppSidebar() {
           url: "/orders-collector",
           icon: ShoppingCart, 
           color: "text-orange-500"
-        }
+        },
+        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
@@ -240,7 +242,8 @@ export function AppSidebar() {
             { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
             { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart }
           ]
-        }
+        },
+        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
@@ -266,7 +269,8 @@ export function AppSidebar() {
           icon: Pill, 
           color: "text-teal-500"
         },
-        { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600" }
+        { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600" },
+        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
@@ -299,7 +303,8 @@ export function AppSidebar() {
             { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
             { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp, requiredRoles: ["MEDICAL REP", "medical rep"] }
           ]
-        }
+        },
+        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
@@ -321,7 +326,8 @@ export function AppSidebar() {
           subItems: [
             { id: "sample-requests", title: "طلبات العينات", url: "/admin/sample-requests", icon: Package }
           ]
-        }
+        },
+        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
@@ -337,7 +343,8 @@ export function AppSidebar() {
             { id: "sample-requests", title: "طلبات العينات", url: "/supervisor/sample-requests", icon: Package },
             { id: "marketing-requests", title: "طلبات النشاط التسويقي", url: "/supervisor/marketing-requests", icon: TrendingUp }
           ]
-        }
+        },
+        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
