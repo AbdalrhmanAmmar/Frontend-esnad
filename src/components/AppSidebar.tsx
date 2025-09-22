@@ -232,17 +232,10 @@ export function AppSidebar() {
     
     if (user?.role === "FINANCIAL OFFICER") {
       return [
-        { 
-          id: "financial-collector", 
-          title: "المحصل المالي", 
-          icon: Receipt, 
-          color: "text-green-600",
-          subItems: [
+   
             { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
             { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart }
-          ]
-        },
-        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
+      
       ];
     }
     

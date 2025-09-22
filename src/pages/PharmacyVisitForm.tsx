@@ -112,6 +112,13 @@ const PharmacyVisitForm = () => {
     handleInputChange('introVisitImage', file);
   };
 
+  const calculateTotal = () => {
+  return currentVisit.orderProducts
+    .filter((p) => p.selected) // ناخد المنتجات المختارة بس
+    .reduce((sum, p) => sum + (p.price * p.quantity), 0);
+};
+
+
   const handleReceiptFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     handleInputChange('receiptImage', file);
@@ -355,10 +362,18 @@ const PharmacyVisitForm = () => {
             {currentVisit.order === 'نعم' && (
               <div className="space-y-6">
                 <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+                  <div className='flex items-center justify-between mb-4'>
+                        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5" />
                     منتجات الطلبية
                   </h3>
+                    <div className="text-lg font-bold">
+                      
+    الإجمالي الكلي:<span className='text-red-500 font-bold'>{calculateTotal()} دينار ليبي</span> 
+  </div>
+
+                  </div>
+              
                   
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse border border-border rounded-lg">
