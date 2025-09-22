@@ -739,14 +739,13 @@ const AdminDashboard: React.FC = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-right p-3 font-medium">رقم الطلب</th>
-                  <th className="text-right p-3 font-medium">تاريخ الزيارة</th>
-                  <th className="text-right p-3 font-medium">مندوب المبيعات</th>
-                  <th className="text-right p-3 font-medium">الصيدلية</th>
-                  <th className="text-right p-3 font-medium">المنطقة</th>
-                  <th className="text-right p-3 font-medium">قيمة الطلب</th>
-                  <th className="text-right p-3 font-medium">الحالة</th>
-                  <th className="text-right p-3 font-medium">الإجراءات</th>
+                  <th className="text-start p-3 font-medium">رقم الطلب</th>
+                  <th className="text-start p-3 font-medium">تاريخ الزيارة</th>
+                  <th className="text-start p-3 font-medium">مندوب المبيعات</th>
+                  <th className="text-start p-3 font-medium">الصيدلية</th>
+                  <th className="text-start p-3 font-medium">المنطقة</th>
+                  <th className="text-start p-3 font-medium">قيمة الطلب</th>
+               
                 </tr>
               </thead>
               <tbody>
@@ -784,28 +783,14 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-end gap-2">
                         <DollarSign className="h-4 w-4 text-green-600" />
                         <span className="font-semibold text-green-700 dark:text-green-400">
                           {order.totalOrderValue.toLocaleString()} د.ل
                         </span>
                       </div>
                     </td>
-                    <td className="p-3">
-                      <Badge 
-                        variant={order.FinalOrderStatusValue === 'approved' ? 'default' : 
-                                order.FinalOrderStatusValue === 'pending' ? 'secondary' : 'destructive'}
-                      >
-                        {order.FinalOrderStatusValue === 'approved' ? 'مُعتمد' :
-                         order.FinalOrderStatusValue === 'pending' ? 'قيد المراجعة' :
-                         order.FinalOrderStatusValue === 'rejected' ? 'مرفوض' : order.FinalOrderStatusValue}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </td>
+             
                   </tr>
                 ))}
               </tbody>

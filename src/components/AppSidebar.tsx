@@ -57,6 +57,7 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
+  { id: "Ai", title: "اعدادات الذكاء الصناعي", url: "/Ai", icon: Moon, color: "text-gray-500" },
   { 
     id: "dashboards", 
     title: "لوحات التحكم", 
@@ -97,7 +98,6 @@ const menuItems = [
     ]
   },
   { id: "clients", title: "قائمة العملاء", url: "/clients", icon: Users, color: "text-cyan-500" },
-  { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
   { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600", requiredRoles: ["SALES REP"] },
   { 
     id: "orders", 
@@ -249,7 +249,6 @@ export function AppSidebar() {
     
     if (user?.role === "SYSTEM_ADMIN") {
       return [
-        { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" }
       ];
     }
     
@@ -270,7 +269,6 @@ export function AppSidebar() {
           color: "text-teal-500"
         },
         { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600" },
-        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
@@ -304,18 +302,19 @@ export function AppSidebar() {
             { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp, requiredRoles: ["MEDICAL REP", "medical rep"] }
           ]
         },
-        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
     if (user?.role === "ADMIN") {
       return [
         { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
+          { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
+
         { 
           id: "admin-dashboard", 
           title: "لوحة تحكم الأدمن", 
           url: "/dashboards/admin", 
-          icon: BarChart3, 
+          icon: BarChart3,  
           color: "text-teal-500"
         },
         { 
@@ -333,7 +332,6 @@ export function AppSidebar() {
     
     if (user?.role === "SUPERVISOR") {
       return [
-        { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
         { 
           id: "requests-list", 
           title: "قائمة الطلبات", 
@@ -344,7 +342,6 @@ export function AppSidebar() {
             { id: "marketing-requests", title: "طلبات النشاط التسويقي", url: "/supervisor/marketing-requests", icon: TrendingUp }
           ]
         },
-        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
