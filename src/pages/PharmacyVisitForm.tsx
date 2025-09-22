@@ -79,6 +79,7 @@ const PharmacyVisitForm = () => {
 
   const handleInputChange = (field: string, value: string | File | null) => {
     updateVisitData({ [field]: value });
+    console.log(value)
   };
 
   const handlePharmacySelect = (pharmacyId: string) => {
@@ -96,6 +97,13 @@ const PharmacyVisitForm = () => {
     const selected = field === 'selected' ? value as boolean : currentVisit.orderProducts.find(p => p._id === productId)?.selected || false;
     updateOrderProduct(productId, quantity, selected);
   };
+
+  const formatDateToYYYYMMDD = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 
 
@@ -214,20 +222,20 @@ const PharmacyVisitForm = () => {
                   تاريخ الزيارة *
                 </Label>
                 <div className="relative max-w-md">
-                  <DatePicker
-                    selected={selectedDate}
-                    onChange={(date) => {
-                      setSelectedDate(date);
-                      handleInputChange('visitDate', date ? date.toISOString().split('T')[0] : '');
-                    }}
-                    dateFormat="yyyy-MM-dd"
-                    placeholderText="اختر تاريخ الزيارة"
-                    className="w-full text-right pr-10 pl-4 py-2 bg-background border-2 border-primary/20 hover:border-primary focus:border-primary transition-all duration-200 rounded-lg shadow-sm focus:shadow-md focus:ring-2 focus:ring-primary/20 outline-none"
-                    calendarClassName="custom-datepicker"
-                    popperClassName="z-50"
-                    showPopperArrow={false}
-                    locale="ar"
-                  />
+           <DatePicker
+  selected={selectedDate}
+  onChange={(date) => {
+    setSelectedDate(date);
+    handleInputChange('visitDate', date ? formatDateToYYYYMMDD(date) : '');
+  }}
+  dateFormat="yyyy-MM-dd"
+  placeholderText="اختر تاريخ الزيارة"
+  className="w-full text-right pr-10 pl-4 py-2 bg-background border-2 border-primary/20 hover:border-primary focus:border-primary transition-all duration-200 rounded-lg shadow-sm focus:shadow-md focus:ring-2 focus:ring-primary/20 outline-none"
+  calendarClassName="custom-datepicker"
+  popperClassName="z-50"
+  showPopperArrow={false}
+  locale="ar"
+/>
                   <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
                 </div>
               </div>
