@@ -81,6 +81,8 @@ const OrdersCollection: React.FC = () => {
     rejectedAmount: 0,
     totalRecords: 0
   });
+    const [salesReps, setSalesReps] = useState([]);
+    const [pharmacies, setPharmacies] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
   const [statusModal, setStatusModal] = useState({
@@ -109,6 +111,29 @@ const OrdersCollection: React.FC = () => {
       };
 
       const response = await getSalesRepProductsData(id, params);
+
+      const uniqueSalesReps = Array.from(
+            new Set(response.data.map((order) => order.salesRepName))
+          ).map(name => ({
+            label: name,
+            value: name,
+          }));
+      
+      
+          setSalesReps(uniqueSalesReps);
+
+
+          const uniquePharmacies = Array.from(
+                new Set(response.data.map((order) => order.pharmacyName))
+              ).map(name => ({
+                label: name,
+                value: name,
+              }));
+          
+          
+              setPharmacies(uniquePharmacies);
+
+
       console.log(response.data)
       
       setOrders(response.data);
@@ -537,6 +562,8 @@ const totalRefuse = () => {
       
 
         filters={filters}
+            salesReps={salesReps}
+        pharmacies={pharmacies}
         onFiltersChange={handleFiltersChange}
         isLoading={loading}
       />
