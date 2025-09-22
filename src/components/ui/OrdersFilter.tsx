@@ -24,8 +24,8 @@ export interface FilterOptions {
 interface OrdersFilterProps {
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
-  salesReps?: Array<{ _id: string; firstName: string; lastName: string }>;
-  pharmacies?: Array<{ _id: string; customerSystemDescription: string }>;
+  salesReps?: Array<{ value: string; label: string}>;
+  pharmacies?: Array<{ value: string; label: string}>;
   isLoading?: boolean;
   className?: string;
 }
@@ -176,11 +176,11 @@ export const OrdersFilter: React.FC<OrdersFilterProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الصيدليات</SelectItem>
-                  {pharmacies.map((pharmacy) => (
-                    <SelectItem key={pharmacy._id} value={pharmacy._id}>
-                      {pharmacy.customerSystemDescription}
-                    </SelectItem>
-                  ))}
+               {pharmacies.map(pharmacy => (
+      <SelectItem key={pharmacy.value} value={pharmacy.value}>
+        {pharmacy.label}
+      </SelectItem>
+    ))}
                 </SelectContent>
               </Select>
             </div>

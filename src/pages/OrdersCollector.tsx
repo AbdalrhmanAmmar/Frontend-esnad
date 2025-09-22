@@ -66,6 +66,17 @@ const uniqueSalesReps = Array.from(
 
 
     setSalesReps(uniqueSalesReps);
+
+
+const uniquePharmacies = Array.from(
+      new Set(response.data.map((order: FinalOrderData) => order.pharmacyName))
+    ).map(name => ({
+      label: name,
+      value: name,
+    }));
+
+
+    setPharmacies(uniquePharmacies);
       
       // تطبيق الفلاتر محلياً
       let filteredData = response.data;
