@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Filter, TrendingUp, TrendingDown, Package, DollarSign, Pill, BarChart3, Loader2, MapPin, Users, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { getSalesRepFinalOrders } from '@/api/FinancialCollector';
+import { getSalesRepOneFinalOrders } from '@/api/FinancialCollector';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -114,7 +114,7 @@ const PharmacyDashboard = () => {
     
     setLoading(true);
     try {
-      const response: ApiResponse = await getSalesRepFinalOrders(
+      const response: ApiResponse = await getSalesRepOneFinalOrders(
         user._id,
         filters.page,
         filters.limit

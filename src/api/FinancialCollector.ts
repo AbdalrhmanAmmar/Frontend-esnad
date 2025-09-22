@@ -106,6 +106,12 @@ export const getSalesRepFinalOrders = async (AdminId: string, page: number = 1, 
   });
   return response.data;
 };
+export const getSalesRepOneFinalOrders = async ( salesRepId: string, page: number = 1, limit: number = 10) => {
+  const response = await api.get(`/pharmacy-requests/sales-rep/${salesRepId}/final-orders`, {
+    params: { page, limit }
+  });
+  return response.data;
+};
 
 // تصدير البيانات المالية إلى ملف Excel
 export const exportFinancialData = async (adminId: string, filters?: FinancialFilters): Promise<Blob> => {
