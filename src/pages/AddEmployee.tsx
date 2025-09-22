@@ -103,7 +103,7 @@ const AddEmployee: React.FC = () => {
       });
 
       // إعادة توجيه إلى صفحة إدارة الموظفين
-      window.location.href = '/employees-management';
+      window.location.href = '/management/employees';
     } catch (error: any) {
       toast({
         title: 'خطأ',
