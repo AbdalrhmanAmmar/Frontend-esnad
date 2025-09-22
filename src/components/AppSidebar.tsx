@@ -227,7 +227,6 @@ export function AppSidebar() {
           icon: ShoppingCart, 
           color: "text-orange-500"
         },
-        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" }
       ];
     }
     
