@@ -30,7 +30,8 @@ import {
   Filter,
   Receipt,
   DollarSign,
-  ShoppingCart
+  ShoppingCart,
+  TrendingDown
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -340,6 +341,11 @@ const OrdersCollection: React.FC = () => {
     });
   };
 
+const totalRefuse = () => {
+  return statistics.totalOrders - (statistics.approvedOrders + statistics.pendingOrders);
+};
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -424,17 +430,18 @@ const OrdersCollection: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600 dark:text-purple-400">القيمة الإجمالية</p>
-                <p className="text-xl font-bold text-purple-900 dark:text-purple-100">
-                  {formatCurrency(statistics.totalValue)}
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">المرفوضة</p>
+                <p className="text-xl font-bold text-red-900 dark:text-red-100">
+                  {totalRefuse()} 
+                  
                 </p>
               </div>
-              <div className="p-2 bg-purple-200 dark:bg-purple-800 rounded-lg">
-                <Store className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-red-200 dark:bg-red-800 rounded-lg">
+                <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </CardContent>
@@ -443,17 +450,17 @@ const OrdersCollection: React.FC = () => {
 
       {/* Status Breakdown Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="border-l-4 border-l-slate-500">
+        <Card className="border-l-4 border-l-purple-500">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">إجمالي المبلغ</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-sm font-medium text-purple-600 dark:text-purple-400">إجمالي المبلغ</p>
+                <p className="text-xl font-bold text-purple-900 dark:text-purple-100">
                   {formatCurrency(statusBreakdown.totalAmount)}
                 </p>
               </div>
-              <div className="p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">
-                <DollarSign className="h-6 w-6 text-slate-600 dark:text-slate-400" />
+              <div className="p-2 bg-purple-200 dark:bg-purple-800 rounded-lg">
+                <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </CardContent>
