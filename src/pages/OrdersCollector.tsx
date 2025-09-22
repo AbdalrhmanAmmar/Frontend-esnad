@@ -22,8 +22,8 @@ const OrdersCollector: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<FinalOrderData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [salesReps, setSalesReps] = useState<Array<{ _id: string; firstName: string; lastName: string }>>([]);
-  const [pharmacies, setPharmacies] = useState<Array<{ _id: string; customerSystemDescription: string }>>([]);
+  const [salesReps, setSalesReps] = useState([]);
+  const [pharmacies, setPharmacies] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -54,6 +54,18 @@ const OrdersCollector: React.FC = () => {
       setLoading(true);
       
       const response = await getFinalOrders();
+      console.log(response.data)
+
+
+const uniqueSalesReps = Array.from(
+      new Set(response.data.map((order: FinalOrderData) => order.salesRepName))
+    ).map(name => ({
+      label: name,
+      value: name,
+    }));
+
+
+    setSalesReps(uniqueSalesReps);
       
       // تطبيق الفلاتر محلياً
       let filteredData = response.data;
@@ -159,6 +171,7 @@ const OrdersCollector: React.FC = () => {
       console.error('Error fetching filter data:', error);
     }
   };
+
 
   useEffect(() => {
     fetchOrders();

@@ -109,6 +109,7 @@ const OrdersCollection: React.FC = () => {
       };
 
       const response = await getSalesRepProductsData(id, params);
+      console.log(response.data)
       
       setOrders(response.data);
       setPagination({
@@ -533,6 +534,8 @@ const totalRefuse = () => {
 
       {/* Filters */}
       <OrdersFilter
+      
+
         filters={filters}
         onFiltersChange={handleFiltersChange}
         isLoading={loading}

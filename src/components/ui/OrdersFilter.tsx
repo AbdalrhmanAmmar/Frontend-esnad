@@ -155,11 +155,11 @@ export const OrdersFilter: React.FC<OrdersFilterProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع المندوبين</SelectItem>
-                  {salesReps.map((rep) => (
-                    <SelectItem key={rep._id} value={rep._id}>
-                      {rep.firstName} {rep.lastName}
-                    </SelectItem>
-                  ))}
+                {salesReps.map(rep => (
+      <SelectItem key={rep.value} value={rep.value}>
+        {rep.label}
+      </SelectItem>
+    ))}
                 </SelectContent>
               </Select>
             </div>
