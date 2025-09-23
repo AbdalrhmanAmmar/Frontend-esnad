@@ -144,50 +144,50 @@ const menuItems = [
 ];
 
 const managementItems = [
-  { 
-    id: "management", 
-    title: "الإدارة العامة", 
-    icon: Settings, 
-    color: "text-gray-500",
-    requiredRoles: ["ADMIN"],
-    subItems: [
-      { id: "work-days", title: "إدارة أيام العمل", url: "/work-day-calender", icon: Calendar },
-      { id: "documents", title: "رفع المنتجات", url: "/management/documents", icon: FolderOpen },
-      { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
-      { id: "doctors-upload", title: "رفع ملفات الأطباء", url: "/management/doctors-upload", icon: Stethoscope },
-      { id: "pharmacies-upload", title: "رفع ملفات الصيدليات", url: "/management/pharmacies-upload", icon: Pill },
-      { id: "users-upload", title: "رفع ملفات المستخدمين", url: "/management/users-upload", icon: Users },
-      { id: "marketing-activities-upload", title: "رفع الأنشطة التسويقية", url: "/management/marketing-activities-upload", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] },
-      { id: "lost-orders", title: "إدارة الطلبيات المفقودة", url: "/management/lost-orders", icon: Package },
-      { id: "site-analytics", title: "إحصائيات الموقع", url: "/management/site-analytics", icon: TrendingUp, requiredRoles: ["SYSTEM_ADMIN"] },
-      {
-        id: "data-management",
-        title: "إدارة البيانات",
-        icon: Database,
-        subItems: [
-          { id: "products-management", title: "إدارة المنتجات", url: "/management/data/products", icon: ShoppingBag },
-          { id: "doctors-management", title: "إدارة الأطباء", url: "/management/data/doctors", icon: UserMinus },
-          { id: "pharmacies-management", title: "إدارة الصيدليات", url: "/management/data/pharmacies", icon: Pill },
-          { id: "employees-management", title: "إدارة الموظفين", url: "/management/employees", icon: Users, requiredRoles: ["ADMIN"] },
-          { id: "marketing-activities-management", title: "إدارة الأنشطة التسويقية", url: "/management/marketing-activities", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] }
-        ]
-      }
-    ]
-  },
-  { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" },
-  { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList, color: "text-green-500", requiredRoles: ["MEDICAL REP", "medical rep"] },
-  { 
-    id: "users", 
-    title: "إدارة المستخدمين", 
-    icon: UserCog, 
-    color: "text-indigo-500",
-    subItems: [
-      { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
-      { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
-      { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] },
-      { id: "all-admins", title: "جميع الأدمن", url: "/management/all-admins", icon: Users, requiredRoles: ["SYSTEM_ADMIN"] }
-    ]
-  },
+  // { 
+  //   id: "management", 
+  //   title: "الإدارة العامة", 
+  //   icon: Settings, 
+  //   color: "text-gray-500",
+  //   requiredRoles: ["ADMIN"],
+  //   subItems: [
+  //     { id: "work-days", title: "إدارة أيام العمل", url: "/work-day-calender", icon: Calendar },
+  //     { id: "documents", title: "رفع المنتجات", url: "/management/documents", icon: FolderOpen },
+  //     { id: "product-messages", title: "رفع رسائل المنتجات", url: "/management/product-messages", icon: MessageSquare },
+  //     { id: "doctors-upload", title: "رفع ملفات الأطباء", url: "/management/doctors-upload", icon: Stethoscope },
+  //     { id: "pharmacies-upload", title: "رفع ملفات الصيدليات", url: "/management/pharmacies-upload", icon: Pill },
+  //     { id: "users-upload", title: "رفع ملفات المستخدمين", url: "/management/users-upload", icon: Users },
+  //     { id: "marketing-activities-upload", title: "رفع الأنشطة التسويقية", url: "/management/marketing-activities-upload", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] },
+  //     { id: "lost-orders", title: "إدارة الطلبيات المفقودة", url: "/management/lost-orders", icon: Package },
+  //     { id: "site-analytics", title: "إحصائيات الموقع", url: "/management/site-analytics", icon: TrendingUp, requiredRoles: ["SYSTEM_ADMIN"] },
+  //     {
+  //       id: "data-management",
+  //       title: "إدارة البيانات",
+  //       icon: Database,
+  //       subItems: [
+  //         { id: "products-management", title: "إدارة المنتجات", url: "/management/data/products", icon: ShoppingBag },
+  //         { id: "doctors-management", title: "إدارة الأطباء", url: "/management/data/doctors", icon: UserMinus },
+  //         { id: "pharmacies-management", title: "إدارة الصيدليات", url: "/management/data/pharmacies", icon: Pill },
+  //         { id: "employees-management", title: "إدارة الموظفين", url: "/management/employees", icon: Users, requiredRoles: ["ADMIN"] },
+  //         { id: "marketing-activities-management", title: "إدارة الأنشطة التسويقية", url: "/management/marketing-activities", icon: Activity, requiredRoles: ["ADMIN", "SYSTEM_ADMIN"] }
+  //       ]
+  //     }
+  //   ]
+  // },
+  // { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" },
+  // { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList, color: "text-green-500", requiredRoles: ["MEDICAL REP", "medical rep"] },
+  // { 
+  //   id: "users", 
+  //   title: "إدارة المستخدمين", 
+  //   icon: UserCog, 
+  //   color: "text-indigo-500",
+  //   subItems: [
+  //     { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
+  //     { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
+  //     { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] },
+  //     { id: "all-admins", title: "جميع الأدمن", url: "/management/all-admins", icon: Users, requiredRoles: ["SYSTEM_ADMIN"] }
+  //   ]
+  // },
 ];
 
 export function AppSidebar() {
@@ -229,7 +229,7 @@ export function AppSidebar() {
         },
       ];
     }
-    if (user?.role === "SALES SUPERVISOR") {
+    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER") {
       return  [
                { 
           id: "dashboards", 
@@ -723,7 +723,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="mt-6">
           <SidebarGroupLabel className="text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-            {!isCollapsed && "الإدارة"}
+            {!isCollapsed && user?.role === "ADMIN" && "الإدارة"}
           </SidebarGroupLabel>
           <SidebarMenu className="space-y-2">
             {getFilteredManagementItems().map((item) => {
