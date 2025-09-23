@@ -104,7 +104,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/dashboards/admin" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'SYSTEM_ADMIN']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'SALES SUPERVISOR', 'SYSTEM_ADMIN']}>
                         <AdminDashboard />
                       </ProtectedRoute>
                     } />

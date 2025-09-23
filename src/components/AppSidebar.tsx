@@ -234,7 +234,7 @@ export function AppSidebar() {
                { 
           id: "dashboards", 
           title: "لوحة تحكم الصيدليات", 
-          url: "/dashboards/pharmacies",
+          url: "/dashboards/admin",
           icon: Pill, 
           color: "text-teal-500"
         },
