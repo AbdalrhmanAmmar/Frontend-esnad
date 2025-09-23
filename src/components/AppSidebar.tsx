@@ -289,12 +289,17 @@ export function AppSidebar() {
         
       ];
     }
-    //  if (user?.role === "SALES SUPERVISOR") {
-    //   return [
-
-    //     null
-    //   ];
-    // }
+    if (user?.role === "SALES SUPERVISOR") {
+      return [
+        { 
+          id: "pharmacy-dashboard", 
+          title: "لوحة تحكم الصيدليات", 
+          url: "/dashboards/pharmacies",
+          icon: Pill, 
+          color: "text-teal-500"
+        }
+      ];
+    }
     
     if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
       return [

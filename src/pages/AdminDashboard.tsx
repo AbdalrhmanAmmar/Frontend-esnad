@@ -111,12 +111,27 @@ const AdminDashboard: React.FC = () => {
     dateTo: ''
   });
 
+      const filteredData = React.useMemo(() => {
+    return ordersData.filter(order => {
+      const matchesSearch = !filters.search || 
+        order.pharmacyName.toLowerCase().includes(filters.search.toLowerCase()) ||
+        order.salesRepName.toLowerCase().includes(filters.search.toLowerCase()) ||
+        order.orderId.toLowerCase().includes(filters.search.toLowerCase());
+      
+      const matchesArea = !filters.area || filters.area === 'all' || order.pharmacyArea === filters.area;
+      const matchesSalesRep = !filters.salesRep || filters.salesRep === 'all' || order.salesRepName === filters.salesRep;
+      const matchesStatus = !filters.status || filters.status === 'all' || order.FinalOrderStatusValue === filters.status;
+      
+      return matchesSearch && matchesArea && matchesSalesRep && matchesStatus;
+    });
+  }, [ordersData, filters]);
+
   // إحصائيات محسوبة
   const stats = React.useMemo(() => {
-    const totalOrders = ordersData.length;
-    const totalRevenue = ordersData.reduce((sum, order) => sum + order.totalOrderValue, 0);
-    const uniquePharmacies = new Set(ordersData.map(order => order.pharmacyName)).size;
-    const uniqueSalesReps = new Set(ordersData.map(order => order.salesRepName)).size;
+    const totalOrders = filteredData.length;
+    const totalRevenue = filteredData.reduce((sum, order) => sum + order.totalOrderValue, 0);
+    const uniquePharmacies = new Set(filteredData.map(order => order.pharmacyName)).size;
+    const uniqueSalesReps = new Set(filteredData.map(order => order.salesRepName)).size;
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     return {
@@ -126,12 +141,12 @@ const AdminDashboard: React.FC = () => {
       uniqueSalesReps,
       avgOrderValue
     };
-  }, [ordersData]);
+  }, [filteredData]);
 
   // بيانات الرسوم البيانية
   const chartData = React.useMemo(() => {
     // أداء مندوبي المبيعات
-    const salesRepPerformance = ordersData.reduce((acc, order) => {
+    const salesRepPerformance = filteredData.reduce((acc, order) => {
       const rep = order.salesRepName;
       if (!acc[rep]) {
         acc[rep] = { orders: 0, revenue: 0 };
@@ -142,7 +157,7 @@ const AdminDashboard: React.FC = () => {
     }, {} as Record<string, { orders: number; revenue: number }>);
 
     // أداء المناطق
-    const areaPerformance = ordersData.reduce((acc, order) => {
+    const areaPerformance = filteredData.reduce((acc, order) => {
       const area = order.pharmacyArea;
       if (!acc[area]) {
         acc[area] = { orders: 0, revenue: 0 };
@@ -182,7 +197,7 @@ const AdminDashboard: React.FC = () => {
       productSales,
       pharmacyPerformance
     };
-  }, [ordersData]);
+  }, [filteredData]);
 
   // جلب البيانات من API
   const AdminId = user.user._id
@@ -221,18 +236,7 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   // تصفية البيانات
-  const filteredData = ordersData.filter(order => {
-    const matchesSearch = !filters.search || 
-      order.pharmacyName.toLowerCase().includes(filters.search.toLowerCase()) ||
-      order.salesRepName.toLowerCase().includes(filters.search.toLowerCase()) ||
-      order.orderId.toLowerCase().includes(filters.search.toLowerCase());
-    
-    const matchesArea = !filters.area || filters.area === 'all' || order.pharmacyArea === filters.area;
-    const matchesSalesRep = !filters.salesRep || filters.salesRep === 'all' || order.salesRepName === filters.salesRep;
-    const matchesStatus = !filters.status || filters.status === 'all' || order.FinalOrderStatusValue === filters.status;
-    
-    return matchesSearch && matchesArea && matchesSalesRep && matchesStatus;
-  });
+
 
   // الحصول على القيم الفريدة للفلاتر
   const uniqueAreas = [...new Set(ordersData.map(order => order.pharmacyArea))];
