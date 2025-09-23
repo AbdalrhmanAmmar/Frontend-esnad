@@ -119,6 +119,19 @@ const OrdersCollection: React.FC = () => {
         ...(currentFilters.startDate && { startDate: currentFilters.startDate.toISOString().split('T')[0] }),
         ...(currentFilters.endDate && { endDate: currentFilters.endDate.toISOString().split('T')[0] })
       };
+          const formatDateForAPI = (dateString: string | Date) => {
+      if (dateString instanceof Date) {
+        return format(dateString, 'yyyy-MM-dd');
+      }
+      return dateString.split('T')[0]; // إذا كانت ISO نأخذ الجزء الأول فقط
+    };
+
+      if (currentFilters.startDate) {
+      params.startDate = formatDateForAPI(currentFilters.startDate);
+    }
+    if (currentFilters.endDate) {
+      params.endDate = formatDateForAPI(currentFilters.endDate);
+    }
 
       const response = await getSalesRepProductsData(id, params);
 
@@ -229,6 +242,7 @@ const OrdersCollection: React.FC = () => {
   }, [filters]);
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
+    
     setFilters(newFilters);
   };
 

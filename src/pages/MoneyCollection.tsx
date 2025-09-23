@@ -84,9 +84,18 @@ const MoneyCollection = () => {
     fetchData();
   }, [filters, user?.id]);
 
-  const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
-  };
+const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
+  if ((key === 'startDate' || key === 'endDate') && value) {
+    // إضافة الوقت ليكون بداية اليوم (لـ startDate) أو نهاية اليوم (لـ endDate)
+    if (key === 'startDate') {
+      value = `${value}T00:00:00.000Z`; // بداية اليوم
+    } else {
+      value = `${value}T23:59:59.999Z`; // نهاية اليوم
+    }
+  }
+  
+  setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+};
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
