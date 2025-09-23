@@ -12,7 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { getFinancialPharmacyData, updateCollectionStatus, exportFinancialData, FinancialData, FinancialStatistics, FinancialFilters } from '@/api/FinancialCollector';
 import { DollarSign, Receipt, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, Eye, Calendar, Filter, Download, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
+
 import { ar } from 'date-fns/locale';
 
 const MoneyCollection = () => {
@@ -20,6 +21,15 @@ const MoneyCollection = () => {
   const { toast } = useToast();
 
   const ifFinancialRole = user?.role === 'FINANCIAL OFFICER';
+
+   const getTodayDate = () => {
+    return format(new Date(), 'yyyy-MM-dd');
+  };
+
+  // دالة للحصول على تاريخ قبل 7 أيام بصيغة YYYY-MM-DD
+  const getSevenDaysAgoDate = () => {
+    return format(subDays(new Date(), 7), 'yyyy-MM-dd');
+  };
   
   const [data, setData] = useState<FinancialData[]>([]);
   const [statistics, setStatistics] = useState<FinancialStatistics>({
@@ -38,7 +48,9 @@ const MoneyCollection = () => {
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<FinancialFilters>({
     page: 1,
-    limit: 10
+    limit: 10,
+    startDate: getSevenDaysAgoDate(), // تاريخ افتراضي: قبل 7 أيام
+    endDate: getTodayDate() 
   });
   const [selectedItem, setSelectedItem] = useState<FinancialData | null>(null);
   const [statusNotes, setStatusNotes] = useState('');

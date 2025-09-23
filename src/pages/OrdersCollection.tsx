@@ -36,7 +36,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
+import { format,subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Pagination } from "@/components/ui/pagination";
 import { OrdersFilter, FilterOptions } from '@/components/ui/OrdersFilter';
@@ -45,6 +45,14 @@ const OrdersCollection: React.FC = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
     const ifFinancialRole = user?.role === 'FINANCIAL OFFICER';
+       const getTodayDate = () => {
+        return format(new Date(), 'yyyy-MM-dd');
+      };
+    
+      // دالة للحصول على تاريخ قبل 7 أيام بصيغة YYYY-MM-DD
+      const getSevenDaysAgoDate = () => {
+        return format(subDays(new Date(), 7), 'yyyy-MM-dd');
+      };
 
   
   const [orders, setOrders] = useState<OrderData[]>([]);
@@ -64,8 +72,8 @@ const OrdersCollection: React.FC = () => {
     status: 'all',
     salesRep: 'all',
     pharmacy: 'all',
-    startDate: null,
-    endDate: null
+    startDate: getSevenDaysAgoDate(),
+    endDate: getTodayDate()
   });
   const [statistics, setStatistics] = useState({
     totalOrders: 0,
