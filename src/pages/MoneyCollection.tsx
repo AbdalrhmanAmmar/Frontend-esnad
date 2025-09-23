@@ -18,6 +18,8 @@ import { ar } from 'date-fns/locale';
 const MoneyCollection = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
+
+  const ifFinancialRole = user?.role === 'FINANCIAL OFFICER';
   
   const [data, setData] = useState<FinancialData[]>([]);
   const [statistics, setStatistics] = useState<FinancialStatistics>({
@@ -471,7 +473,7 @@ const MoneyCollection = () => {
                                   </div>
                                 )}
                                 
-                                {selectedItem.status === 'pending' && (
+                                {selectedItem.status === 'pending' && ifFinancialRole && (
                                   <div className="space-y-4 pt-4 border-t">
                                     <div>
                                       <Label htmlFor="notes">ملاحظات (اختياري)</Label>
@@ -509,8 +511,8 @@ const MoneyCollection = () => {
                             )}
                           </DialogContent>
                           </Dialog>
-                          
-                          {item.status === 'pending' && (
+
+                          {item.status === 'pending' && ifFinancialRole && (
                             <>
                               <Button
                                 size="sm"

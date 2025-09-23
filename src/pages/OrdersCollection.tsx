@@ -157,6 +157,13 @@ const OrdersCollection: React.FC = () => {
         uniqueProductsCount: response.statistics.summary.uniqueProductsCount
       };
 
+// let filteredData = response.data;
+// if (currentFilters.status && currentFilters.status !== 'all') {
+//   filteredData = filteredData.filter(order => order.orderStatus === currentFilters.status);
+// }
+
+      
+
       // حساب الطلبات حسب الحالة
       response.data.forEach(order => {
         switch (order.orderStatus) {

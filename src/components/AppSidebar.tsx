@@ -263,6 +263,12 @@ export function AppSidebar() {
         { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600" },
       ];
     }
+    //  if (user?.role === "SALES SUPERVISOR") {
+    //   return [
+
+    //     null
+    //   ];
+    // }
     
     if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
       return [
@@ -336,6 +342,8 @@ export function AppSidebar() {
         },
       ];
     }
+   
+   
     
     return menuItems;
   };
