@@ -257,6 +257,13 @@ export function AppSidebar() {
     
     if (user?.role === "FINANCIAL OFFICER") {
       return [
+                      { 
+          id: "dashboards", 
+          title: "لوحة تحكم الصيدليات", 
+          url: "/dashboards/admin",
+          icon: Pill, 
+          color: "text-teal-500"
+        },
    
             { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
             { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart }
