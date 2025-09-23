@@ -175,7 +175,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/orders-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'FINANCIAL OFFICER']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'SALES SUPERVISOR', 'FINANCIAL OFFICER']}>
                         <OrdersCollection />
                       </ProtectedRoute>
                     } />
@@ -185,7 +185,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/orders-collector" element={
-                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS']}>
+                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS','ADMIN', 'SALES SUPERVISOR']}>
                         <OrdersCollector />
                       </ProtectedRoute>
                     } />

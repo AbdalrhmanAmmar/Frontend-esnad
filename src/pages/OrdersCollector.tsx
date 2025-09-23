@@ -16,8 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { OrderEditModal } from '@/components/ui/OrderEditModal';
 import { Pagination } from "@/components/ui/pagination";
 import { OrdersFilter, FilterOptions } from '@/components/ui/OrdersFilter';
+import { useAuthStore } from '@/stores/authStore';
+
 
 const OrdersCollector: React.FC = () => {
+  const { user } = useAuthStore();
+  const ifOrderOfficerRole = user?.role === 'ORDERS OFFICERS';
   const [orders, setOrders] = useState<FinalOrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<FinalOrderData | null>(null);
@@ -491,8 +495,9 @@ const uniquePharmacies = Array.from(
                           )}
                         </div>
                       </div>
-                      
-                      <Button
+                      {ifOrderOfficerRole && (
+                        <>
+                                  <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditOrder(order)}
@@ -501,6 +506,11 @@ const uniquePharmacies = Array.from(
                         <Edit3 className="h-4 w-4 mr-2" />
                         عرض/تعديل
                       </Button>
+                        </>
+
+                      )}
+                      
+            
                     </div>
 
                     <Separator className="my-4" />

@@ -229,6 +229,31 @@ export function AppSidebar() {
         },
       ];
     }
+    if (user?.role === "SALES SUPERVISOR") {
+      return  [
+               { 
+          id: "dashboards", 
+          title: "لوحة تحكم الصيدليات", 
+          url: "/dashboards/pharmacies",
+          icon: Pill, 
+          color: "text-teal-500"
+        },
+        
+   
+            { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
+            { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart },
+               { 
+          id: "orders-collector", 
+          title: "محصل الطلبيات", 
+          url: "/orders-collector",
+          icon: ShoppingCart, 
+          color: "text-orange-500"
+        },
+         { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" },
+      
+      
+      ];
+    }
     
     if (user?.role === "FINANCIAL OFFICER") {
       return [
@@ -261,6 +286,7 @@ export function AppSidebar() {
           color: "text-teal-500"
         },
         { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600" },
+        
       ];
     }
     //  if (user?.role === "SALES SUPERVISOR") {
@@ -310,7 +336,7 @@ export function AppSidebar() {
 
         { 
           id: "admin-dashboard", 
-          title: "لوحة تحكم الأدمن", 
+          title: "لوحة تحكم الصيدليات", 
           url: "/dashboards/admin", 
           icon: BarChart3,  
           color: "text-teal-500"
@@ -352,6 +378,13 @@ export function AppSidebar() {
     if (user?.role === "SALES_REP" || user?.role === "SALES REP") {
       return [
         { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" }
+      ];
+    }
+       if (user?.role === "SALES SUPERVISOR") {
+      return  [
+   
+       
+      
       ];
     }
     

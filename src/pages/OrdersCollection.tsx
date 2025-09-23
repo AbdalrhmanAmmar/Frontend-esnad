@@ -44,6 +44,8 @@ import { OrdersFilter, FilterOptions } from '@/components/ui/OrdersFilter';
 const OrdersCollection: React.FC = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
+    const ifFinancialRole = user?.role === 'FINANCIAL OFFICER';
+
   
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -660,8 +662,8 @@ const totalRefuse = () => {
                           <Eye className="h-4 w-4 mr-2" />
                           عرض التفاصيل
                         </Button>
-                        
-                        {(!order.orderStatus || order.orderStatus === 'pending') && (
+
+                        {(!order.orderStatus || order.orderStatus === 'pending') && ifFinancialRole && (
                           <>
                             <Button
                               variant="outline"
