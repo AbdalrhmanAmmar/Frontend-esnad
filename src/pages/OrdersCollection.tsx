@@ -36,7 +36,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { format,subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Pagination } from "@/components/ui/pagination";
 import { OrdersFilter, FilterOptions } from '@/components/ui/OrdersFilter';
@@ -44,16 +44,6 @@ import { OrdersFilter, FilterOptions } from '@/components/ui/OrdersFilter';
 const OrdersCollection: React.FC = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
-    const ifFinancialRole = user?.role === 'FINANCIAL OFFICER';
-       const getTodayDate = () => {
-        return format(new Date(), 'yyyy-MM-dd');
-      };
-    
-      // دالة للحصول على تاريخ قبل 7 أيام بصيغة YYYY-MM-DD
-      const getSevenDaysAgoDate = () => {
-        return format(subDays(new Date(), 7), 'yyyy-MM-dd');
-      };
-
   
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,13 +57,19 @@ const OrdersCollection: React.FC = () => {
     hasPrevPage: false,
     limit: 10
   });
+    const startDate = new Date();
+startDate.setDate(startDate.getDate() - 7);
+  
+  // آخر يوم من الشهر الحالي
+  const endDate = new Date();
+
   const [filters, setFilters] = useState<FilterOptions>({
     search: '',
     status: 'all',
     salesRep: 'all',
     pharmacy: 'all',
-    startDate: getSevenDaysAgoDate(),
-    endDate: getTodayDate()
+    startDate: startDate,
+    endDate: endDate
   });
   const [statistics, setStatistics] = useState({
     totalOrders: 0,
@@ -119,19 +115,6 @@ const OrdersCollection: React.FC = () => {
         ...(currentFilters.startDate && { startDate: currentFilters.startDate.toISOString().split('T')[0] }),
         ...(currentFilters.endDate && { endDate: currentFilters.endDate.toISOString().split('T')[0] })
       };
-          const formatDateForAPI = (dateString: string | Date) => {
-      if (dateString instanceof Date) {
-        return format(dateString, 'yyyy-MM-dd');
-      }
-      return dateString.split('T')[0]; // إذا كانت ISO نأخذ الجزء الأول فقط
-    };
-
-      if (currentFilters.startDate) {
-      params.startDate = formatDateForAPI(currentFilters.startDate);
-    }
-    if (currentFilters.endDate) {
-      params.endDate = formatDateForAPI(currentFilters.endDate);
-    }
 
       const response = await getSalesRepProductsData(id, params);
 
@@ -242,7 +225,6 @@ const OrdersCollection: React.FC = () => {
   }, [filters]);
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
-    
     setFilters(newFilters);
   };
 
@@ -684,8 +666,8 @@ const totalRefuse = () => {
                           <Eye className="h-4 w-4 mr-2" />
                           عرض التفاصيل
                         </Button>
-
-                        {(!order.orderStatus || order.orderStatus === 'pending') && ifFinancialRole && (
+                        
+                        {(!order.orderStatus || order.orderStatus === 'pending') && (
                           <>
                             <Button
                               variant="outline"
