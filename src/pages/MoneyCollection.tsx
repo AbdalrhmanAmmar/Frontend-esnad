@@ -11,9 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { getFinancialPharmacyData, updateCollectionStatus, exportFinancialData, FinancialData, FinancialStatistics, FinancialFilters } from '@/api/FinancialCollector';
-import { DollarSign, Receipt, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, Eye, Calendar, Filter, Download, RefreshCw } from 'lucide-react';
+import { DollarSign, Receipt, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, Eye, Calendar, Filter, Download, RefreshCw, Search, User, Building } from 'lucide-react';
 import { format, subDays } from 'date-fns';
-
 import { ar } from 'date-fns/locale';
 
 const MoneyCollection = () => {
@@ -247,6 +246,16 @@ const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
     }
   };
 
+  // دالة لمسح جميع الفلاتر
+  const clearFilters = () => {
+    setFilters({
+      page: 1,
+      limit: 10,
+      startDate: getSevenDaysAgoDate(),
+      endDate: getTodayDate()
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -327,9 +336,48 @@ const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
             <Filter className="w-5 h-5" />
             الفلاتر
           </CardTitle>
+          <CardDescription className="flex justify-between items-center">
+            <span>استخدم الفلاتر للبحث عن البيانات المطلوبة</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearFilters}
+              className="text-xs"
+            >
+              مسح الكل
+            </Button>
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="lg:col-span-2">
+              <Label htmlFor="repName">بحث باسم المندوب</Label>
+              <div className="relative">
+                <User className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="repName"
+                  placeholder="ابحث باسم المندوب..."
+                  value={filters.repName || ''}
+                  onChange={(e) => handleFilterChange('repName', e.target.value || undefined)}
+                  className="pr-10"
+                />
+              </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+              <Label htmlFor="pharmacyName">بحث باسم الصيدلية</Label>
+              <div className="relative">
+                <Building className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="pharmacyName"
+                  placeholder="ابحث باسم الصيدلية..."
+                  value={filters.pharmacyName || ''}
+                  onChange={(e) => handleFilterChange('pharmacyName', e.target.value || undefined)}
+                  className="pr-10"
+                />
+              </div>
+            </div>
+            
             <div>
               <Label htmlFor="status">الحالة</Label>
               <Select value={filters.status || 'all'} onValueChange={(value) => handleFilterChange('status', value === 'all' ? undefined : value)}>
@@ -346,26 +394,6 @@ const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
             </div>
             
             <div>
-              <Label htmlFor="startDate">من تاريخ</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={filters.startDate || ''}
-                onChange={(e) => handleFilterChange('startDate', e.target.value || undefined)}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="endDate">إلى تاريخ</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={filters.endDate || ''}
-                onChange={(e) => handleFilterChange('endDate', e.target.value || undefined)}
-              />
-            </div>
-            
-            <div>
               <Label htmlFor="limit">عدد السجلات</Label>
               <Select value={filters.limit?.toString() || '10'} onValueChange={(value) => handleFilterChange('limit', parseInt(value))}>
                 <SelectTrigger>
@@ -379,6 +407,26 @@ const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div>
+              <Label htmlFor="startDate">من تاريخ</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={filters.startDate ? filters.startDate.split('T')[0] : ''}
+                onChange={(e) => handleFilterChange('startDate', e.target.value || undefined)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="endDate">إلى تاريخ</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={filters.endDate ? filters.endDate.split('T')[0] : ''}
+                onChange={(e) => handleFilterChange('endDate', e.target.value || undefined)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -389,6 +437,16 @@ const handleFilterChange = (key: keyof FinancialFilters, value: any) => {
           <CardTitle>بيانات التحصيل</CardTitle>
           <CardDescription>
             عرض جميع عمليات التحصيل المالي مع إمكانية المراجعة والموافقة
+            {filters.repName && (
+              <Badge variant="outline" className="mr-2">
+                المندوب: {filters.repName}
+              </Badge>
+            )}
+            {filters.pharmacyName && (
+              <Badge variant="outline" className="mr-2">
+                الصيدلية: {filters.pharmacyName}
+              </Badge>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
