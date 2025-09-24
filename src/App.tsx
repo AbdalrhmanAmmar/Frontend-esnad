@@ -58,6 +58,8 @@ import OrdersCollector from "./pages/OrdersCollector";
 import FinancialOrdersCollection from "./pages/FinancialOrdersCollection";
 import WorkCalendar from "./pages/WorkdayCalender";
 import ProductDetailsView from "./pages/ProductDetailsView";
+import ReceiptBooksManager from "./pages/ReceiptBooksManager";
+import ReceiptBookDetails from "./pages/ReceiptBookDetails";
 
 
 const queryClient = new QueryClient();
@@ -197,6 +199,16 @@ const App = () => (
                     <Route path="/evaluations" element={
                       <ProtectedRoute>
                         <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/ReceipBooks-manager" element={
+                      <ProtectedRoute>
+                        <ReceiptBooksManager />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/receipt-books/:id" element={
+                      <ProtectedRoute>
+                        <ReceiptBookDetails />
                       </ProtectedRoute>
                     } />
                     <Route path="/evaluations/representatives" element={

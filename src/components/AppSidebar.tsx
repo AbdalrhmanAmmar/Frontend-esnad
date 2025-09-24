@@ -33,7 +33,8 @@ import {
   MessageSquare,
   LogOut,
   User,
-  TrendingUp
+  TrendingUp,
+  BookA
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
@@ -363,6 +364,7 @@ export function AppSidebar() {
           ]
         },
         { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
+        { id: "product-search", title: "دفتر الوصولات", url: "/ReceipBooks-manager", icon: BookA, color: "text-tomato-500" },
          { 
     id: "management", 
     title: "الإدارة العامة", 
