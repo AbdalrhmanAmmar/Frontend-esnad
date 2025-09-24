@@ -177,7 +177,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/orders-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL_OFFICER', 'ASSITANT']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT']}>
                         <OrdersCollection />
                       </ProtectedRoute>
                     } />
