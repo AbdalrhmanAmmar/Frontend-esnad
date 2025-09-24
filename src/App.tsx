@@ -60,6 +60,7 @@ import WorkCalendar from "./pages/WorkdayCalender";
 import ProductDetailsView from "./pages/ProductDetailsView";
 import ReceiptBooksManager from "./pages/ReceiptBooksManager";
 import ReceiptBookDetails from "./pages/ReceiptBookDetails";
+import ReportMarketingMedicalRep from "./pages/medical-reports/ReportMarketingMedicalRep";
 
 
 const queryClient = new QueryClient();
@@ -409,6 +410,11 @@ const App = () => (
                     <Route path="/marketing-form" element={
                       <ProtectedRoute>
                         <MarketingForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/reports/marketing/medical-rep" element={
+                      <ProtectedRoute>
+                        <ReportMarketingMedicalRep />
                       </ProtectedRoute>
                     } />
                     <Route path="/marketing-request" element={

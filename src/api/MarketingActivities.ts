@@ -126,6 +126,25 @@ export const deleteMarketingActivity = async (id: string) => {
   }
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//form 
+
+
 // جلب نشاط تسويقي واحد
 export const getMarketingActivityById = async (id: string) => {
   try {
