@@ -311,6 +311,8 @@ export function AppSidebar() {
     
     if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
       return [
+                          { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
+
         
        
             { id: "clinic-analytics", title: "لوحه تحكم العيادات", url: "/analytics/clinics", icon: Building2 },
@@ -331,7 +333,6 @@ export function AppSidebar() {
           icon: ShoppingCart, 
           color: "text-orange-500",
           subItems: [
-                  { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
 
             { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
             { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp, requiredRoles: ["MEDICAL REP", "medical rep"] }
