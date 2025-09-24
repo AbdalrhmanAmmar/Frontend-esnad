@@ -57,91 +57,91 @@ import {
 import { Button } from "@/components/ui/button";
 
 const menuItems = [
-  { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
-  { id: "Ai", title: "اعدادات الذكاء الصناعي", url: "/Ai", icon: Moon, color: "text-gray-500" },
-  { 
-    id: "dashboards", 
-    title: "لوحات التحكم", 
-    icon: BarChart3, 
-    color: "text-teal-500",
-    subItems: [
-      { id: "clinic-analytics", title: "تحليلات العيادات المتقدمة", url: "/analytics/clinics", icon: Building2 },
-      { id: "clinic-dashboard", title: "لوحة تحكم العيادات", url: "/dashboards/clinics", icon: Building2 },
-      { id: "pharmacy-dashboard", title: "لوحة تحكم الصيدليات", url: "/dashboards/pharmacies", icon: Pill },
-      { id: "admin-dashboard", title: "لوحة تحكم الأدمن", url: "/dashboards/admin", icon: Settings, requiredRoles: ["ADMIN", "admin", "SYSTEM_ADMIN"] }
-    ]
-  },
-  { 
-    id: "reports", 
-    title: "التقارير", 
-    icon: FileText, 
-    color: "text-green-500",
-    subItems: [
-      { id: "clinic-reports", title: "تقرير العيادات", url: "/reports/clinics", icon: Building2 },
-      { id: "pharmacy-reports", title: "تقرير الصيدليات", url: "/reports/pharmacies", icon: Pill }
-    ]
-  },
-  {
-    id:"visits-pharmacy-reports",
-    title: " زيارات الصيدليات",
-    url: "visits/pharmacy",
-    icon: Pill,
-    color: "text-pink-500"
-  },
-  { 
-    id: "visits", 
-    title: "الزيارات", 
-    icon: Users, 
-    color: "text-purple-500",
-    subItems: [
-      { id: "clinic-visit", title: "تسجيل زيارة عيادة", url: "/visits/clinic", icon: Stethoscope },
-      { id: "pharmacy-visit", title: "تسجيل زيارة صيدلية", url: "/visits/pharmacy", icon: Pill }
-    ]
-  },
-  { id: "clients", title: "قائمة العملاء", url: "/clients", icon: Users, color: "text-cyan-500" },
-  { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600", requiredRoles: ["SALES REP"] },
-  { 
-    id: "orders", 
-    title: "الطلبات", 
-    icon: ShoppingCart, 
-    color: "text-orange-500",
-    subItems: [
-      { id: "sample-order", title: "طلب عينات", url: "/sample-form", icon: Package },
-      { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
-      { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp }
-    ]
-  },
-  { 
-    id: "collections", 
-    title: "التحصيلات", 
-    icon: DollarSign, 
-    color: "text-emerald-500",
-    subItems: [
-      { id: "financial-collection", title: "تحصيل مالي", url: "/collections/financial", icon: CreditCard },
-      { id: "order-collection", title: "تحصيل طلب", url: "/collections/orders", icon: Receipt }
-    ]
-  },
-  { 
-    id: "financial-collector", 
-    title: "المحصل المالي", 
-    icon: Receipt, 
-    color: "text-green-600",
-    requiredRoles: ["ADMIN", "SYSTEM_ADMIN", "FINANCIAL OFFICER"],
-    subItems: [
-      { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
-      { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart },
-      { id: "financial-orders-collection", title: "مجموعة الطلبات المالية", url: "/financial-collector/financial-orders-collection", icon: BarChart3 }
-    ]
-  },
-  { 
-    id: "evaluations", 
-    title: "التقييمات", 
-    icon: Star, 
-    color: "text-yellow-500",
-    subItems: [
-      { id: "rep-evaluation", title: "تقييم مندوب الزيارات", url: "/evaluations/representatives", icon: UserCheck }
-    ]
-  },
+  // { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
+  // { id: "Ai", title: "اعدادات الذكاء الصناعي", url: "/Ai", icon: Moon, color: "text-gray-500" },
+  // { 
+  //   id: "dashboards", 
+  //   title: "لوحات التحكم", 
+  //   icon: BarChart3, 
+  //   color: "text-teal-500",
+  //   subItems: [
+  //     { id: "clinic-analytics", title: "تحليلات العيادات المتقدمة", url: "/analytics/clinics", icon: Building2 },
+  //     { id: "clinic-dashboard", title: "لوحة تحكم العيادات", url: "/dashboards/clinics", icon: Building2 },
+  //     { id: "pharmacy-dashboard", title: "لوحة تحكم الصيدليات", url: "/dashboards/pharmacies", icon: Pill },
+  //     { id: "admin-dashboard", title: "لوحة تحكم الأدمن", url: "/dashboards/admin", icon: Settings, requiredRoles: ["ADMIN", "admin", "SYSTEM_ADMIN"] }
+  //   ]
+  // },
+  // { 
+  //   id: "reports", 
+  //   title: "التقارير", 
+  //   icon: FileText, 
+  //   color: "text-green-500",
+  //   subItems: [
+  //     { id: "clinic-reports", title: "تقرير العيادات", url: "/reports/clinics", icon: Building2 },
+  //     { id: "pharmacy-reports", title: "تقرير الصيدليات", url: "/reports/pharmacies", icon: Pill }
+  //   ]
+  // },
+  // {
+  //   id:"visits-pharmacy-reports",
+  //   title: " زيارات الصيدليات",
+  //   url: "visits/pharmacy",
+  //   icon: Pill,
+  //   color: "text-pink-500"
+  // },
+  // { 
+  //   id: "visits", 
+  //   title: "الزيارات", 
+  //   icon: Users, 
+  //   color: "text-purple-500",
+  //   subItems: [
+  //     { id: "clinic-visit", title: "تسجيل زيارة عيادة", url: "/visits/clinic", icon: Stethoscope },
+  //     { id: "pharmacy-visit", title: "تسجيل زيارة صيدلية", url: "/visits/pharmacy", icon: Pill }
+  //   ]
+  // },
+  // { id: "clients", title: "قائمة العملاء", url: "/clients", icon: Users, color: "text-cyan-500" },
+  // { id: "sales-clients", title: "عملاء المبيعات", url: "/sales-clients", icon: UserCheck, color: "text-blue-600", requiredRoles: ["SALES REP"] },
+  // { 
+  //   id: "orders", 
+  //   title: "الطلبات", 
+  //   icon: ShoppingCart, 
+  //   color: "text-orange-500",
+  //   subItems: [
+  //     { id: "sample-order", title: "طلب عينات", url: "/sample-form", icon: Package },
+  //     { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
+  //     { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp }
+  //   ]
+  // },
+  // { 
+  //   id: "collections", 
+  //   title: "التحصيلات", 
+  //   icon: DollarSign, 
+  //   color: "text-emerald-500",
+  //   subItems: [
+  //     { id: "financial-collection", title: "تحصيل مالي", url: "/collections/financial", icon: CreditCard },
+  //     { id: "order-collection", title: "تحصيل طلب", url: "/collections/orders", icon: Receipt }
+  //   ]
+  // },
+  // { 
+  //   id: "financial-collector", 
+  //   title: "المحصل المالي", 
+  //   icon: Receipt, 
+  //   color: "text-green-600",
+  //   requiredRoles: ["ADMIN", "SYSTEM_ADMIN", "FINANCIAL OFFICER"],
+  //   subItems: [
+  //     { id: "money-collection", title: "تحصيل المال", url: "/financial-collector/money-collection", icon: DollarSign },
+  //     { id: "orders-collection", title: "تحصيل الطلبيات", url: "/financial-collector/orders-collection", icon: ShoppingCart },
+  //     { id: "financial-orders-collection", title: "مجموعة الطلبات المالية", url: "/financial-collector/financial-orders-collection", icon: BarChart3 }
+  //   ]
+  // },
+  // { 
+  //   id: "evaluations", 
+  //   title: "التقييمات", 
+  //   icon: Star, 
+  //   color: "text-yellow-500",
+  //   subItems: [
+  //     { id: "rep-evaluation", title: "تقييم مندوب الزيارات", url: "/evaluations/representatives", icon: UserCheck }
+  //   ]
+  // },
 ];
 
 const managementItems = [
@@ -230,7 +230,7 @@ export function AppSidebar() {
         },
       ];
     }
-    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER" || user?.role === "ASSITANT" || user?.role === "GENARL MANAGER") {
+    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER" || user?.role === "ASSITANT" || user?.role === "GENERAL MANAGER") {
       return  [
                { 
           id: "dashboards", 
