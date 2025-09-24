@@ -61,6 +61,7 @@ import ProductDetailsView from "./pages/ProductDetailsView";
 import ReceiptBooksManager from "./pages/ReceiptBooksManager";
 import ReceiptBookDetails from "./pages/ReceiptBookDetails";
 import ReportMarketingMedicalRep from "./pages/medical-reports/ReportMarketingMedicalRep";
+import SamplesMedicalRep from "./pages/medical-reports/SamplesMedicalRep";
 
 
 const queryClient = new QueryClient();
@@ -385,6 +386,11 @@ const App = () => (
                     <Route path="/admin/sample-requests" element={
                       <ProtectedRoute requiredRoles={['ADMIN']}>
                         <AdminSampleRequests />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/reports/samples/medical-rep" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP']}>
+                        <SamplesMedicalRep />
                       </ProtectedRoute>
                     } />
                     <Route path="/users" element={

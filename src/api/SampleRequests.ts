@@ -305,3 +305,144 @@ export const exportAdminSampleRequestsToExcel = async (
     throw new Error(error.response?.data?.message || 'Failed to export sample requests');
   }
 };
+
+
+
+// User Sample Requests Types and Functions
+export interface UserSampleRequest {
+  _id: string;
+  requestDate: string;
+  deliveryDate: string;
+  product: {
+    _id: string;
+    PRODUCT: string;
+    CODE?: string;
+    BRAND?: string;
+    PRICE?: number;
+    COMPANY?: string;
+  };
+  doctor: {
+    _id: string;
+    drName: string;
+    organizationName?: string;
+    specialty?: string;
+    telNumber?: string;
+    city?: string;
+    area?: string;
+    district?: string;
+  };
+  quantity: number;
+  status: 'pending' | 'approved' | 'cancelled';
+  medicalRep?: {
+    _id: string;
+    username: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    role?: string;
+  };
+  adminId?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  id: string;
+}
+
+export interface UserSampleRequestsStats {
+  pending: number;
+  approved: number;
+  cancelled: number;
+  total: number;
+}
+
+export interface UserSampleRequestsPagination {
+  currentPage: number;
+  totalPages: number;
+  totalRequests: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface UserInfo {
+  id: string;
+  name: string;
+  username: string;
+  role: string;
+}
+
+export interface UserSampleRequestsResponse {
+  success: boolean;
+  message: string;
+  data: UserSampleRequest[];
+  userInfo: UserInfo;
+  pagination: UserSampleRequestsPagination;
+  stats: UserSampleRequestsStats & {
+    medicalRepsCount?: number;
+  };
+}
+
+export interface GetUserSampleRequestsParams {
+  page?: number;
+  limit?: number;
+  status?: 'pending' | 'approved' | 'cancelled';
+  doctor?: string;
+  product?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
+// Get sample requests by user ID
+export const getSampleRequestsByUserId = async (
+  userId: string,
+  params?: GetUserSampleRequestsParams
+): Promise<UserSampleRequestsResponse> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.doctor) queryParams.append('doctor', params.doctor);
+    if (params?.product) queryParams.append('product', params.product);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.search) queryParams.append('search', params.search);
+
+    const url = `/sample-requests/user/${userId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching user sample requests:', error);
+    throw new Error(error.response?.data?.message || 'فشل في جلب طلبات العينات للمستخدم');
+  }
+};
+
+// Export user sample requests to Excel
+export const exportUserSampleRequestsToExcel = async (
+  userId: string,
+  params?: Omit<GetUserSampleRequestsParams, 'page' | 'limit'>
+): Promise<Blob> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.doctor) queryParams.append('doctor', params.doctor);
+    if (params?.product) queryParams.append('product', params.product);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.search) queryParams.append('search', params.search);
+
+    const url = `/sample-requests/user/${userId}/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url, { responseType: 'blob' });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error exporting user sample requests:', error);
+    throw new Error(error.response?.data?.message || 'فشل في تصدير طلبات العينات');
+  }
+};
