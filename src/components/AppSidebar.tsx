@@ -230,7 +230,7 @@ export function AppSidebar() {
         },
       ];
     }
-    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER" || user?.role === "ASSITANT") {
+    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER" || user?.role === "ASSITANT" || user?.role === "GENARL MANAGER") {
       return  [
                { 
           id: "dashboards", 

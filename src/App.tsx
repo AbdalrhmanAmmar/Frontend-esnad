@@ -106,7 +106,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/dashboards/admin" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'SALES SUPERVISOR', 'FINANCIAL OFFICER','FINANCIAL MANAGER','ASSITANT']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'SALES SUPERVISOR', 'FINANCIAL OFFICER','FINANCIAL MANAGER','ASSITANT' , 'GENERAL MANAGER']}>
                         <AdminDashboard />
                       </ProtectedRoute>
                     } />
@@ -172,22 +172,22 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/money-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT' , 'GENARL MANAGER']}>
                         <MoneyCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/orders-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT','GENARL MANAGER']}>
                         <OrdersCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/financial-orders-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'manager', 'FINANCIAL OFFICER' , 'ASSITANT']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'manager', 'FINANCIAL OFFICER' , 'ASSITANT' , 'GENARL MANAGER']}>
                         <FinancialOrdersCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/orders-collector" element={
-                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS','ADMIN', 'SALES SUPERVISOR','FINANCIAL MANAGER', 'ASSITANT']}>
+                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS','ADMIN', 'SALES SUPERVISOR','FINANCIAL MANAGER', 'ASSITANT', 'GENARL MANAGER']}>
                         <OrdersCollector />
                       </ProtectedRoute>
                     } />
