@@ -311,15 +311,11 @@ export function AppSidebar() {
     
     if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
       return [
-        { 
-          id: "dashboards", 
-          title: "لوحات التحكم", 
-          icon: BarChart3, 
-          color: "text-teal-500",
-          subItems: [
-            { id: "clinic-analytics", title: "تحليلات العيادات المتقدمة", url: "/analytics/clinics", icon: Building2 }
-          ]
-        },
+        
+       
+            { id: "clinic-analytics", title: "لوحه تحكم العيادات", url: "/analytics/clinics", icon: Building2 },
+          
+        
         { 
           id: "reports", 
           title: "التقارير", 
@@ -335,10 +331,14 @@ export function AppSidebar() {
           icon: ShoppingCart, 
           color: "text-orange-500",
           subItems: [
+                  { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
+
             { id: "sample-request", title: "نموذج طلب عينات", url: "/sample-request", icon: Package, requiredRoles: ["MEDICAL REP", "medical rep"] },
             { id: "marketing-order", title: "نموذج طلب تسويقي", url: "/marketing-request", icon: TrendingUp, requiredRoles: ["MEDICAL REP", "medical rep"] }
           ]
         },
+                    { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList },
+
       ];
     }
     
@@ -403,7 +403,6 @@ export function AppSidebar() {
     icon: UserCog, 
     color: "text-indigo-500",
     subItems: [
-      { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus, requiredRoles: ["MEDICAL REP", "medical rep"] },
       { id: "add-user", title: "إضافة مستخدم", url: "/users/add", icon: UserPlus },
       { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] },
       { id: "all-admins", title: "جميع الأدمن", url: "/management/all-admins", icon: Users, requiredRoles: ["SYSTEM_ADMIN"] }
@@ -477,25 +476,12 @@ export function AppSidebar() {
             { id: "create-admin", title: "إنشاء أدمن جديد", url: "/management/create-admin", icon: User, requiredRoles: ["SYSTEM_ADMIN"] },
             { id: "all-admins", title: "جميع عملائي (الادمن)", url: "/management/all-admins", icon: Users, requiredRoles: ["SYSTEM_ADMIN"] }
           ]
-        }
+        },
+        
       ];
     }
     
-    if (user?.role === "MEDICAL REP" || user?.role === "medical rep") {
-      return [
-        { 
-          id: "users", 
-          title: "إدارة المستخدمين", 
-          icon: UserCog, 
-          color: "text-indigo-500",
-          subItems: [
-            { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User },
-            { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList },
-            { id: "create-visit", title: "تسجيل زيارة عادية", url: "/create-visit", icon: CalendarPlus }
-          ]
-        }
-      ];
-    }
+    
     
     return managementItems;
   };
