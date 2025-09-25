@@ -102,7 +102,7 @@ export const exportOrdersData = async (
   if (filters.startDate) params.append('startDate', filters.startDate);
   if (filters.endDate) params.append('endDate', filters.endDate);
 
-  const response = await api.get(`//${adminId}/sales-products/export?${params.toString()}`, {
+  const response = await api.get(`/financial-pharmacy/export/sales/${adminId}?${params.toString()}`, {
     responseType: 'blob'
   });
   return response.data;
