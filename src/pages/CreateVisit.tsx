@@ -37,7 +37,7 @@ const CreateVisit: React.FC = () => {
   
   // Form state
   const [formData, setFormData] = useState<CreateVisitRequest>({
-    visitDate: '',
+    visitDate: new Date().toISOString(),
     doctorId: '',
     products: [],
     notes: '',
@@ -175,7 +175,7 @@ const CreateVisit: React.FC = () => {
           title: 'نجح',
           description: 'تم إنشاء الزيارة بنجاح',
         });
-        navigate('/visits'); // Navigate to visits list
+        navigate('/analytics/clinics'); // Navigate to visits list
       }
     } catch (error: any) {
       toast({
