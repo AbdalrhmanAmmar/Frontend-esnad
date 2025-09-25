@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuthStore } from '@/stores/authStore';
+import { useMedicalRepStore } from '@/stores/medicalRepStore';
 import { loginUser } from '@/api/api';
+import { getMedicalRepData } from '@/api/MedicalRep';
 import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
@@ -20,6 +22,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated, user } = useAuthStore();
+  const { setData } = useMedicalRepStore();
   
   // Redirect if already authenticated
   useEffect(() => {
@@ -53,7 +56,25 @@ const Login: React.FC = () => {
         // Check if data was stored
         console.log('Auth store after login:', { user, isAuthenticated });
         
-        toast.success('تم تسجيل الدخول بنجاح!');
+        // If user is a medical rep, load their data automatically
+        if (response.data.user.role === 'MEDICAL REP' || response.data.user.role === 'medical rep') {
+          try {
+            const medicalRepData = await getMedicalRepData(response.data.user._id);
+            if (medicalRepData.success) {
+              setData(medicalRepData.data.doctors, medicalRepData.data.products);
+              toast.success('تم تسجيل الدخول وتحميل البيانات بنجاح!');
+            } else {
+              toast.success('تم تسجيل الدخول بنجاح!');
+              toast.error('فشل في تحميل البيانات، يرجى زيارة صفحة بياناتي');
+            }
+          } catch (error) {
+            console.error('Error loading medical rep data:', error);
+            toast.success('تم تسجيل الدخول بنجاح!');
+            toast.error('فشل في تحميل البيانات، يرجى زيارة صفحة بياناتي');
+          }
+        } else {
+          toast.success('تم تسجيل الدخول بنجاح!');
+        }
         
         // Redirect to profile page
         navigate('/profile', { replace: true });

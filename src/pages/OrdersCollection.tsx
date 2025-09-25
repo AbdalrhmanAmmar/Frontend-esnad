@@ -112,8 +112,8 @@ startDate.setDate(startDate.getDate() - 7);
         limit: 10,
         ...(currentFilters.search && { search: currentFilters.search }),
         ...(currentFilters.status && currentFilters.status !== 'all' && { status: currentFilters.status as 'pending' | 'approved' | 'rejected' }),
-        ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRepName: currentFilters.salesRep }),
-        ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacyName: currentFilters.pharmacy }),
+        ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRep: currentFilters.salesRep }),
+        ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacy: currentFilters.pharmacy }),
         ...(currentFilters.startDate && { 
           startDate: new Date(currentFilters.startDate.getFullYear(), currentFilters.startDate.getMonth(), currentFilters.startDate.getDate(), 0, 0, 0).toISOString()
         }),
@@ -254,7 +254,7 @@ startDate.setDate(startDate.getDate() - 7);
       const params: any = {
         ...(filters.search && { search: filters.search }),
         ...(filters.status && filters.status !== 'all' && { status: filters.status as 'pending' | 'approved' | 'rejected' }),
-        ...(filters.salesRep && filters.salesRep !== 'all' && { salesRepId: filters.salesRep }),
+        ...(filters.salesRep && filters.salesRep !== 'all' && { salesRep: filters.salesRep }),
         ...(filters.pharmacy && filters.pharmacy !== 'all' && { pharmacy: filters.pharmacy }),
         ...(filters.startDate && { startDate: filters.startDate.toISOString().split('T')[0] }),
         ...(filters.endDate && { endDate: filters.endDate.toISOString().split('T')[0] })
