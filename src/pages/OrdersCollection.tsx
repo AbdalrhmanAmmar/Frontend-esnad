@@ -112,8 +112,8 @@ startDate.setDate(startDate.getDate() - 7);
         limit: 10,
         ...(currentFilters.search && { search: currentFilters.search }),
         ...(currentFilters.status && currentFilters.status !== 'all' && { status: currentFilters.status as 'pending' | 'approved' | 'rejected' }),
-        ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRepId: currentFilters.salesRep }),
-        ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacy: currentFilters.pharmacy }),
+        ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRepName: currentFilters.salesRep }),
+        ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacyName: currentFilters.pharmacy }),
         ...(currentFilters.startDate && { 
           startDate: new Date(currentFilters.startDate.getFullYear(), currentFilters.startDate.getMonth(), currentFilters.startDate.getDate(), 0, 0, 0).toISOString()
         }),
@@ -121,6 +121,9 @@ startDate.setDate(startDate.getDate() - 7);
           endDate: new Date(currentFilters.endDate.getFullYear(), currentFilters.endDate.getMonth(), currentFilters.endDate.getDate(), 23, 59, 59, 999).toISOString()
         })
       };
+
+      console.log('Filters being sent to API:', params);
+      console.log('Current filters state:', currentFilters);
 
       const response = await getSalesRepProductsData(id, params);
 

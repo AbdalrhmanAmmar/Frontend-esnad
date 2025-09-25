@@ -55,9 +55,13 @@ export interface OrderFilters {
   limit?: number;
   productId?: string;
   salesRepId?: string;
+  salesRepName?: string;
+  pharmacyName?: string;
   startDate?: string;
   endDate?: string;
   orderStatus?: string;
+  status?: string;
+  search?: string;
 }
 
 export interface OrdersResponse {
@@ -83,9 +87,13 @@ export const getSalesRepProductsData = async (
   if (filters.limit) params.append('limit', filters.limit.toString());
   if (filters.productId) params.append('productId', filters.productId);
   if (filters.salesRepId) params.append('salesRepId', filters.salesRepId);
+  if (filters.salesRepName) params.append('salesRepName', filters.salesRepName);
+  if (filters.pharmacyName) params.append('pharmacyName', filters.pharmacyName);
   if (filters.startDate) params.append('startDate', filters.startDate);
   if (filters.endDate) params.append('endDate', filters.endDate);
   if (filters.orderStatus) params.append('orderStatus', filters.orderStatus);
+  if (filters.status) params.append('status', filters.status);
+  if (filters.search) params.append('search', filters.search);
 
   const response = await api.get(`/financial-pharmacy/${adminId}/sales-products?${params.toString()}`);
   return response.data;
