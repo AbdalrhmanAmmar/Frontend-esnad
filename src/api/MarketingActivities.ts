@@ -381,3 +381,200 @@ export const exportMarketingActivityRequests = async (
     throw new Error(error.response?.data?.message || 'حدث خطأ أثناء تصدير البيانات');
   }
 };
+
+
+
+// ===== طلبات الأنشطة التسويقية حسب UserId =====
+
+export interface UserMarketingActivityRequest {
+  _id: string;
+  activityDate: string;
+  activityType: {
+    _id: string;
+    name?: string;
+    nameAr?: string;
+    description?: string;
+    descriptionAr?: string;
+    displayName?: string;
+  };
+  doctor: {
+    _id: string;
+    drName: string;
+    organizationName?: string;
+    specialty?: string;
+    telNumber?: string;
+    city?: string;
+    area?: string;
+    district?: string;
+  };
+  cost: number;
+  notes?: string;
+  adminId?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+  createdBy?: {
+    _id: string;
+    username: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    role?: string;
+  };
+  status: 'pending' | 'approved' | 'rejected';
+  requestDate: string;
+  createdAt?: string;
+  updatedAt?: string;
+  statusAr?: string;
+  formattedRequestDate?: string;
+  formattedActivityDate?: string;
+}
+
+export interface UserMarketingActivityRequestsStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+  totalCost: number;
+  medicalRepsCount?: number;
+}
+
+export interface UserMarketingActivityRequestsPagination {
+  currentPage: number;
+  totalPages: number;
+  totalRequests: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface UserInfo {
+  id: string;
+  name: string;
+  username: string;
+  role: string;
+}
+
+export interface UserMarketingActivityRequestsResponse {
+  success: boolean;
+  message: string;
+  data: UserMarketingActivityRequest[];
+  userInfo: UserInfo;
+  pagination: UserMarketingActivityRequestsPagination;
+  stats: UserMarketingActivityRequestsStats;
+}
+
+export interface GetUserMarketingActivityRequestsParams {
+  page?: number;
+  limit?: number;
+  status?: 'pending' | 'approved' | 'rejected' | 'all';
+  activityType?: string;
+  doctor?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
+// Get marketing activity requests by user ID
+export const getMarketingActivityRequestsByUserId = async (
+  userId: string,
+  params?: GetUserMarketingActivityRequestsParams
+): Promise<UserMarketingActivityRequestsResponse> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
+    if (params?.activityType) queryParams.append('activityType', params.activityType);
+    if (params?.doctor) queryParams.append('doctor', params.doctor);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.search) queryParams.append('search', params.search);
+
+    const url = `/marketing-activity-requests/user/${userId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching user marketing activity requests:', error);
+    throw new Error(error.response?.data?.message || 'فشل في جلب طلبات الأنشطة التسويقية للمستخدم');
+  }
+};
+
+// Export user marketing activity requests to Excel
+export const exportUserMarketingActivityRequestsToExcel = async (
+  userId: string,
+  params?: Omit<GetUserMarketingActivityRequestsParams, 'page' | 'limit'>
+): Promise<Blob> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
+    if (params?.activityType) queryParams.append('activityType', params.activityType);
+    if (params?.doctor) queryParams.append('doctor', params.doctor);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.search) queryParams.append('search', params.search);
+
+    const url = `/marketing-activity-requests/user/${userId}/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url, { responseType: 'blob' });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error exporting user marketing activity requests:', error);
+    throw new Error(error.response?.data?.message || 'فشل في تصدير طلبات الأنشطة التسويقية');
+  }
+};
+
+// Update marketing activity request status for user
+export const updateUserMarketingActivityRequestStatus = async (
+  requestId: string,
+  status: 'pending' | 'approved' | 'rejected',
+  notes?: string
+): Promise<{ success: boolean; message: string; data: UserMarketingActivityRequest }> => {
+  try {
+    const response = await api.put(`/marketing-activity-requests/${requestId}`, {
+      status,
+      notes
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'حدث خطأ أثناء تحديث حالة الطلب');
+  }
+};
+
+// Create marketing activity request for user
+export const createUserMarketingActivityRequest = async (
+  requestData: Omit<MarketingActivityRequest, 'status'>
+): Promise<{ success: boolean; message: string; data: UserMarketingActivityRequest }> => {
+  try {
+    const response = await api.post('/marketing-activity-requests', requestData);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'حدث خطأ أثناء إنشاء طلب النشاط التسويقي');
+  }
+};
+
+// Delete marketing activity request for user
+export const deleteUserMarketingActivityRequest = async (
+  requestId: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await api.delete(`/marketing-activity-requests/${requestId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'حدث خطأ أثناء حذف طلب النشاط التسويقي');
+  }
+};
+
+// Get marketing activity request by ID for user
+export const getUserMarketingActivityRequestById = async (
+  requestId: string
+): Promise<{ success: boolean; data: UserMarketingActivityRequest }> => {
+  try {
+    const response = await api.get(`/marketing-activity-requests/${requestId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'فشل في جلب تفاصيل طلب النشاط التسويقي');
+  }
+};

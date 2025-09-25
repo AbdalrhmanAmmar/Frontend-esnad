@@ -1,264 +1,362 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Search, Filter, BookOpen, Calendar, Hash, CheckCircle, XCircle, TrendingUp, Eye } from 'lucide-react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { 
+  Button 
+} from '@/components/ui/button';
+import { 
+  Input 
+} from '@/components/ui/input';
+import { 
+  Label 
+} from '@/components/ui/label';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  Textarea 
+} from '@/components/ui/textarea';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { 
+  Badge 
+} from '@/components/ui/badge';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { Pagination } from '@/components/ui/pagination';
+import { 
+  Loader2, 
+  Plus, 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Power, 
+  PowerOff, 
+  BookOpen, 
+  Users, 
+  FileText, 
+  Activity,
+  X,
+  Calendar,
+  User
+} from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  ReceiptBook,
+  CreateReceiptBookData,
+  UpdateReceiptBookData,
+  getAllReceiptBooks,
+  createReceiptBook,
+  updateReceiptBook,
+  deleteReceiptBook,
+  toggleReceiptBookStatus,
+  getReceiptBooksStats,
+  getAllSalesReps,
+  SalesRep
+} from '@/api/ReceiptBooks';
 
-// أنواع البيانات
-interface ReceiptBook {
-  id: string;
-  bookNumber: string;
-  startReceiptNumber: number;
-  endReceiptNumber: number;
+interface Stats {
+  totalBooks: number;
+  activeBooks: number;
+  inactiveBooks: number;
   totalReceipts: number;
-  status: 'active' | 'used' | 'cancelled';
-  createdAt: string;
-  createdBy: string;
-  usedReceipts?: number;
-  notes?: string;
+  usedReceipts: number;
+  availableReceipts: number;
 }
 
-interface CreateReceiptBookForm {
-  bookNumber: string;
-  startReceiptNumber: number;
-  endReceiptNumber: number;
-  notes: string;
-}
+const ReceiptBooksManager: React.FC = () => {
+  // State Management
+  const [receiptBooks, setReceiptBooks] = useState<ReceiptBook[]>([]);
+  const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
+  const [stats, setStats] = useState<Stats>({
+    totalBooks: 0,
+    activeBooks: 0,
+    inactiveBooks: 0,
+    totalReceipts: 0,
+    usedReceipts: 0,
+    availableReceipts: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
 
-const ReceiptBooksManager = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [books, setBooks] = useState<ReceiptBook[]>([
-
-  ]);
-
+  // Pagination & Filtering
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'used' | 'cancelled'>('all');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [salesRepFilter, setSalesRepFilter] = useState<string>('all');
+
+  // Dialog States
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<ReceiptBook | null>(null);
-  const [formData, setFormData] = useState<CreateReceiptBookForm>({
-    bookNumber: '',
-    startReceiptNumber: 0,
-    endReceiptNumber: 0,
+
+  // Form Data
+  const [formData, setFormData] = useState<CreateReceiptBookData>({
+    bookName: '',
+    startNumber: 1,
+    endNumber: 100,
+    salesRep: '',
     notes: ''
   });
-  const [loading, setLoading] = useState(false);
 
-  // تصفية الدفاتر حسب البحث والحالة
-  const filteredBooks = books.filter(book => {
-    const matchesSearch = book.bookNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.notes?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || book.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Load Data
+  useEffect(() => {
+    loadData();
+    loadSalesReps();
+    loadStats();
+  }, [currentPage, searchTerm, statusFilter, salesRepFilter]);
 
-  // إنشاء رقم دفتر تلقائي
-  const generateBookNumber = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const count = books.length + 1;
-    return `BK-${year}-${month}-${String(count).padStart(3, '0')}`;
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: 10,
+        ...(searchTerm && { search: searchTerm }),
+        ...(statusFilter !== 'all' && { isActive: statusFilter === 'active' }),
+        ...(salesRepFilter !== 'all' && { salesRep: salesRepFilter })
+      };
+
+      const response = await getAllReceiptBooks(params);
+      if (response.success) {
+        setReceiptBooks(response.data);
+        setTotalPages(response.pagination.totalPages);
+        setTotalItems(response.pagination.totalItems);
+      }
+    } catch (error: any) {
+      toast.error('خطأ في تحميل البيانات: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // فتح نموذج الإنشاء
-  const handleCreateNew = () => {
+  const loadSalesReps = async () => {
+    try {
+      const response = await getAllSalesReps();
+      if (response.success) {
+        setSalesReps(response.data);
+      }
+    } catch (error: any) {
+      console.error('خطأ في تحميل المندوبين:', error);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await getReceiptBooksStats();
+      if (response.success) {
+        setStats(response.data);
+      }
+    } catch (error: any) {
+      console.error('خطأ في تحميل الإحصائيات:', error);
+    }
+  };
+
+  // Form Handlers
+  const handleInputChange = (field: keyof CreateReceiptBookData, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const validateForm = (): boolean => {
+    if (!formData.bookName.trim()) {
+      toast.error('يرجى إدخال اسم الدفتر');
+      return false;
+    }
+    if (!formData.salesRep) {
+      toast.error('يرجى اختيار المندوب');
+      return false;
+    }
+    if (formData.startNumber >= formData.endNumber) {
+      toast.error('رقم البداية يجب أن يكون أقل من رقم النهاية');
+      return false;
+    }
+    if (formData.startNumber < 1) {
+      toast.error('رقم البداية يجب أن يكون أكبر من صفر');
+      return false;
+    }
+    return true;
+  };
+
+  const resetForm = () => {
     setFormData({
-      bookNumber: generateBookNumber(),
-      startReceiptNumber: 0,
-      endReceiptNumber: 0,
+      bookName: '',
+      startNumber: 1,
+      endNumber: 100,
+      salesRep: '',
       notes: ''
     });
-    setIsCreateDialogOpen(true);
   };
 
-  // فتح نموذج التعديل
-  const handleEdit = (book: ReceiptBook) => {
-    setSelectedBook(book);
-    setFormData({
-      bookNumber: book.bookNumber,
-      startReceiptNumber: book.startReceiptNumber,
-      endReceiptNumber: book.endReceiptNumber,
-      notes: book.notes || ''
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  // إنشاء دفتر جديد
+  // CRUD Operations
   const handleCreate = async () => {
-    if (formData.startReceiptNumber >= formData.endReceiptNumber) {
-      toast({
-        title: "خطأ في المدخلات",
-        description: "رقم بداية الوصل يجب أن يكون أقل من رقم نهاية الوصل",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!validateForm()) return;
 
-    if (formData.startReceiptNumber <= 0 || formData.endReceiptNumber <= 0) {
-      toast({
-        title: "خطأ في المدخلات",
-        description: "يجب أن تكون أرقام الوصولات أكبر من الصفر",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
     try {
-      // محاكاة API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newBook: ReceiptBook = {
-        id: String(Date.now()),
-        bookNumber: formData.bookNumber,
-        startReceiptNumber: formData.startReceiptNumber,
-        endReceiptNumber: formData.endReceiptNumber,
-        totalReceipts: formData.endReceiptNumber - formData.startReceiptNumber + 1,
-        status: 'active',
-        createdAt: new Date().toISOString().split('T')[0],
-        createdBy: 'المستخدم الحالي',
-        usedReceipts: 0,
+      setCreating(true);
+      const response = await createReceiptBook(formData);
+      if (response.success) {
+        toast.success('تم إنشاء دفتر الوصولات بنجاح');
+        setCreateDialogOpen(false);
+        resetForm();
+        loadData();
+        loadStats();
+      }
+    } catch (error: any) {
+      toast.error('خطأ في إنشاء دفتر الوصولات: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedBook || !validateForm()) return;
+
+    try {
+      setUpdating(true);
+      const updateData: UpdateReceiptBookData = {
+        bookName: formData.bookName,
+        startNumber: formData.startNumber,
+        endNumber: formData.endNumber,
+        salesRep: formData.salesRep,
         notes: formData.notes
       };
 
-      setBooks(prev => [newBook, ...prev]);
-      setIsCreateDialogOpen(false);
-      setFormData({ bookNumber: '', startReceiptNumber: 0, endReceiptNumber: 0, notes: '' });
-      
-      toast({
-        title: "تم بنجاح ✅",
-        description: "تم إنشاء دفتر الوصولات الجديد بنجاح"
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "فشل في إنشاء دفتر الوصولات",
-        variant: "destructive"
-      });
+      const response = await updateReceiptBook(selectedBook._id, updateData);
+      if (response.success) {
+        toast.success('تم تحديث دفتر الوصولات بنجاح');
+        setEditDialogOpen(false);
+        setSelectedBook(null);
+        resetForm();
+        loadData();
+        loadStats();
+      }
+    } catch (error: any) {
+      toast.error('خطأ في تحديث دفتر الوصولات: ' + (error.response?.data?.message || error.message));
     } finally {
-      setLoading(false);
+      setUpdating(false);
     }
   };
 
-  // تحديث دفتر
-  const handleUpdate = async () => {
-    if (!selectedBook) return;
-
-    if (formData.startReceiptNumber >= formData.endReceiptNumber) {
-      toast({
-        title: "خطأ في المدخلات",
-        description: "رقم بداية الوصل يجب أن يكون أقل من رقم نهاية الوصل",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (formData.startReceiptNumber <= 0 || formData.endReceiptNumber <= 0) {
-      toast({
-        title: "خطأ في المدخلات",
-        description: "يجب أن تكون أرقام الوصولات أكبر من الصفر",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
+  const handleDelete = async (id: string) => {
     try {
-      // محاكاة API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const updatedBooks = books.map(book =>
-        book.id === selectedBook.id
-          ? {
-              ...book,
-              bookNumber: formData.bookNumber,
-              startReceiptNumber: formData.startReceiptNumber,
-              endReceiptNumber: formData.endReceiptNumber,
-              totalReceipts: formData.endReceiptNumber - formData.startReceiptNumber + 1,
-              notes: formData.notes
-            }
-          : book
-      );
-
-      setBooks(updatedBooks);
-      setIsEditDialogOpen(false);
-      setSelectedBook(null);
-      
-      toast({
-        title: "تم بنجاح ✅",
-        description: "تم تحديث دفتر الوصولات بنجاح"
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "فشل في تحديث دفتر الوصولات",
-        variant: "destructive"
-      });
+      setDeleting(id);
+      const response = await deleteReceiptBook(id);
+      if (response.success) {
+        toast.success('تم حذف دفتر الوصولات بنجاح');
+        loadData();
+        loadStats();
+      }
+    } catch (error: any) {
+      toast.error('خطأ في حذف دفتر الوصولات: ' + (error.response?.data?.message || error.message));
     } finally {
-      setLoading(false);
+      setDeleting(null);
     }
   };
 
-  // حذف دفتر
-  const handleDelete = async (book: ReceiptBook) => {
-    if (!confirm(`هل أنت متأكد من حذف دفتر الوصولات ${book.bookNumber}؟`)) return;
-
-    setLoading(true);
+  const handleToggleStatus = async (id: string) => {
     try {
-      // محاكاة API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const updatedBooks = books.filter(b => b.id !== book.id);
-      setBooks(updatedBooks);
-      
-      toast({
-        title: "تم بنجاح ✅",
-        description: "تم حذف دفتر الوصولات بنجاح"
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "فشل في حذف دفتر الوصولات",
-        variant: "destructive"
-      });
+      setToggling(id);
+      const response = await toggleReceiptBookStatus(id);
+      if (response.success) {
+        toast.success('تم تغيير حالة دفتر الوصولات بنجاح');
+        loadData();
+        loadStats();
+      }
+    } catch (error: any) {
+      toast.error('خطأ في تغيير حالة دفتر الوصولات: ' + (error.response?.data?.message || error.message));
     } finally {
-      setLoading(false);
+      setToggling(null);
     }
   };
 
-  // الحصول على لون الحالة
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" />نشط</Badge>;
-      case 'used':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">مكتمل</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" />ملغى</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
+  // Dialog Handlers
+  const openEditDialog = (book: ReceiptBook) => {
+    setSelectedBook(book);
+    setFormData({
+      bookName: book.bookName,
+      startNumber: book.startNumber,
+      endNumber: book.endNumber,
+      salesRep: book.salesRep._id,
+      notes: book.notes || ''
+    });
+    setEditDialogOpen(true);
   };
 
-  // تنسيق التاريخ
+  const openViewDialog = (book: ReceiptBook) => {
+    setSelectedBook(book);
+    setViewDialogOpen(true);
+  };
+
+  // Utility Functions
+  const getStatusBadge = (isActive: boolean) => {
+    return (
+      <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-green-500" : "bg-gray-500"}>
+        {isActive ? 'نشط' : 'غير نشط'}
+      </Badge>
+    );
+  };
+
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd/MM/yyyy', { locale: ar });
+    return new Date(dateString).toLocaleDateString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
-  // حساب النسبة المئوية للاستخدام
-  const getUsagePercentage = (book: ReceiptBook) => {
-    if (!book.usedReceipts) return 0;
-    return Math.round((book.usedReceipts / book.totalReceipts) * 100);
+  const getUsagePercentage = (current: number, start: number, end: number) => {
+    const total = end - start + 1;
+    const used = current - start;
+    return Math.round((used / total) * 100);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setSalesRepFilter('all');
+    setCurrentPage(1);
   };
 
   return (
@@ -266,67 +364,155 @@ const ReceiptBooksManager = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <BookOpen className="w-8 h-8 text-primary" />
-            دفتر الوصولات
-          </h1>
-          <p className="text-muted-foreground mt-1">إدارة دفاتر أرقام الوصولات وتتبع استخدامها</p>
+          <h1 className="text-3xl font-bold text-gray-900">إدارة دفاتر الوصولات</h1>
+          <p className="text-gray-600 mt-1">إدارة وتتبع دفاتر الوصولات للمندوبين</p>
         </div>
-        <Button onClick={handleCreateNew} className="gap-2">
-          <Plus className="w-4 h-4" />
-          إنشاء دفتر جديد
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={loadData}
+            variant="outline"
+            size="sm"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            تحديث
+          </Button>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                إنشاء دفتر جديد
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>إنشاء دفتر وصولات جديد</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="bookName">اسم الدفتر *</Label>
+                  <Input
+                    id="bookName"
+                    value={formData.bookName}
+                    onChange={(e) => handleInputChange('bookName', e.target.value)}
+                    placeholder="أدخل اسم الدفتر"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="salesRep">المندوب *</Label>
+                  <Select
+                    value={formData.salesRep}
+                    onValueChange={(value) => handleInputChange('salesRep', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المندوب" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {salesReps.map((rep) => (
+                        <SelectItem key={rep._id} value={rep._id}>
+                          {rep.username}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startNumber">رقم البداية *</Label>
+                    <Input
+                      id="startNumber"
+                      type="number"
+                      value={formData.startNumber}
+                      onChange={(e) => handleInputChange('startNumber', parseInt(e.target.value) || 1)}
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="endNumber">رقم النهاية *</Label>
+                    <Input
+                      id="endNumber"
+                      type="number"
+                      value={formData.endNumber}
+                      onChange={(e) => handleInputChange('endNumber', parseInt(e.target.value) || 100)}
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">ملاحظات</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    placeholder="أدخل أي ملاحظات إضافية"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCreateDialogOpen(false)}
+                    disabled={creating}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    onClick={handleCreate}
+                    disabled={creating || !formData.bookName || !formData.salesRep}
+                  >
+                    {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    إنشاء
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي الدفاتر</CardTitle>
-            <BookOpen className="h-4 w-4 text-blue-600" />
+            <BookOpen className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{books.length}</div>
-            <p className="text-xs text-blue-600">دفتر</p>
+            <div className="text-2xl font-bold text-blue-600">{stats.totalBooks}</div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-r from-green-50 to-green-100">
+
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">الدفاتر النشطة</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <Activity className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {books.filter(b => b.status === 'active').length}
-            </div>
-            <p className="text-xs text-green-600">دفتر نشط</p>
+            <div className="text-2xl font-bold text-green-600">{stats.activeBooks}</div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-r from-orange-50 to-orange-100">
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">المندوبين</CardTitle>
+            <Users className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{salesReps.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي الوصولات</CardTitle>
-            <Hash className="h-4 w-4 text-orange-600" />
+            <FileText className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {books.reduce((sum, book) => sum + book.totalReceipts, 0)}
-            </div>
-            <p className="text-xs text-orange-600">وصول</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-r from-red-200 to-red-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الوصولات الخاطئه</CardTitle>
-            <TrendingUp className="h-4 w-4 text-red-900" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {books.length > 0 ? Math.round(books.reduce((sum, book) => sum + getUsagePercentage(book), 0) / books.length) : 0}%
-            </div>
-            <p className="text-xs text-purple-600">نسبة الاستخدام</p>
+            <div className="text-2xl font-bold text-orange-600">{stats.totalReceipts}</div>
           </CardContent>
         </Card>
       </div>
@@ -335,315 +521,411 @@ const ReceiptBooksManager = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
+            <Filter className="h-5 w-5" />
             البحث والتصفية
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <Label htmlFor="search">بحث</Label>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="search">البحث</Label>
               <div className="relative">
-                <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="search"
-                  placeholder="ابحث برقم الدفتر أو الملاحظات..."
+                  placeholder="البحث في أسماء الدفاتر..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10"
+                  className="pl-10"
                 />
               </div>
             </div>
-            
+
             <div>
-              <Label htmlFor="status">حالة الدفتر</Label>
-              <select
-                id="status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              <Label htmlFor="status">الحالة</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="active">نشط</SelectItem>
+                  <SelectItem value="inactive">غير نشط</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="salesRep">المندوب</Label>
+              <Select value={salesRepFilter} onValueChange={setSalesRepFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع المندوبين</SelectItem>
+                  {salesReps.map((rep) => (
+                    <SelectItem key={rep._id} value={rep._id}>
+                      {rep.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-end">
+              <Button
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full"
               >
-                <option value="all">جميع الحالات</option>
-                <option value="active">نشط</option>
-                <option value="used">مكتمل</option>
-                <option value="cancelled">ملغى</option>
-              </select>
+                <X className="h-4 w-4 mr-2" />
+                مسح الفلاتر
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Books Table */}
+      {/* Data Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة دفاتر الوصولات</CardTitle>
-          <CardDescription>
-            عرض جميع دفاتر الوصولات مع إمكانية الإدارة والتعديل
-          </CardDescription>
+          <CardTitle>قائمة دفاتر الوصولات ({totalItems})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>رقم الدفتر</TableHead>
-                  <TableHead>أرقام الوصولات</TableHead>
-                  <TableHead>إجمالي الوصولات</TableHead>
-                  <TableHead>المستخدم</TableHead>
-                  <TableHead>حالة الاستخدام</TableHead>
-                  <TableHead>تاريخ الإنشاء</TableHead>
-                  <TableHead>الحالة</TableHead>
-                  <TableHead>الإجراءات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBooks.map((book) => (
-                  <TableRow key={book.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="font-medium text-primary">{book.bookNumber}</div>
-                      {book.notes && (
-                        <div className="text-sm text-muted-foreground">{book.notes}</div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-mono text-sm">
-                        {book.startReceiptNumber} - {book.endReceiptNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-mono">
-                        {book.totalReceipts} وصل
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{book.createdBy}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>مستخدم</span>
-                          <span>{book.usedReceipts || 0}/{book.totalReceipts}</span>
-                        </div>
-                        <div className="w-full bg-secondary rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              getUsagePercentage(book) < 50 ? 'bg-green-500' :
-                              getUsagePercentage(book) < 80 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${getUsagePercentage(book)}%` }}
-                          />
-                        </div>
-                        <div className="text-xs text-muted-foreground text-center">
-                          {getUsagePercentage(book)}%
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(book.createdAt)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(book.status)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                            <Button
-      variant="outline"
-      size="sm"
-      onClick={() => navigate(`/receipt-books/${book.id}`)}
-      className="gap-1"
-    >
-      <Eye className="w-3 h-3" />
-      التفاصيل
-    </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(book)}
-                          disabled={book.status === 'used'}
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(book)}
-                          disabled={book.status === 'used'}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="mr-2">جاري التحميل...</span>
+            </div>
+          ) : receiptBooks.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              لا توجد دفاتر وصولات
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>اسم الدفتر</TableHead>
+                    <TableHead>المندوب</TableHead>
+                    <TableHead>النطاق</TableHead>
+                    <TableHead>الرقم الحالي</TableHead>
+                    <TableHead>نسبة الاستخدام</TableHead>
+                    <TableHead>الحالة</TableHead>
+                    <TableHead>تاريخ الإنشاء</TableHead>
+                    <TableHead>الإجراءات</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            {filteredBooks.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchTerm || statusFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد دفاتر متاحة'}
-              </div>
-            )}
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {receiptBooks.map((book) => (
+                    <TableRow key={book._id}>
+                      <TableCell className="font-medium">{book.bookName}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-400" />
+                          {book.salesRep.username}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {book.startNumber} - {book.endNumber}
+                      </TableCell>
+                      <TableCell>{book.currentNumber}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full"
+                              style={{
+                                width: `${getUsagePercentage(book.currentNumber, book.startNumber, book.endNumber)}%`
+                              }}
+                            />
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            {getUsagePercentage(book.currentNumber, book.startNumber, book.endNumber)}%
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(book.isActive)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          {formatDate(book.createdAt)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openViewDialog(book)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditDialog(book)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleToggleStatus(book._id)}
+                            disabled={toggling === book._id}
+                          >
+                            {toggling === book._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : book.isActive ? (
+                              <PowerOff className="h-4 w-4" />
+                            ) : (
+                              <Power className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  هل أنت متأكد من حذف دفتر الوصولات "{book.bookName}"؟ 
+                                  هذا الإجراء لا يمكن التراجع عنه.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(book._id)}
+                                  disabled={deleting === book._id}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {deleting === book._id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  ) : null}
+                                  حذف
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 
-      {/* Create Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-primary" />
-              إنشاء دفتر وصلات جديد
-            </DialogTitle>
-            <DialogDescription>
-              أدخل معلومات دفتر الوصلات الجديد
-            </DialogDescription>
+            <DialogTitle>تعديل دفتر الوصولات</DialogTitle>
           </DialogHeader>
-          
           <div className="space-y-4">
             <div>
-              <Label htmlFor="bookNumber">رقم الدفتر</Label>
+              <Label htmlFor="editBookName">اسم الدفتر *</Label>
               <Input
-                id="bookNumber"
-                value={formData.bookNumber}
-                onChange={(e) => setFormData(prev => ({ ...prev, bookNumber: e.target.value }))}
-                placeholder="رقم الدفتر"
+                id="editBookName"
+                value={formData.bookName}
+                onChange={(e) => handleInputChange('bookName', e.target.value)}
+                placeholder="أدخل اسم الدفتر"
               />
             </div>
-            
+
+            <div>
+              <Label htmlFor="editSalesRep">المندوب *</Label>
+              <Select
+                value={formData.salesRep}
+                onValueChange={(value) => handleInputChange('salesRep', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {salesReps.map((rep) => (
+                    <SelectItem key={rep._id} value={rep._id}>
+                      {rep.name} ({rep.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startReceiptNumber">رقم بداية الوصل</Label>
+                <Label htmlFor="editStartNumber">رقم البداية *</Label>
                 <Input
-                  id="startReceiptNumber"
+                  id="editStartNumber"
                   type="number"
+                  value={formData.startNumber}
+                  onChange={(e) => handleInputChange('startNumber', parseInt(e.target.value) || 1)}
                   min="1"
-                  value={formData.startReceiptNumber || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, startReceiptNumber: parseInt(e.target.value) || 0 }))}
-                  placeholder="1001"
                 />
               </div>
-              
               <div>
-                <Label htmlFor="endReceiptNumber">رقم نهاية الوصل</Label>
+                <Label htmlFor="editEndNumber">رقم النهاية *</Label>
                 <Input
-                  id="endReceiptNumber"
+                  id="editEndNumber"
                   type="number"
+                  value={formData.endNumber}
+                  onChange={(e) => handleInputChange('endNumber', parseInt(e.target.value) || 100)}
                   min="1"
-                  value={formData.endReceiptNumber || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, endReceiptNumber: parseInt(e.target.value) || 0 }))}
-                  placeholder="1100"
                 />
               </div>
             </div>
-            
-            {formData.startReceiptNumber > 0 && formData.endReceiptNumber > 0 && (
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-sm text-center">
-                  إجمالي عدد الوصلات: <strong>{formData.endReceiptNumber - formData.startReceiptNumber + 1}</strong>
-                </div>
-              </div>
-            )}
-            
+
             <div>
-              <Label htmlFor="notes">ملاحظات (اختياري)</Label>
-              <Input
-                id="notes"
+              <Label htmlFor="editNotes">ملاحظات</Label>
+              <Textarea
+                id="editNotes"
                 value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="ملاحظات حول الدفتر..."
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                placeholder="أدخل أي ملاحظات إضافية"
+                rows={3}
               />
             </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditDialogOpen(false);
+                  setSelectedBook(null);
+                  resetForm();
+                }}
+              >
+                إلغاء
+              </Button>
+              <Button
+                onClick={handleUpdate}
+                disabled={updating}
+              >
+                {updating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    جاري التحديث...
+                  </>
+                ) : (
+                  'تحديث'
+                )}
+              </Button>
+            </div>
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleCreate} disabled={loading}>
-              {loading ? 'جاري الإنشاء...' : 'إنشاء الدفتر'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5 text-primary" />
-              تعديل دفتر الوصلات
-            </DialogTitle>
-            <DialogDescription>
-              تعديل معلومات دفتر الوصلات المحدد
-            </DialogDescription>
+            <DialogTitle>تفاصيل دفتر الوصولات</DialogTitle>
           </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="editBookNumber">رقم الدفتر</Label>
-              <Input
-                id="editBookNumber"
-                value={formData.bookNumber}
-                onChange={(e) => setFormData(prev => ({ ...prev, bookNumber: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="editStartReceiptNumber">رقم بداية الوصل</Label>
-                <Input
-                  id="editStartReceiptNumber"
-                  type="number"
-                  min="1"
-                  value={formData.startReceiptNumber || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, startReceiptNumber: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="editEndReceiptNumber">رقم نهاية الوصل</Label>
-                <Input
-                  id="editEndReceiptNumber"
-                  type="number"
-                  min="1"
-                  value={formData.endReceiptNumber || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, endReceiptNumber: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-            </div>
-            
-            {formData.startReceiptNumber > 0 && formData.endReceiptNumber > 0 && (
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-sm text-center">
-                  إجمالي عدد الوصلات: <strong>{formData.endReceiptNumber - formData.startReceiptNumber + 1}</strong>
+          {selectedBook && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">اسم الدفتر</Label>
+                  <p className="text-sm font-medium">{selectedBook.bookName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">الحالة</Label>
+                  <div className="mt-1">{getStatusBadge(selectedBook.isActive)}</div>
                 </div>
               </div>
-            )}
-            
-            <div>
-              <Label htmlFor="editNotes">ملاحظات</Label>
-              <Input
-                id="editNotes"
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              />
+
+              <div>
+                <Label className="text-sm font-medium text-gray-500">المندوب</Label>
+                <p className="text-sm font-medium">{selectedBook.salesRep.username}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">رقم البداية</Label>
+                  <p className="text-sm font-medium">{selectedBook.startNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">رقم النهاية</Label>
+                  <p className="text-sm font-medium">{selectedBook.endNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">الرقم الحالي</Label>
+                  <p className="text-sm font-medium">{selectedBook.currentNumber}</p>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-500">نسبة الاستخدام</Label>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className="bg-blue-500 h-3 rounded-full flex items-center justify-center"
+                      style={{
+                        width: `${getUsagePercentage(selectedBook.currentNumber, selectedBook.startNumber, selectedBook.endNumber)}%`
+                      }}
+                    >
+                      <span className="text-xs text-white font-medium">
+                        {getUsagePercentage(selectedBook.currentNumber, selectedBook.startNumber, selectedBook.endNumber)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {selectedBook.notes && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">ملاحظات</Label>
+                  <p className="text-sm">{selectedBook.notes}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">تاريخ الإنشاء</Label>
+                  <p className="text-sm">{formatDate(selectedBook.createdAt)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">آخر تحديث</Label>
+                  <p className="text-sm">{formatDate(selectedBook.updatedAt)}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setViewDialogOpen(false);
+                    setSelectedBook(null);
+                  }}
+                >
+                  إغلاق
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleUpdate} disabled={loading}>
-              {loading ? 'جاري التحديث...' : 'تحديث الدفتر'}
-            </Button>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>

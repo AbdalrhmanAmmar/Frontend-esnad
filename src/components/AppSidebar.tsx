@@ -34,7 +34,11 @@ import {
   LogOut,
   User,
   TrendingUp,
-  BookA
+  BookA,
+  CalendarDays,
+  MapPin,
+  Globe,
+  Globe2
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
@@ -341,6 +345,7 @@ export function AppSidebar() {
           ]
         },
                     { id: "my-data", title: "قائمة بياناتي", url: "/my-data", icon: ClipboardList },
+                    { id: "work-day", title: "قائمة أيام العمل", url: "/work-day", icon: CalendarDays },
 
       ];
     }
@@ -348,7 +353,21 @@ export function AppSidebar() {
     if (user?.role === "ADMIN") {
       return [
         { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
-          { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
+         { 
+          id: "SEARCH", 
+          title: "الباحث الذكي", 
+          icon: ShoppingCart, 
+          color: "text-orange-500",
+          subItems: [
+                     { id: "product-search", title: "باحث المنتجات", url: "/products", icon: Package, color: "text-indigo-500" },
+// { id: "doctor-search", title: "باحث الأطباء", url: "/doctors", icon: User, color: "text-green-500" },
+// { id: "pharmacy-search", title: "باحث الصيدليات", url: "/pharmacies", icon: MapPin, color: "text-blue-500" },
+// { id: "area-search", title: "باحث المناطق", url: "/areas", icon: Globe2, color: "text-orange-500" },
+
+
+          ]
+        },
+
 
         { 
           id: "admin-dashboard", 
@@ -366,8 +385,8 @@ export function AppSidebar() {
             { id: "sample-requests", title: "طلبات العينات", url: "/admin/sample-requests", icon: Package }
           ]
         },
-        { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
-        { id: "product-search", title: "دفتر الوصولات", url: "/ReceipBooks-manager", icon: BookA, color: "text-tomato-500" },
+        { id: "product-details", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
+        { id: "receipt-books", title: "دفتر الوصولات", url: "/ReceipBooks-manager", icon: BookA, color: "text-tomato-500" },
          { 
     id: "management", 
     title: "الإدارة العامة", 

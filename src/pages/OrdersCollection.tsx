@@ -43,6 +43,8 @@ import { OrdersFilter, FilterOptions } from '@/components/ui/OrdersFilter';
 
 const OrdersCollection: React.FC = () => {
   const { user } = useAuthStore();
+    const ifFinancialRole = user?.role === 'FINANCIAL OFFICER';
+
   const { toast } = useToast();
   
   const [orders, setOrders] = useState<OrderData[]>([]);
@@ -667,7 +669,7 @@ const totalRefuse = () => {
                           عرض التفاصيل
                         </Button>
                         
-                        {(!order.orderStatus || order.orderStatus === 'pending') && (
+                        {(!order.orderStatus || order.orderStatus === 'pending') && ifFinancialRole && (
                           <>
                             <Button
                               variant="outline"

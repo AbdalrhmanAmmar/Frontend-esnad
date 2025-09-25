@@ -11,7 +11,12 @@ import {
   XCircle,
   Clock,
   Star,
-  Gift
+  Gift,
+  Users,
+  Building,
+  MapPin,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { 
   format, 
@@ -22,12 +27,14 @@ import {
   addMonths, 
   subMonths,
   getDay,
-  isWeekend as isWeekendDate,
   startOfWeek,
-  endOfWeek
+  endOfWeek,
+  isToday,
+  isWeekend
 } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
+// أنواع البيانات
 interface Holiday {
   id: string;
   date: string;
@@ -36,14 +43,26 @@ interface Holiday {
   recurring: boolean;
 }
 
-interface WorkSettings {
-  weeklyHolidays: number[]; // 0 = Sunday, 1 = Monday, etc.
-  workingHours: {
-    start: string;
-    end: string;
-  };
+interface WorkItem {
+  id: string;
+  projectId: string;
+  projectName: string;
+  taskName: string;
+  assignedTo: string;
+  startDate: string;
+  endDate: string;
+  status: 'planned' | 'in-progress' | 'completed' | 'delayed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  progress: number;
+  location?: string;
+  notes?: string;
 }
 
+interface WorkSettings {
+  weeklyHolidays: number[];
+}
+
+// البيانات الافتراضية
 const defaultHolidays: Holiday[] = [
   {
     id: '1',
@@ -65,6 +84,70 @@ const defaultHolidays: Holiday[] = [
     name: 'عيد الأضحى',
     type: 'religious',
     recurring: false
+  },
+  {
+    id: '4',
+    date: '2024-01-01',
+    name: 'رأس السنة الميلادية',
+    type: 'custom',
+    recurring: true
+  }
+];
+
+const defaultWorkSettings: WorkSettings = {
+  weeklyHolidays: [5] // الجمعة
+};
+
+const mockWorkItems: WorkItem[] = [
+  {
+    id: '1',
+    projectId: '1',
+    projectName: 'برج الرياض',
+    taskName: 'صب الأساسات',
+    assignedTo: 'أحمد محمد',
+    startDate: '2024-03-01',
+    endDate: '2024-03-15',
+    status: 'completed',
+    priority: 'high',
+    progress: 100,
+    location: 'الرياض - حي الملك فهد'
+  },
+  {
+    id: '2',
+    projectId: '1',
+    projectName: 'برج الرياض',
+    taskName: 'هيكل خرساني',
+    assignedTo: 'سارة عبدالله',
+    startDate: '2024-03-10',
+    endDate: '2024-04-05',
+    status: 'in-progress',
+    priority: 'high',
+    progress: 65,
+    location: 'الرياض - حي الملك فهد'
+  },
+  {
+    id: '3',
+    projectId: '2',
+    projectName: 'مجمع جدة',
+    taskName: 'التصميم المعماري',
+    assignedTo: 'فاطمة ناصر',
+    startDate: '2024-03-05',
+    endDate: '2024-03-25',
+    status: 'in-progress',
+    priority: 'medium',
+    progress: 80
+  },
+  {
+    id: '4',
+    projectId: '3',
+    projectName: 'فيلا القصيم',
+    taskName: 'تشطيب داخلي',
+    assignedTo: 'خالد إبراهيم',
+    startDate: '2024-03-20',
+    endDate: '2024-04-10',
+    status: 'planned',
+    priority: 'medium',
+    progress: 0
   }
 ];
 
@@ -79,45 +162,47 @@ const weekDays = [
 ];
 
 const holidayTypes = [
-  { value: 'national', label: 'عطلة وطنية', color: 'bg-green-100 text-green-800' },
-  { value: 'religious', label: 'عطلة دينية', color: 'bg-blue-100 text-blue-800' },
-  { value: 'custom', label: 'عطلة مخصصة', color: 'bg-purple-100 text-purple-800' }
+  { value: 'national', label: 'عطلة وطنية', color: 'bg-green-100 text-green-800', icon: Star },
+  { value: 'religious', label: 'عطلة دينية', color: 'bg-blue-100 text-blue-800', icon: Gift },
+  { value: 'custom', label: 'عطلة مخصصة', color: 'bg-purple-100 text-purple-800', icon: CalendarIcon }
 ];
 
-export default function WorkCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [holidays, setHolidays] = useState<Holiday[]>(() => {
-    const saved = localStorage.getItem('workCalendarHolidays');
-    return saved ? JSON.parse(saved) : defaultHolidays;
-  });
-  
-  const [workSettings, setWorkSettings] = useState<WorkSettings>(() => {
-    const saved = localStorage.getItem('workCalendarSettings');
-    return saved ? JSON.parse(saved) : {
-      weeklyHolidays: [5], // Friday by default
-      workingHours: { start: '08:00', end: '17:00' }
-    };
-  });
+const statusColors = {
+  planned: 'bg-gray-100 text-gray-800',
+  'in-progress': 'bg-blue-100 text-blue-800',
+  completed: 'bg-green-100 text-green-800',
+  delayed: 'bg-red-100 text-red-800'
+};
 
+const priorityColors = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-yellow-100 text-yellow-800',
+  high: 'bg-orange-100 text-orange-800',
+  urgent: 'bg-red-100 text-red-800'
+};
+
+function WorkItemCalendar() {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [holidays, setHolidays] = useState<Holiday[]>(defaultHolidays);
+  const [workSettings, setWorkSettings] = useState<WorkSettings>(defaultWorkSettings);
+  const [workItems, setWorkItems] = useState<WorkItem[]>(mockWorkItems);
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
   const [newHoliday, setNewHoliday] = useState<Partial<Holiday>>({
     name: '',
     type: 'custom',
     recurring: false
   });
 
-  // Get calendar days for current month
+  // حساب أيام التقويم للشهر الحالي
   const calendarDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 0 });
     const end = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [currentDate]);
 
-  // Check if a date is a holiday
+  // التحقق إذا كان اليوم عطلة
   const isHoliday = (date: Date) => {
     const dayOfWeek = getDay(date);
     const isWeeklyHoliday = workSettings.weeklyHolidays.includes(dayOfWeek);
@@ -127,7 +212,7 @@ export default function WorkCalendar() {
     return isWeeklyHoliday || isCustomHoliday;
   };
 
-  // Get holiday info for a date
+  // الحصول على معلومات العطلة ليوم معين
   const getHolidayInfo = (date: Date) => {
     const dayOfWeek = getDay(date);
     const isWeeklyHoliday = workSettings.weeklyHolidays.includes(dayOfWeek);
@@ -145,65 +230,51 @@ export default function WorkCalendar() {
     return null;
   };
 
-  // Save data to localStorage
-  const saveData = () => {
-    localStorage.setItem('workCalendarHolidays', JSON.stringify(holidays));
-    localStorage.setItem('workCalendarSettings', JSON.stringify(workSettings));
+  // الحصول على مهام العمل ليوم معين
+  const getWorkItemsForDate = (date: Date) => {
+    return workItems.filter(item => 
+      isSameDay(new Date(item.startDate), date) || 
+      isSameDay(new Date(item.endDate), date) ||
+      (new Date(item.startDate) <= date && new Date(item.endDate) >= date)
+    );
   };
 
-  // Add or edit holiday
-  const handleSaveHoliday = () => {
+  // إحصائيات الشهر
+  const monthStats = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    const workDays = monthDays.filter(day => !isHoliday(day)).length;
+    const holidayDays = monthDays.filter(day => isHoliday(day)).length;
+    const totalWorkItems = workItems.filter(item => {
+      const itemStart = new Date(item.startDate);
+      const itemEnd = new Date(item.endDate);
+      return itemStart <= monthEnd && itemEnd >= monthStart;
+    }).length;
+
+    return { workDays, holidayDays, totalDays: monthDays.length, totalWorkItems };
+  }, [currentDate, holidays, workSettings, workItems]);
+
+  // إضافة عطلة جديدة
+  const handleAddHoliday = () => {
     if (!newHoliday.name || !selectedDate) return;
 
     const holiday: Holiday = {
-      id: editingHoliday?.id || Date.now().toString(),
+      id: Date.now().toString(),
       date: format(selectedDate, 'yyyy-MM-dd'),
       name: newHoliday.name,
       type: newHoliday.type as Holiday['type'],
       recurring: newHoliday.recurring || false
     };
 
-    if (editingHoliday) {
-      setHolidays(prev => prev.map(h => h.id === holiday.id ? holiday : h));
-    } else {
-      setHolidays(prev => [...prev, holiday]);
-    }
-
+    setHolidays(prev => [...prev, holiday]);
     setShowHolidayModal(false);
-    setEditingHoliday(null);
     setNewHoliday({ name: '', type: 'custom', recurring: false });
     setSelectedDate(null);
-    saveData();
   };
 
-  // Delete holiday
-  const handleDeleteHoliday = (id: string) => {
-    setHolidays(prev => prev.filter(h => h.id !== id));
-    saveData();
-  };
-
-  // Edit holiday
-  const handleEditHoliday = (holiday: Holiday) => {
-    setEditingHoliday(holiday);
-    setNewHoliday(holiday);
-    setSelectedDate(new Date(holiday.date));
-    setShowHolidayModal(true);
-  };
-
-  // Add holiday for selected date
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    setNewHoliday({ name: '', type: 'custom', recurring: false });
-    setShowHolidayModal(true);
-  };
-
-  // Update work settings
-  const handleUpdateSettings = () => {
-    saveData();
-    setShowSettingsModal(false);
-  };
-
-  // Toggle weekly holiday
+  // تبديل العطلة الأسبوعية
   const toggleWeeklyHoliday = (dayId: number) => {
     setWorkSettings(prev => ({
       ...prev,
@@ -213,28 +284,15 @@ export default function WorkCalendar() {
     }));
   };
 
-  // Get statistics
-  const monthStats = useMemo(() => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-    
-    const workDays = monthDays.filter(day => !isHoliday(day)).length;
-    const holidayDays = monthDays.filter(day => isHoliday(day)).length;
-    const totalDays = monthDays.length;
-
-    return { workDays, holidayDays, totalDays };
-  }, [currentDate, holidays, workSettings]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50" dir="rtl">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">تقويم العمل</h1>
-              <p className="text-gray-600">إدارة أيام العمل والعطلات</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">تقويم العمل والمشاريع</h1>
+              <p className="text-gray-600">إدارة مهام العمل والعطلات في مكان واحد</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -242,10 +300,13 @@ export default function WorkCalendar() {
                 className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 <Settings className="w-4 h-4" />
-                الإعدادات
+                إعدادات العمل
               </button>
               <button
-                onClick={() => handleDateClick(new Date())}
+                onClick={() => {
+                  setSelectedDate(new Date());
+                  setShowHolidayModal(true);
+                }}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
@@ -255,7 +316,7 @@ export default function WorkCalendar() {
           </div>
 
           {/* Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -291,11 +352,23 @@ export default function WorkCalendar() {
                 </div>
               </div>
             </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Building className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-800">المهام النشطة</h3>
+                  <p className="text-2xl font-bold text-purple-600">{monthStats.totalWorkItems}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Calendar */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
           {/* Calendar Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
             <div className="flex items-center justify-between">
@@ -303,7 +376,7 @@ export default function WorkCalendar() {
                 onClick={() => setCurrentDate(subMonths(currentDate, 1))}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
-                <span className="text-xl">‹</span>
+                <ChevronRight className="w-6 h-6" />
               </button>
               
               <h2 className="text-2xl font-bold">
@@ -314,15 +387,15 @@ export default function WorkCalendar() {
                 onClick={() => setCurrentDate(addMonths(currentDate, 1))}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
-                <span className="text-xl">›</span>
+                <ChevronLeft className="w-6 h-6" />
               </button>
             </div>
           </div>
 
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 bg-gray-50">
+          <div className="grid grid-cols-7 bg-gray-50 border-b">
             {weekDays.map(day => (
-              <div key={day.id} className="p-4 text-center font-semibold text-gray-700 border-b">
+              <div key={day.id} className="p-4 text-center font-semibold text-gray-700">
                 {day.name}
               </div>
             ))}
@@ -332,89 +405,147 @@ export default function WorkCalendar() {
           <div className="grid grid-cols-7">
             {calendarDays.map((day, index) => {
               const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-              const isToday = isSameDay(day, new Date());
+              const isTodayDate = isToday(day);
               const isHolidayDay = isHoliday(day);
               const holidayInfo = getHolidayInfo(day);
+              const dayWorkItems = getWorkItemsForDate(day);
 
               return (
                 <div
                   key={index}
-                  onClick={() => handleDateClick(day)}
                   className={`
-                    min-h-[120px] p-3 border-b border-r cursor-pointer transition-all hover:bg-gray-50
+                    min-h-[140px] p-2 border-b border-r cursor-pointer transition-all hover:bg-gray-50
                     ${!isCurrentMonth ? 'bg-gray-100 text-gray-400' : ''}
-                    ${isToday ? 'bg-blue-50 border-blue-200' : ''}
+                    ${isTodayDate ? 'bg-blue-50 border-blue-200' : ''}
                     ${isHolidayDay ? 'bg-red-50' : ''}
                   `}
+                  onClick={() => setSelectedDate(day)}
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-1">
                     <span className={`
-                      text-lg font-semibold
-                      ${isToday ? 'bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center' : ''}
-                      ${isHolidayDay && !isToday ? 'text-red-600' : ''}
+                      text-sm font-semibold
+                      ${isTodayDate ? 'bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs' : ''}
+                      ${isHolidayDay && !isTodayDate ? 'text-red-600' : ''}
                     `}>
                       {format(day, 'd')}
                     </span>
                     
-                    {isHolidayDay && (
-                      <div className="flex items-center gap-1">
-                        {holidayInfo?.type === 'national' && <Star className="w-4 h-4 text-green-600" />}
-                        {holidayInfo?.type === 'religious' && <Gift className="w-4 h-4 text-blue-600" />}
-                        {(holidayInfo?.type === 'custom' || holidayInfo?.type === 'weekly') && <XCircle className="w-4 h-4 text-red-600" />}
+                    {isHolidayDay && holidayInfo && (
+                      <div className="flex">
+                        {holidayInfo.type === 'national' && <Star className="w-3 h-3 text-green-600" />}
+                        {holidayInfo.type === 'religious' && <Gift className="w-3 h-3 text-blue-600" />}
+                        {holidayInfo.type === 'custom' && <CalendarIcon className="w-3 h-3 text-purple-600" />}
+                        {holidayInfo.type === 'weekly' && <XCircle className="w-3 h-3 text-red-600" />}
                       </div>
                     )}
                   </div>
 
+                  {/* Holiday Info */}
                   {holidayInfo && (
-                    <div className="text-xs text-gray-600 bg-white/80 rounded p-1 mt-1">
+                    <div className="text-xs text-gray-600 bg-white/80 rounded px-1 py-0.5 mb-1 truncate">
                       {holidayInfo.name}
                     </div>
                   )}
+
+                  {/* Work Items */}
+                  <div className="space-y-1">
+                    {dayWorkItems.slice(0, 2).map(item => (
+                      <div
+                        key={item.id}
+                        className={`text-xs p-1 rounded ${
+                          item.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          item.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                          item.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}
+                        title={item.taskName}
+                      >
+                        <div className="truncate font-medium">{item.taskName}</div>
+                        <div className="flex justify-between text-[10px]">
+                          <span>{item.projectName}</span>
+                          <span>{item.progress}%</span>
+                        </div>
+                      </div>
+                    ))}
+                    {dayWorkItems.length > 2 && (
+                      <div className="text-xs text-gray-500 text-center">
+                        +{dayWorkItems.length - 2} مهمة أخرى
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Holidays List */}
-        <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">العطلات المخصصة</h3>
-          <div className="space-y-3">
-            {holidays.map(holiday => {
-              const holidayType = holidayTypes.find(t => t.value === holiday.type);
-              return (
-                <div key={holiday.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-gray-600">
-                      {format(new Date(holiday.date), 'dd/MM/yyyy')}
-                    </div>
-                    <div className="font-medium text-gray-900">{holiday.name}</div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${holidayType?.color}`}>
-                      {holidayType?.label}
-                    </span>
-                    {holiday.recurring && (
-                      <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                        متكررة سنوياً
+        {/* Work Items List */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* العطلات القادمة */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">العطلات القادمة</h3>
+            <div className="space-y-3">
+              {holidays
+                .filter(holiday => new Date(holiday.date) >= new Date())
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .slice(0, 5)
+                .map(holiday => {
+                  const holidayType = holidayTypes.find(t => t.value === holiday.type);
+                  const IconComponent = holidayType?.icon || CalendarIcon;
+                  
+                  return (
+                    <div key={holiday.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <IconComponent className="w-4 h-4" />
+                        <div>
+                          <div className="font-medium text-gray-900">{holiday.name}</div>
+                          <div className="text-sm text-gray-600">
+                            {format(new Date(holiday.date), 'dd/MM/yyyy')}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${holidayType?.color}`}>
+                        {holidayType?.label}
                       </span>
-                    )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* المهام النشطة */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">المهام النشطة هذا الشهر</h3>
+            <div className="space-y-3">
+              {workItems
+                .filter(item => item.status === 'in-progress')
+                .slice(0, 5)
+                .map(item => (
+                  <div key={item.id} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="font-medium text-gray-900">{item.taskName}</div>
+                        <div className="text-sm text-gray-600">{item.projectName}</div>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${statusColors[item.status]}`}>
+                        قيد التنفيذ
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">{item.assignedTo}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${item.progress}%` }}
+                          ></div>
+                        </div>
+                        <span>{item.progress}%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditHoliday(holiday)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteHoliday(holiday.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                ))}
+            </div>
           </div>
         </div>
       </div>
@@ -425,15 +556,9 @@ export default function WorkCalendar() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {editingHoliday ? 'تعديل العطلة' : 'إضافة عطلة جديدة'}
-                </h2>
+                <h2 className="text-xl font-bold text-gray-900">إضافة عطلة جديدة</h2>
                 <button
-                  onClick={() => {
-                    setShowHolidayModal(false);
-                    setEditingHoliday(null);
-                    setNewHoliday({ name: '', type: 'custom', recurring: false });
-                  }}
+                  onClick={() => setShowHolidayModal(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-6 h-6" />
@@ -492,21 +617,17 @@ export default function WorkCalendar() {
 
             <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setShowHolidayModal(false);
-                  setEditingHoliday(null);
-                  setNewHoliday({ name: '', type: 'custom', recurring: false });
-                }}
+                onClick={() => setShowHolidayModal(false)}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 إلغاء
               </button>
               <button
-                onClick={handleSaveHoliday}
+                onClick={handleAddHoliday}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                حفظ
+                حفظ العطلة
               </button>
             </div>
           </div>
@@ -546,22 +667,13 @@ export default function WorkCalendar() {
                   ))}
                 </div>
               </div>
-
-       
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+            <div className="p-6 border-t border-gray-200 flex justify-end">
               <button
                 onClick={() => setShowSettingsModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                إلغاء
-              </button>
-              <button
-                onClick={handleUpdateSettings}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
                 حفظ الإعدادات
               </button>
             </div>
@@ -571,3 +683,5 @@ export default function WorkCalendar() {
     </div>
   );
 }
+
+export default WorkItemCalendar;
