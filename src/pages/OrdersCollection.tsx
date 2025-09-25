@@ -114,8 +114,12 @@ startDate.setDate(startDate.getDate() - 7);
         ...(currentFilters.status && currentFilters.status !== 'all' && { status: currentFilters.status as 'pending' | 'approved' | 'rejected' }),
         ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRepId: currentFilters.salesRep }),
         ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacy: currentFilters.pharmacy }),
-        ...(currentFilters.startDate && { startDate: currentFilters.startDate.toISOString().split('T')[0] }),
-        ...(currentFilters.endDate && { endDate: currentFilters.endDate.toISOString().split('T')[0] })
+        ...(currentFilters.startDate && { 
+          startDate: new Date(currentFilters.startDate.getFullYear(), currentFilters.startDate.getMonth(), currentFilters.startDate.getDate(), 0, 0, 0).toISOString()
+        }),
+        ...(currentFilters.endDate && { 
+          endDate: new Date(currentFilters.endDate.getFullYear(), currentFilters.endDate.getMonth(), currentFilters.endDate.getDate(), 23, 59, 59, 999).toISOString()
+        })
       };
 
       const response = await getSalesRepProductsData(id, params);
