@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
@@ -53,6 +54,7 @@ interface ProcessedVisit {
   medicalRepName: string;
   teamArea: string;
   teamProducts: string;
+  doctorId: string; // إضافة معرف الطبيب
 }
 
 // Mock data for analytics
@@ -91,6 +93,8 @@ const mockAnalyticsData = {
 };
 
 const ClinicsAnalytics: React.FC = () => {
+  const navigate = useNavigate();
+  
   // Data states
   const [visits, setVisits] = useState<ProcessedVisit[]>([]);
   const [filteredVisits, setFilteredVisits] = useState<ProcessedVisit[]>([]);
@@ -127,7 +131,8 @@ const ClinicsAnalytics: React.FC = () => {
       notes: visit.notes,
       medicalRepName: `${visit.medicalRepId.firstName} ${visit.medicalRepId.lastName}`,
       teamArea: visit.medicalRepId.teamArea,
-      teamProducts: visit.medicalRepId.teamProducts
+      teamProducts: visit.medicalRepId.teamProducts,
+      doctorId: visit.doctorId._id // إضافة معرف الطبيب
     }));
   };
 
@@ -1160,9 +1165,7 @@ const ClinicsAnalytics: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              toast.success('عرض تفاصيل الطبيب');
-                            }}
+                            onClick={() => navigate(`/doctor-card/${visit.doctorId}`)}
                           >
                             عرض الطبيب
                           </Button>

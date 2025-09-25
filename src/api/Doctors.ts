@@ -219,44 +219,55 @@ export const deleteDoctor = async (doctorId: string) => {
   }
 };
 
-// تصدير الأطباء إلى ملف Excel
 export const exportDoctors = async (params: GetDoctorsParams = {}) => {
   try {
     const response = await api.get('/doctors/export', {
       params: {
-        search: params.search,
         city: params.city,
         specialty: params.specialty,
         brand: params.brand,
+        search: params.search,
       },
-      responseType: 'blob', // مهم لتحميل الملفات
+      responseType: 'blob',
     });
 
-    // إنشاء رابط تحميل
-    const blob = new Blob([response.data], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    });
-    
-    const url = window.URL.createObjectURL(blob);
+    // إنشاء رابط تحميل الملف
+    const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
     
-    // تحديد اسم الملف مع التاريخ
-    const currentDate = new Date().toISOString().split('T')[0];
-    link.download = `doctors_export_${currentDate}.xlsx`;
+    // تحديد اسم الملف
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = 'doctors.xlsx';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/); 
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+    }
     
-    // تحميل الملف
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    
-    // تنظيف الذاكرة
+    link.remove();
     window.URL.revokeObjectURL(url);
-    
-    return { success: true, message: 'تم تصدير ملف الأطباء بنجاح' };
+
+    return { success: true, message: 'تم تصدير بيانات الأطباء بنجاح' };
   } catch (error: any) {
     console.error('Error exporting doctors:', error);
-    const errorMessage = error.response?.data?.message || 'فشل في تصدير ملف الأطباء';
+    const errorMessage = error.response?.data?.message || 'فشل في تصدير بيانات الأطباء';
+    throw new Error(errorMessage);
+  }
+};
+
+// جلب البيانات الشاملة للطبيب
+export const getDoctorComprehensiveData = async (doctorId: string) => {
+  try {
+    const response = await api.get(`/doctor-card/${doctorId}/comprehensive-data`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching doctor comprehensive data:', error);
+    const errorMessage = error.response?.data?.message || 'فشل في جلب البيانات الشاملة للطبيب';
     throw new Error(errorMessage);
   }
 };

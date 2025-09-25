@@ -69,11 +69,120 @@ export interface DoctorDetailsResponse {
   };
 }
 
+// واجهات البيانات الشاملة للطبيب
+export interface ComprehensiveDoctorInfo {
+  id: string;
+  name: string;
+  organizationType?: string;
+  organizationName?: string;
+  specialty?: string;
+  telNumber?: string;
+  profile?: string;
+  location?: {
+    district?: string;
+    city: string;
+    area?: string;
+  };
+  brand: string;
+  segment?: string;
+  targetFrequency?: number;
+  keyOpinionLeader?: boolean;
+  teamProducts?: string;
+  teamArea?: string;
+}
+
+export interface ComprehensiveVisit {
+  _id: string;
+  visitDate: string;
+  visitTime?: string;
+  visitType: string;
+  visitStatus: string;
+  medicalRep: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  products: Array<{
+    _id: string;
+    productName: string;
+    category?: string;
+    samplesCount: number;
+    notes?: string;
+  }>;
+  notes?: string;
+  feedback?: string;
+  nextVisitPlanned?: string;
+}
+
+export interface ProductRequest {
+  requestId: string;
+  requestDate: string;
+  deliveryDate?: string;
+  product: {
+    id: string;
+    code: string;
+    name: string;
+    brand: string;
+    price: number;
+  };
+  quantity: number;
+  medicalRep: {
+    id: string;
+    name: string;
+    username: string;
+  };
+  notes?: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface MarketingActivity {
+  activityId: string;
+  requestDate: string;
+  activityDate: string;
+  activityType: {
+    id: string;
+  };
+  cost: number;
+  notes?: string;
+  createdBy: {
+    id: string;
+    name: string;
+    username: string;
+  };
+  status: string;
+  createdAt: string;
+}
+
+export interface ComprehensiveStatistics {
+  totalVisits: number;
+  totalSamples: number;
+  uniqueProducts: number;
+  recentVisits: number;
+  approvedProductRequests: number;
+  approvedMarketingActivities: number;
+  lastVisitDate?: string;
+  firstVisitDate?: string;
+}
+
+export interface DoctorComprehensiveData {
+  success: boolean;
+  data: {
+    doctor: ComprehensiveDoctorInfo;
+    visits: ComprehensiveVisit[];
+    approvedProductRequests: ProductRequest[];
+    approvedMarketingActivities: MarketingActivity[];
+    statistics: ComprehensiveStatistics;
+  };
+}
+
 export const getDoctorDetails = async (doctorName: string): Promise<DoctorDetailsResponse> => {
   try {
-    const response = await api.get(`/automation/doctor-details?doctorName=${encodeURIComponent(doctorName)}`);
+    const response = await api.get(`/doctors/details?name=${encodeURIComponent(doctorName)}`);
     return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'حدث خطأ في جلب بيانات الدكتور');
+  } catch (error) {
+    console.error('Error fetching doctor details:', error);
+    throw error;
   }
 };

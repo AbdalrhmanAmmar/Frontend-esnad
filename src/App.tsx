@@ -63,6 +63,7 @@ import ReceiptBookDetails from "./pages/ReceiptBookDetails";
 import ReportMarketingMedicalRep from "./pages/medical-reports/ReportMarketingMedicalRep";
 import SamplesMedicalRep from "./pages/medical-reports/SamplesMedicalRep";
 import WorkItemCalendar from "./pages/WorkItemCalender";
+import DoctorCard from "./pages/DoctorCard";
 
 
 const queryClient = new QueryClient();
@@ -437,6 +438,11 @@ const App = () => (
                     <Route path="/product-details" element={
                       <ProtectedRoute>
                         <ProductDetailsView />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/doctor-card/:id" element={
+                      <ProtectedRoute>
+                        <DoctorCard />
                       </ProtectedRoute>
                     } />
                     <Route path="*" element={<NotFound />} />
