@@ -1,445 +1,526 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ar } from 'date-fns/locale';
+
+// Register Arabic locale
+registerLocale('ar', ar);
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, Edit, Trash2, Stethoscope, Filter, Loader2, RefreshCw, Calendar, Building2, Tag, MapPin, GraduationCap, Phone, Download } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { getDoctors, GetDoctorsParams, exportDoctors, deleteDoctor } from '../api/Doctors';
-import toast from 'react-hot-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { CalendarDays, User, Package, FileText, Users, Plus, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { createVisit, CreateVisitRequest, VisitProduct } from '@/api/Visits';
+import { getSupervisors, MedicalRepDoctor, MedicalRepProduct } from '@/api/MedicalRep';
+import { useAuthStore } from '@/stores/authStore';
+import { useMedicalRepStore } from '@/stores/medicalRepStore';
 
-interface Doctor {
+interface Supervisor {
   _id: string;
-  drName: string;
-  organizationName: string;
-  city: string;
-  specialty: string;
-  brand?: string;
-  phone?: string;
-  experience?: string;
-  createdAt: string;
-  updatedAt: string;
+  firstName: string;
+  lastName: string;
+  username: string;
 }
 
-function DoctorsManagement() {
+const CreateVisit: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuthStore();
+  const { doctors: storeDoctors, products: storeProducts, isLoaded } = useMedicalRepStore();
+  
+  // Form state
+  const [formData, setFormData] = useState<CreateVisitRequest>({
+    visitDate: new Date().toISOString(),
+    doctorId: '',
+    products: [],
+    notes: '',
+    withSupervisor: false,
+    supervisorId: ''
+  });
+  
+  // Data state
+  const [doctors, setDoctors] = useState<MedicalRepDoctor[]>([]);
+  const [products, setProducts] = useState<MedicalRepProduct[]>([]);
+  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+  
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [selectedMessage, setSelectedMessage] = useState<string>('');
+  const [selectedSamplesCount, setSelectedSamplesCount] = useState<number>(0);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCity, setFilterCity] = useState('all');
-  const [filterSpecialty, setFilterSpecialty] = useState('all');
-  const [filterBrand, setFilterBrand] = useState('all');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalDoctors, setTotalDoctors] = useState(0);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
+  // Load initial data - fetch directly if not in store
+  useEffect(() => {
+    const loadData = async () => {
+      if (storeDoctors.length > 0 && storeProducts.length > 0) {
+        // Use data from store
+        setDoctors(storeDoctors);
+        setProducts(storeProducts);
+        setLoadingData(false);
+      } else {
+        // Fetch data directly if not in store
+        if (!user?._id) return;
+        
+        try {
+          setLoadingData(true);
+          const { getMedicalRepData } = await import('@/api/MedicalRep');
+          const response = await getMedicalRepData(user._id);
+          
+          if (response.success) {
+            setDoctors(response.data.doctors);
+            setProducts(response.data.products);
+            // Also save to store for future use
+            const { useMedicalRepStore } = await import('@/stores/medicalRepStore');
+            useMedicalRepStore.getState().setData(response.data.doctors, response.data.products);
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          toast({
+            title: 'خطأ',
+            description: 'حدث خطأ في تحميل البيانات',
+            variant: 'destructive',
+          });
+        } finally {
+          setLoadingData(false);
+        }
+      }
+    };
 
-  // Fetch doctors from API
-  const fetchDoctors = async (params: GetDoctorsParams = {}) => {
+    loadData();
+  }, [storeDoctors, storeProducts, user?._id, toast]);
+
+  // Load supervisors when needed
+  useEffect(() => {
+    const loadSupervisors = async () => {
+      if (formData.withSupervisor && user?._id && supervisors.length === 0) {
+        try {
+          const response = await getSupervisors(user._id);
+          if (response.success) {
+            setSupervisors(response.data);
+          }
+        } catch (error) {
+          console.error('Error fetching supervisors:', error);
+          toast({
+            title: 'خطأ',
+            description: 'حدث خطأ في تحميل قائمة المشرفين',
+            variant: 'destructive',
+          });
+        }
+      }
+    };
+
+    loadSupervisors();
+  }, [formData.withSupervisor, user?._id, supervisors.length, toast]);
+
+  // Get product messages from store data
+  const getProductMessages = (productId: string) => {
+    const product = products.find(p => p._id === productId);
+    return product?.messages || [];
+  };
+
+  // Handle product selection
+  const handleProductSelect = (productId: string) => {
+    setSelectedProduct(productId);
+    setSelectedMessage('');
+  };
+
+  // Add product to visit
+  const addProductToVisit = () => {
+    if (!selectedProduct || !selectedMessage) {
+      toast({
+        title: 'تنبيه',
+        description: 'يرجى اختيار المنتج والرسالة',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (selectedSamplesCount < 0) {
+      toast({
+        title: 'تنبيه',
+        description: 'عدد العينات يجب أن يكون أكبر من أو يساوي صفر',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check if product already added
+    const existingProduct = formData.products.find(p => p.productId === selectedProduct && p.messageId === selectedMessage);
+    if (existingProduct) {
+      toast({
+        title: 'تنبيه',
+        description: 'تم إضافة هذا المنتج والرسالة مسبقاً',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      products: [...prev.products, { 
+        productId: selectedProduct, 
+        messageId: selectedMessage,
+        samplesCount: selectedSamplesCount
+      }]
+    }));
+    
+    setSelectedProduct('');
+    setSelectedMessage('');
+    setSelectedSamplesCount(0);
+  };
+
+  // Remove product from visit
+  const removeProduct = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      products: prev.products.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user?._id) return;
+    
+    // Validation
+    if (!formData.visitDate || !formData.doctorId || formData.products.length === 0) {
+      toast({
+        title: 'خطأ في البيانات',
+        description: 'يرجى ملء جميع الحقول المطلوبة',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (formData.withSupervisor && !formData.supervisorId) {
+      toast({
+        title: 'خطأ في البيانات',
+        description: 'يرجى اختيار المشرف',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     try {
       setLoading(true);
-      const response = await getDoctors({
-        page: currentPage,
-        limit: 10,
-        search: searchTerm,
-        city: filterCity !== 'all' ? filterCity : undefined,
-        specialty: filterSpecialty !== 'all' ? filterSpecialty : undefined,
-        brand: filterBrand !== 'all' ? filterBrand : undefined,
-        ...params
-      });
+      const response = await createVisit(user._id, formData);
       
       if (response.success) {
-        console.log(response);
-        setDoctors(response.data);
-        setTotalPages(response.meta.totalPages);
-        setTotalDoctors(response.meta.total);
+        toast({
+          title: 'نجح',
+          description: 'تم إنشاء الزيارة بنجاح',
+        });
+        navigate('/visits'); // Navigate to visits list
       }
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
-      toast.error('حدث خطأ أثناء تحميل بيانات الأطباء. يرجى المحاولة مرة أخرى.');
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ أثناء إنشاء الزيارة',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchDoctors();
-  }, [currentPage, searchTerm, filterCity, filterSpecialty, filterBrand]);
-
-  // Get unique values for filters
-  const uniqueCities = [...new Set(doctors.map(d => d.city))].filter(Boolean);
-  const uniqueSpecialties = [...new Set(doctors.map(d => d.specialty))].filter(Boolean);
-  const uniqueBrands = [...new Set(doctors.map(d => d.brand))].filter(Boolean);
-
-  const handleRefresh = () => {
-    fetchDoctors();
+  const getProductName = (productId: string) => {
+    const product = products.find(p => p._id === productId);
+    return product ? `${product.code} - ${product.name}` : 'منتج غير معروف';
   };
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page when searching
+  const getMessageTitle = (productId: string, messageId: string) => {
+    const messages = getProductMessages(productId);
+    const message = messages.find((m: any, index: number) => index.toString() === messageId);
+    return message ? message.tag : 'رسالة غير معروفة';
   };
 
-  const handleDeleteClick = (doctor: Doctor) => {
-    setDoctorToDelete(doctor);
-    setIsDeleteDialogOpen(true);
+  const getDoctorName = (doctorId: string) => {
+    const doctor = doctors.find(d => d._id === doctorId);
+    return doctor ? doctor.name : 'طبيب غير معروف';
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!doctorToDelete) return;
-
-    setDeleteLoading(true);
-    const loadingToastId = toast.loading('جاري حذف الطبيب...');
-
-    try {
-      const result = await deleteDoctor(doctorToDelete._id);
-      
-      if (result.success) {
-        toast.success(result.message || 'تم حذف الطبيب بنجاح', { id: loadingToastId });
-        setIsDeleteDialogOpen(false);
-        setDoctorToDelete(null);
-        fetchDoctors(); // Refresh the list
-      } else {
-        toast.error(result.error || 'فشل في حذف الطبيب', { id: loadingToastId });
-      }
-    } catch (error: any) {
-      console.error('Error deleting doctor:', error);
-      toast.error('حدث خطأ غير متوقع', { id: loadingToastId });
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setIsDeleteDialogOpen(false);
-    setDoctorToDelete(null);
-  };
-
-  const handleExportDoctors = async () => {
-    setExportLoading(true);
-    const loadingToastId = toast.loading('جاري تصدير ملف الأطباء...');
-
-    try {
-      // تمرير معاملات الفلترة الحالية
-      const exportParams: GetDoctorsParams = {
-        search: searchTerm || undefined,
-        city: filterCity !== 'all' ? filterCity : undefined,
-        specialty: filterSpecialty !== 'all' ? filterSpecialty : undefined,
-        brand: filterBrand !== 'all' ? filterBrand : undefined,
-      };
-      
-      await exportDoctors(exportParams);
-      toast.success('تم تصدير ملف الأطباء بنجاح', { id: loadingToastId });
-    } catch (error: any) {
-      console.error('Error exporting doctors:', error);
-      toast.error(error.message || 'حدث خطأ أثناء تصدير ملف الأطباء', { id: loadingToastId });
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const getSpecialtyBadge = (specialty: string) => {
-    const specialtyColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
-      'طب باطني': 'default',
-      'جراحة': 'destructive',
-      'أطفال': 'secondary',
-      'نساء وولادة': 'outline',
-      'عظام': 'default',
-      'قلب': 'destructive',
-      'جلدية': 'secondary',
-      'عيون': 'outline'
-    };
-    
-    const variant = specialtyColors[specialty] || 'outline';
-    return <Badge variant={variant}>{specialty}</Badge>;
-  };
-
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <Stethoscope className="h-8 w-8 text-blue-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">إدارة الأطباء</h1>
-            <p className="text-gray-600">إدارة وتنظيم بيانات الأطباء ({totalDoctors} طبيب)</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
-            تحديث
-          </Button>
-          <Button variant="outline" onClick={handleExportDoctors} disabled={exportLoading}>
-            {exportLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
-            تصدير Excel
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/management/data/doctors/add')}>
-            <Plus className="h-4 w-4 ml-2" />
-            إضافة طبيب جديد
-          </Button>
+  if (loadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">جاري تحميل البيانات...</p>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="container mx-auto p-6 max-w-4xl">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Stethoscope className="h-5 w-5" />
-            قائمة الأطباء
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            <CalendarDays className="h-6 w-6" />
+            تسجيل زيارة عادية
           </CardTitle>
           <CardDescription>
-            إجمالي الأطباء: {totalDoctors} | الصفحة {currentPage} من {totalPages}
+            قم بتسجيل زيارة جديدة للطبيب مع تحديد المنتجات والرسائل المناسبة
           </CardDescription>
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="البحث في الأطباء (الاسم، المنظمة، المدينة، التخصص)..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pr-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={filterCity} onValueChange={setFilterCity}>
-                <SelectTrigger className="w-48">
-                  <MapPin className="h-4 w-4 ml-2" />
-                  <SelectValue placeholder="المدينة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع المدن</SelectItem>
-                  {uniqueCities.map((city) => (
-                    <SelectItem key={city} value={city}>{city}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterSpecialty} onValueChange={setFilterSpecialty}>
-                <SelectTrigger className="w-48">
-                  <GraduationCap className="h-4 w-4 ml-2" />
-                  <SelectValue placeholder="التخصص" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع التخصصات</SelectItem>
-                  {uniqueSpecialties.map((specialty) => (
-                    <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterBrand} onValueChange={setFilterBrand}>
-                <SelectTrigger className="w-48">
-                  <Tag className="h-4 w-4 ml-2" />
-                  <SelectValue placeholder="العلامة التجارية" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع العلامات التجارية</SelectItem>
-                  {uniqueBrands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="mr-2">جاري تحميل بيانات الأطباء...</span>
+          <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
+            {/* Visit Date */}
+            <div className="space-y-2">
+              <Label htmlFor="visitDate" className="flex items-center gap-2 justify-end">
+                <span>تاريخ الزيارة *</span>
+                <CalendarDays className="h-4 w-4" />
+              </Label>
+              <div className="relative">
+                <DatePicker
+                    selected={selectedDate}
+                    onChange={(date) => {
+                      setSelectedDate(date);
+                      setFormData(prev => ({
+                        ...prev,
+                        visitDate: date ? date.toISOString() : ''
+                      }));
+                    }}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="اختر تاريخ الزيارة"
+                    className="w-full text-right pr-10 pl-4 py-2 bg-background border-2 border-primary/20 hover:border-primary focus:border-primary transition-all duration-200 rounded-lg shadow-sm focus:shadow-md focus:ring-2 focus:ring-primary/20 outline-none"
+                    calendarClassName="custom-datepicker"
+                    popperClassName="z-50"
+                    showPopperArrow={false}
+                    locale="ar"
+                  />
+                <CalendarDays className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
+              </div>
             </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">اسم الطبيب</TableHead>
-                    <TableHead className="text-right">التخصص</TableHead>
-                    <TableHead className="text-right">المنظمة</TableHead>
-                    <TableHead className="text-right">المدينة</TableHead>
-                    <TableHead className="text-right">العلامة التجارية</TableHead>
-                    <TableHead className="text-right">تاريخ الإضافة</TableHead>
-                    <TableHead className="text-right">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {doctors.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        لا توجد بيانات أطباء متاحة
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    doctors.map((doctor) => (
-                      <TableRow key={doctor._id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <Stethoscope className="h-4 w-4 text-blue-600" />
-                            {doctor.drName}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getSpecialtyBadge(doctor.specialty)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Building2 className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{doctor.organizationName}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{doctor.city}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {doctor.brand ? (
-                            <Badge variant="outline">{doctor.brand}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">غير محدد</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(doctor.createdAt)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/management/data/doctors/update/${doctor._id}`)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteClick(doctor)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+
+            {/* Doctor Selection */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 justify-end">
+                <span>اسم الطبيب *</span>
+                <User className="h-4 w-4" />
+              </Label>
+              <Select
+                value={formData.doctorId}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, doctorId: value }))}
+              >
+                <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg shadow-sm">
+                  <SelectValue placeholder="اختر الطبيب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors.map((doctor) => (
+                    <SelectItem key={doctor._id} value={doctor._id}>
+                      <div className="flex flex-col text-right">
+                        <span className="font-medium">{doctor.name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {doctor.specialty} - {doctor.organizationName}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Products Section */}
+            <div className="space-y-4">
+              <Label className="flex items-center gap-2 justify-end">
+                <span>المنتجات والرسائل *</span>
+                <Package className="h-4 w-4" />
+              </Label>
               
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-muted-foreground">
-                    عرض {((currentPage - 1) * 10) + 1} إلى {Math.min(currentPage * 10, totalDoctors)} من {totalDoctors} طبيب
+              {/* Add Product */}
+              <Card className="p-4 border-2 border-border hover:border-primary/50 transition-colors rounded-lg shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label className="text-sm text-right block mb-2">اختر المنتج</Label>
+                    <Select value={selectedProduct} onValueChange={handleProductSelect}>
+                      <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg">
+                        <SelectValue placeholder="اختر المنتج" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product._id} value={product._id} className="text-right">
+                            {product.code} - {product.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
+                  
+                  <div>
+                    <Label className="text-sm text-right block mb-2">اختر الرسالة</Label>
+                    <Select 
+                      value={selectedMessage} 
+                      onValueChange={setSelectedMessage}
+                      disabled={!selectedProduct}
                     >
-                      السابق
-                    </Button>
-                    <div className="flex items-center space-x-1 rtl:space-x-reverse">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(page)}
-                            className="w-8 h-8 p-0"
-                          >
-                            {page}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
+                      <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg">
+                        <SelectValue placeholder="اختر الرسالة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getProductMessages(selectedProduct).map((message: any, index: number) => (
+                          <SelectItem key={index} value={index.toString()} className="text-right">
+                            {message.tag}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm text-right block mb-2">عدد العينات</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={selectedSamplesCount}
+                      onChange={(e) => setSelectedSamplesCount(parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg"
+                    />
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button 
+                      type="button" 
+                      onClick={addProductToVisit}
+                      disabled={!selectedProduct || !selectedMessage}
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
                     >
-                      التالي
+                      <span>إضافة</span>
+                      <Plus className="h-4 w-4 ml-2" />
                     </Button>
                   </div>
                 </div>
+              </Card>
+
+              {/* Selected Products */}
+              {formData.products.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-right block">المنتجات المحددة:</Label>
+                  <div className="space-y-2">
+                    {formData.products.map((product, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border hover:border-primary/50 transition-colors">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeProduct(index)}
+                          className="hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 text-right">
+                          <div className="font-medium">{getProductName(product.productId)}</div>
+                          <div className="text-sm text-muted-foreground">
+                            الرسالة: {getMessageTitle(product.productId, product.messageId)}
+                          </div>
+                          <div className="text-sm text-primary font-medium">
+                            عدد العينات: {product.samplesCount}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-            </>
-          )}
+            </div>
+
+            <Separator />
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="flex items-center gap-2 justify-end">
+                <span>ملاحظات</span>
+                <FileText className="h-4 w-4" />
+              </Label>
+              <Textarea
+                id="notes"
+                placeholder="أضف أي ملاحظات حول الزيارة..."
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                rows={4}
+                className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg shadow-sm resize-none"
+              />
+            </div>
+
+            {/* Supervisor Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-end space-x-reverse space-x-2">
+                <Label htmlFor="withSupervisor" className="flex items-center gap-2">
+                  <span>هل كان بصحبة مشرف؟</span>
+                  <Users className="h-4 w-4" />
+                </Label>
+                <Checkbox
+                  id="withSupervisor"
+                  checked={formData.withSupervisor}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      withSupervisor: checked as boolean,
+                      supervisorId: checked ? prev.supervisorId : ''
+                    }));
+                  }}
+                  className="border-2 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+              </div>
+
+              {formData.withSupervisor && (
+                <div className="space-y-2">
+                  <Label className="text-right block">اختر المشرف *</Label>
+                  <Select
+                    value={formData.supervisorId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, supervisorId: value }))}
+                  >
+                    <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg">
+                      <SelectValue placeholder="اختر المشرف" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supervisors.map((supervisor) => (
+                        <SelectItem key={supervisor._id} value={supervisor._id} className="text-right">
+                          {supervisor.firstName} {supervisor.lastName} ({supervisor.username})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-border" />
+
+            {/* Submit Button */}
+            <div className="flex gap-4 flex-row-reverse">
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
+              >
+                {loading ? 'جاري الحفظ...' : 'حفظ الزيارة'}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => navigate(-1)}
+                disabled={loading}
+                className="border-2 border-border hover:border-primary hover:bg-primary/5 transition-colors rounded-lg"
+              >
+                إلغاء
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">تأكيد حذف الطبيب</DialogTitle>
-            <DialogDescription>
-              هل أنت متأكد من حذف الطبيب "{doctorToDelete?.drName}"؟
-              <br />
-              <span className="text-sm text-muted-foreground mt-2 block">
-                التخصص: {doctorToDelete?.specialty}
-              </span>
-              <span className="text-sm text-muted-foreground block">
-                المنظمة: {doctorToDelete?.organizationName}
-              </span>
-              <br />
-              <span className="text-red-500 font-medium">
-                هذا الإجراء لا يمكن التراجع عنه.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
-              onClick={handleDeleteCancel}
-              disabled={deleteLoading}
-            >
-              إلغاء
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteConfirm}
-              disabled={deleteLoading}
-              className="flex items-center gap-2"
-            >
-              {deleteLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  جاري الحذف...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-4 w-4" />
-                  حذف الطبيب
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
-}
+};
 
-export default DoctorsManagement;
+export default CreateVisit;
