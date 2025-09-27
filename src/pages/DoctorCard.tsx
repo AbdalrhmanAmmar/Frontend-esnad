@@ -277,7 +277,12 @@ const DoctorCard: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-blue-600" />
                           <span className="font-semibold text-blue-800 dark:text-blue-200">
-                            {new Date(visit.visitDate).toLocaleDateString('ar-SA')}
+                            {new Date(visit.visitDate).toLocaleDateString('ar-SA', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              calendar: 'gregory'
+                            })}
                           </span>
                           {visit.visitTime && (
                             <span className="text-sm text-muted-foreground">
@@ -408,7 +413,12 @@ const DoctorCard: React.FC = () => {
                           <div>
                             <p className="text-muted-foreground">تاريخ الطلب:</p>
                             <p className="font-medium">
-                              {new Date(request.requestDate).toLocaleDateString('ar-SA')}
+                              {new Date(request.requestDate).toLocaleDateString('ar-SA', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                calendar: 'gregory'
+                              })}
                             </p>
                           </div>
                         </div>
@@ -434,7 +444,12 @@ const DoctorCard: React.FC = () => {
                           <div>
                             <p className="text-muted-foreground">تاريخ التسليم:</p>
                             <p className="font-medium">
-                              {new Date(request.deliveryDate).toLocaleDateString('ar-SA')}
+                              {new Date(request.deliveryDate).toLocaleDateString('ar-SA', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                calendar: 'gregory'
+                              })}
                             </p>
                           </div>
                         </div>
@@ -524,7 +539,12 @@ const DoctorCard: React.FC = () => {
                           <div>
                             <p className="text-muted-foreground">تاريخ النشاط:</p>
                             <p className="font-medium">
-                              {new Date(activity.activityDate).toLocaleDateString('ar-SA')}
+                              {new Date(activity.activityDate).toLocaleDateString('ar-SA', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                calendar: 'gregory'
+                              })}
                             </p>
                           </div>
                         </div>
@@ -535,7 +555,12 @@ const DoctorCard: React.FC = () => {
                         <div>
                           <p className="text-muted-foreground">تاريخ الطلب:</p>
                           <p className="font-medium">
-                            {new Date(activity.requestDate).toLocaleDateString('ar-SA')}
+                            {new Date(activity.requestDate).toLocaleDateString('ar-SA', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              calendar: 'gregory'
+                            })}
                           </p>
                         </div>
                       </div>
