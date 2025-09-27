@@ -325,7 +325,7 @@ export function AppSidebar() {
           icon: FileText, 
           color: "text-green-500",
           subItems: [
-            { id: "clinic-reports", title: "تقرير العيادات", url: "/reports/clinics", icon: Building2 },
+            // { id: "clinic-reports", title: "تقرير العيادات", url: "/reports/clinics", icon: Building2 },
             { id: "sample-reports", title: "تقرير العينات", url: "/reports/samples/medical-rep", icon: Package },
             { id: "marketing-reports", title: " الأنشطة التسويقية", url: "/reports/marketing/medical-rep", icon: TrendingUp }
           ]

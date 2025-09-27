@@ -64,6 +64,7 @@ import ReportMarketingMedicalRep from "./pages/medical-reports/ReportMarketingMe
 import SamplesMedicalRep from "./pages/medical-reports/SamplesMedicalRep";
 import WorkItemCalendar from "./pages/WorkItemCalender";
 import DoctorCard from "./pages/DoctorCard";
+import MedicalRepMarketing from "./pages/marketing/MedicalRep";
 
 
 const queryClient = new QueryClient();
