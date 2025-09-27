@@ -120,7 +120,12 @@ const ClinicsAnalytics: React.FC = () => {
   const processVisitsData = (rawVisits: DetailedVisit[]): ProcessedVisit[] => {
     return rawVisits.map(visit => ({
       _id: visit._id,
-      visitDate: new Date(visit.visitDate).toLocaleDateString('ar-SA'),
+      visitDate: new Date(visit.visitDate).toLocaleDateString('ar-SA', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        calendar: 'gregory' 
+      }),
       doctorName: visit.doctorId.drName,
       specialty: visit.doctorId.specialty,
       clinicName: visit.doctorId.organizationName,
@@ -162,6 +167,7 @@ const ClinicsAnalytics: React.FC = () => {
       };
 
       const response = await getDetailedVisits(medicalRepId, params);
+      console.log(response.data, "response")
       if (response.success && response.data) {
         setAnalyticsData(response.data);
         const processedVisits = processVisitsData(response.data.visits);
@@ -1128,7 +1134,7 @@ const ClinicsAnalytics: React.FC = () => {
                   filteredVisits.map((visit, index) => (
                     <tr key={visit._id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2">
-                        {new Date(visit.visitDate).toLocaleDateString('ar-EG')}
+                        {visit.visitDate}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">{visit.doctorName}</td>
                       <td className="border border-gray-300 px-4 py-2">{visit.clinicName}</td>
@@ -1153,15 +1159,7 @@ const ClinicsAnalytics: React.FC = () => {
                       <td className="border border-gray-300 px-4 py-2">{visit.medicalRepName}</td>
                       <td className="border border-gray-300 px-4 py-2">
                         <div className="flex gap-2 justify-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              toast.success('عرض تفاصيل الزيارة');
-                            }}
-                          >
-                            عرض الزيارة
-                          </Button>
+                 
                           <Button
                             size="sm"
                             variant="outline"
