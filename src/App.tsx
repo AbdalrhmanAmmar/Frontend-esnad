@@ -66,6 +66,7 @@ import WorkItemCalendar from "./pages/WorkItemCalender";
 import DoctorCard from "./pages/DoctorCard";
 import MedicalRepMarketing from "./pages/marketing/MedicalRep";
 import Medicalcoah from "./pages/Medicalcoah";
+import AnalyticsClincsSupervisor from "./pages/AnalyticsClincsSupervisor";
 
 
 const queryClient = new QueryClient();
@@ -355,6 +356,11 @@ const App = () => (
                     <Route path="/analytics/clinics" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'MEDICAL REP', 'medical rep', 'SUPERVISOR', 'supervisor']}>
                         <ClinicsAnalytics />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/analytics/clinics/supervisor" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'MEDICAL REP', 'medical rep', 'SUPERVISOR', 'supervisor']}>
+                        <AnalyticsClincsSupervisor />
                       </ProtectedRoute>
                     } />
                     <Route path="/profile" element={

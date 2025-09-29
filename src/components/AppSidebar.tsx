@@ -420,7 +420,7 @@ export function AppSidebar() {
     
     if (user?.role === "SUPERVISOR") {
       return [
-          { id: "clinic-analytics", title: "لوحه تحكم العيادات", url: "/analytics/clinics", icon: Building2 },
+          { id: "clinic-analytics", title: "لوحه تحكم العيادات", url: "/analytics/clinics/supervisor", icon: Building2 },
 
         { 
           id: "requests-list", 
