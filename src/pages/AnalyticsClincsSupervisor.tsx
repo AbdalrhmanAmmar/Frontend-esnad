@@ -60,39 +60,7 @@ interface ProcessedVisit {
 }
 
 // Mock data for analytics
-const mockAnalyticsData = {
-  kpis: {
-    totalVisits: 2847,
-    totalRevenue: 125600,
-    activeClinic: 45,
-    avgVisitsPerDay: 23.7,
-    growthRate: 12.5,
-    satisfactionRate: 94.2
-  },
-  monthlyTrends: {
-    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
-    visits: [180, 220, 195, 267, 289, 312, 298, 345, 378, 392, 415, 428],
-    revenue: [8500, 11200, 9800, 13400, 14500, 15600, 14900, 17250, 18900, 19600, 20750, 21400]
-  },
-  specialtyDistribution: {
-    labels: ['طب الأطفال', 'طب الباطنة', 'طب الأسنان', 'طب العيون', 'طب الجلدية', 'طب النساء', 'طب العظام'],
-    data: [25, 20, 18, 12, 10, 8, 7]
-  },
-  clinicComparison: {
-    labels: ['عيادة النور', 'عيادة الشفاء', 'عيادة الأمل', 'عيادة السلام', 'عيادة الحياة'],
-    visits: [450, 380, 320, 290, 250],
-    revenue: [22500, 19000, 16000, 14500, 12500]
-  },
-  productPerformance: {
-    labels: ['المنتج الأول', 'المنتج الثاني', 'المنتج الثالث', 'المنتج الرابع', 'المنتج الخامس'],
-    sales: [85, 72, 68, 45, 38],
-    satisfaction: [92, 88, 85, 78, 75]
-  },
-  timeAnalysis: {
-    labels: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
-    visits: [12, 25, 35, 42, 38, 28, 45, 52, 38, 22]
-  }
-};
+
 
 const AnalyticsClincsSupervisor: React.FC = () => {
   const navigate = useNavigate();

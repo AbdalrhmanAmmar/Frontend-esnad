@@ -146,13 +146,22 @@ const ClinicsAnalytics: React.FC = () => {
     }));
   };
 
-  // Get unique values for filters
-  const uniqueDoctors = [...new Set(visits.map(visit => visit.doctorName))];
-  const uniqueSpecialties = [...new Set(visits.map(visit => visit.specialty))];
-  const uniqueSegments = [...new Set(visits.map(visit => visit.classification))];
-  const uniqueBrands = [...new Set(visits.map(visit => visit.brand))];
-  const uniqueClinics = [...new Set(visits.map(visit => visit.clinicName))];
-  const uniqueProducts = [...new Set(visits.flatMap(visit => visit.products))];
+  // Get unique values for filters from all data (not filtered data)
+  const [allVisits, setAllVisits] = useState<ProcessedVisit[]>([]);
+  
+  // Store all visits separately to keep filters stable
+  useEffect(() => {
+    if (visits.length > 0 && allVisits.length === 0) {
+      setAllVisits(visits);
+    }
+  }, [visits]);
+
+  const uniqueDoctors = [...new Set(allVisits.map(visit => visit.doctorName))];
+  const uniqueSpecialties = [...new Set(allVisits.map(visit => visit.specialty))];
+  const uniqueSegments = [...new Set(allVisits.map(visit => visit.classification))];
+  const uniqueBrands = [...new Set(allVisits.map(visit => visit.brand))];
+  const uniqueClinics = [...new Set(allVisits.map(visit => visit.clinicName))];
+  const uniqueProducts = [...new Set(allVisits.flatMap(visit => visit.products))];
 
   // Fetch data from API
   const fetchVisitsData = async () => {
@@ -846,42 +855,58 @@ const ClinicsAnalytics: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Products Performance Chart */}
-        <Card className="p-6">
+        {/* Segments Performance Chart */}
+        <Card className="p-6 shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-orange-500" />
-              أداء المنتجات
+              <Tag className="h-5 w-5 text-blue-500" />
+              أداء الشرائح A & B
             </CardTitle>
             <CardDescription>
-              مقارنة أداء المنتجات الثلاثة
+              مقارنة أداء الشرائح المختلفة للأطباء
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <Bar 
                 data={{
-                  labels: ['المنتج الأول', 'المنتج الثاني', 'المنتج الثالث'],
+                  labels: ['الشريحة A', 'الشريحة B'],
                   datasets: [
                     {
-                      label: 'عدد مرات الاستخدام',
+                      label: 'عدد الزيارات',
                       data: [
-                        filteredVisits.filter(v => v.product1).length,
-                        filteredVisits.filter(v => v.product2).length,
-                        filteredVisits.filter(v => v.product3).length
+                        filteredVisits.filter(v => v.classification === 'A').length,
+                        filteredVisits.filter(v => v.classification === 'B').length
                       ],
                       backgroundColor: [
-                        'rgba(245, 101, 101, 0.8)',
-                        'rgba(251, 191, 36, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
                         'rgba(16, 185, 129, 0.8)'
                       ],
                       borderColor: [
-                        'rgb(245, 101, 101)',
-                        'rgb(251, 191, 36)',
+                        'rgb(59, 130, 246)',
                         'rgb(16, 185, 129)'
                       ],
-                      borderWidth: 2,
-                      borderRadius: 12
+                      borderWidth: 3,
+                      borderRadius: 12,
+                      borderSkipped: false,
+                    },
+                    {
+                      label: 'إجمالي العينات',
+                      data: [
+                        filteredVisits.filter(v => v.classification === 'A').reduce((sum, v) => sum + v.samplesCount, 0),
+                        filteredVisits.filter(v => v.classification === 'B').reduce((sum, v) => sum + v.samplesCount, 0)
+                      ],
+                      backgroundColor: [
+                        'rgba(245, 101, 101, 0.8)',
+                        'rgba(251, 191, 36, 0.8)'
+                      ],
+                      borderColor: [
+                        'rgb(245, 101, 101)',
+                        'rgb(251, 191, 36)'
+                      ],
+                      borderWidth: 3,
+                      borderRadius: 12,
+                      borderSkipped: false,
                     }
                   ]
                 }} 
@@ -890,8 +915,49 @@ const ClinicsAnalytics: React.FC = () => {
                   plugins: {
                     ...chartOptions.plugins,
                     legend: {
-                      display: false
+                      display: true,
+                      position: 'top' as const,
+                      labels: {
+                        font: {
+                          family: 'Cairo, sans-serif',
+                          size: 12,
+                          weight: 'bold'
+                        },
+                        usePointStyle: true,
+                        padding: 20
+                      }
+                    },
+                    tooltip: {
+                      ...chartOptions.plugins.tooltip,
+                      callbacks: {
+                        label: function(context: any) {
+                          const label = context.dataset.label || '';
+                          const value = context.parsed.y;
+                          return `${label}: ${value.toLocaleString('ar-SA')}`;
+                        }
+                      }
                     }
+                  },
+                  scales: {
+                    ...chartOptions.scales,
+                    y: {
+                      ...chartOptions.scales.y,
+                      beginAtZero: true,
+                      ticks: {
+                        ...chartOptions.scales.y.ticks,
+                        callback: function(value: any) {
+                          return value.toLocaleString('ar-SA');
+                        }
+                      }
+                    }
+                  },
+                  animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart'
+                  },
+                  interaction: {
+                    intersect: false,
+                    mode: 'index'
                   }
                 }} 
               />
