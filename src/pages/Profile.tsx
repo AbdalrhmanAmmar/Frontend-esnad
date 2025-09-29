@@ -111,11 +111,11 @@ const Profile = () => {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      calendar: 'gregory'
     });
   };
 
+   
   const getInitials = (firstName: string, lastName: string) => {
     const first = firstName?.charAt(0)?.toUpperCase() || '';
     const last = lastName?.charAt(0)?.toUpperCase() || '';
