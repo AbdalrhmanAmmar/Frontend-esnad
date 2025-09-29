@@ -482,71 +482,7 @@ function WorkItemCalendar() {
         {/* Work Items List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* العطلات القادمة */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">العطلات القادمة</h3>
-            <div className="space-y-3">
-              {holidays
-                .filter(holiday => new Date(holiday.date) >= new Date())
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                .slice(0, 5)
-                .map(holiday => {
-                  const holidayType = holidayTypes.find(t => t.value === holiday.type);
-                  const IconComponent = holidayType?.icon || CalendarIcon;
-                  
-                  return (
-                    <div key={holiday.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <IconComponent className="w-4 h-4" />
-                        <div>
-                          <div className="font-medium text-gray-900">{holiday.name}</div>
-                          <div className="text-sm text-gray-600">
-                            {format(new Date(holiday.date), 'dd/MM/yyyy')}
-                          </div>
-                        </div>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${holidayType?.color}`}>
-                        {holidayType?.label}
-                      </span>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
 
-          {/* المهام النشطة */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">المهام النشطة هذا الشهر</h3>
-            <div className="space-y-3">
-              {workItems
-                .filter(item => item.status === 'in-progress')
-                .slice(0, 5)
-                .map(item => (
-                  <div key={item.id} className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="font-medium text-gray-900">{item.taskName}</div>
-                        <div className="text-sm text-gray-600">{item.projectName}</div>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${statusColors[item.status]}`}>
-                        قيد التنفيذ
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">{item.assignedTo}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${item.progress}%` }}
-                          ></div>
-                        </div>
-                        <span>{item.progress}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
         </div>
       </div>
 

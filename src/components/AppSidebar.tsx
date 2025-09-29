@@ -35,7 +35,8 @@ import {
   User,
   TrendingUp,
   BookA,
-  CalendarDays
+  CalendarDays,
+  Stars
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
@@ -419,6 +420,8 @@ export function AppSidebar() {
     
     if (user?.role === "SUPERVISOR") {
       return [
+          { id: "clinic-analytics", title: "لوحه تحكم العيادات", url: "/analytics/clinics", icon: Building2 },
+
         { 
           id: "requests-list", 
           title: "قائمة الطلبات", 
@@ -429,6 +432,9 @@ export function AppSidebar() {
             { id: "marketing-requests", title: "طلبات النشاط التسويقي", url: "/supervisor/marketing-requests", icon: TrendingUp }
           ]
         },
+        { id: "medical-coach", title: "تقييم المندوب", url: "/Medical-coah", icon: Stars, color: "text-yellow-500" },
+
+        { id: "profile", title: "الملف الشخصي", url: "/profile", icon: User, color: "text-blue-500" }
       ];
     }
    

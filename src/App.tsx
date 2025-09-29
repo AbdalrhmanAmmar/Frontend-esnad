@@ -65,6 +65,7 @@ import SamplesMedicalRep from "./pages/medical-reports/SamplesMedicalRep";
 import WorkItemCalendar from "./pages/WorkItemCalender";
 import DoctorCard from "./pages/DoctorCard";
 import MedicalRepMarketing from "./pages/marketing/MedicalRep";
+import Medicalcoah from "./pages/Medicalcoah";
 
 
 const queryClient = new QueryClient();
@@ -444,6 +445,11 @@ const App = () => (
                     <Route path="/doctor-card/:id" element={
                       <ProtectedRoute>
                         <DoctorCard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/Medical-coah" element={
+                      <ProtectedRoute>
+                        <Medicalcoah />
                       </ProtectedRoute>
                     } />
                     <Route path="*" element={<NotFound />} />
