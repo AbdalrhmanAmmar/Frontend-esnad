@@ -197,9 +197,55 @@ const AnalyticsClincsSupervisor: React.FC = () => {
   useEffect(() => {
     let filtered = visits;
 
-    // Additional local filtering if needed
+    // Apply local filters for immediate UI response
+    if (selectedDoctor !== 'all') {
+      filtered = filtered.filter(visit => visit.doctorName === selectedDoctor);
+    }
+    
+    if (selectedMedicalRep !== 'all') {
+      filtered = filtered.filter(visit => visit.medicalRepName === selectedMedicalRep);
+    }
+    
+    if (selectedSpecialty !== 'all') {
+      filtered = filtered.filter(visit => visit.specialty === selectedSpecialty);
+    }
+    
+    if (selectedSegment !== 'all') {
+      filtered = filtered.filter(visit => visit.classification === selectedSegment);
+    }
+    
+    if (selectedBrand !== 'all') {
+      filtered = filtered.filter(visit => visit.brand === selectedBrand);
+    }
+    
+    if (selectedClinic !== 'all') {
+      filtered = filtered.filter(visit => visit.clinicName === selectedClinic);
+    }
+    
+    if (selectedProducts.length > 0) {
+      filtered = filtered.filter(visit => 
+        visit.products.some(product => selectedProducts.includes(product))
+      );
+    }
+    
+    if (fromDate) {
+      filtered = filtered.filter(visit => {
+        const visitDate = new Date(visit.visitDate);
+        const filterDate = new Date(fromDate);
+        return visitDate >= filterDate;
+      });
+    }
+    
+    if (toDate) {
+      filtered = filtered.filter(visit => {
+        const visitDate = new Date(visit.visitDate);
+        const filterDate = new Date(toDate);
+        return visitDate <= filterDate;
+      });
+    }
+
     setFilteredVisits(filtered);
-  }, [visits]);
+  }, [visits, selectedDoctor, selectedMedicalRep, selectedSpecialty, selectedSegment, selectedBrand, selectedClinic, selectedProducts, fromDate, toDate]);
 
   const handleRefresh = () => {
     fetchVisitsData();
