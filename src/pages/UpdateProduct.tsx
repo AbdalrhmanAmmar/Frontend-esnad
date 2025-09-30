@@ -105,7 +105,15 @@ const UpdateProduct = () => {
     const loadingToastId = toast.loading('جاري تحديث المنتج...');
 
     try {
-      const result = await updateProduct(code!, formData);
+      // تحويل messages من array of strings إلى array of objects
+      const dataToSend = {
+        ...formData,
+        messages: formData.messages?.map(msg => ({
+          text: typeof msg === 'string' ? msg : msg
+        })) || []
+      };
+      
+      const result = await updateProduct(code!, dataToSend);
       
       if (result.success) {
         toast.success('تم تحديث المنتج بنجاح', { id: loadingToastId });
