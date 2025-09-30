@@ -273,7 +273,7 @@ const EditEmployee: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ASSITANT">مساعد</SelectItem>
-                    <SelectItem value="SUPERVISOR">مشرف</SelectItem>
+                    <SelectItem value="SUPERVISOR"> مشرف دعايا طبيه</SelectItem>
                     <SelectItem value="MEDICAL REP">مندوب طبي</SelectItem>
                     <SelectItem value="SALES REP">مندوب مبيعات</SelectItem>
                     <SelectItem value="GENERAL MANAGER">مدير عام</SelectItem>
