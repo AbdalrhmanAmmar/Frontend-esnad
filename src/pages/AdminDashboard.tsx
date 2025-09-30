@@ -88,25 +88,38 @@ interface ApiResponse {
 
 interface Filters {
   search: string;
+  pharmacyName: string; // إضافة فلتر اسم الصيدلية
   area: string;
   salesRep: string;
   status: string;
+  finalOrderStatus: string; // إضافة فلتر حالة الطلبية النهائية
   dateFrom: string;
   dateTo: string;
 }
 
 const AdminDashboard: React.FC = () => {
   const user = useAuthStore()
+  const [data, setData] = useState<OrderData[]>([]);
   const [ordersData, setOrdersData] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  
+  // متغيرات للقيم الفريدة للفلاتر
+  const [uniqueAreas, setUniqueAreas] = useState<string[]>([]);
+  const [uniqueSalesReps, setUniqueSalesReps] = useState<string[]>([]);
+  const [uniquePharmacies, setUniquePharmacies] = useState<string[]>([]);
+  const [uniqueOrderStatuses, setUniqueOrderStatuses] = useState<string[]>([]);
+  const [uniqueFinalOrderStatuses, setUniqueFinalOrderStatuses] = useState<string[]>([]);
+  
   const [filters, setFilters] = useState<Filters>({
     search: '',
+    pharmacyName: 'all',
     area: 'all',
     salesRep: 'all',
     status: 'all',
+    finalOrderStatus: 'all',
     dateFrom: '',
     dateTo: ''
   });
@@ -118,11 +131,15 @@ const AdminDashboard: React.FC = () => {
         order.salesRepName.toLowerCase().includes(filters.search.toLowerCase()) ||
         order.orderId.toLowerCase().includes(filters.search.toLowerCase());
       
+      const matchesPharmacyName = !filters.pharmacyName || filters.pharmacyName === 'all' || 
+        order.pharmacyName.toLowerCase().includes(filters.pharmacyName.toLowerCase());
+      
       const matchesArea = !filters.area || filters.area === 'all' || order.pharmacyArea === filters.area;
       const matchesSalesRep = !filters.salesRep || filters.salesRep === 'all' || order.salesRepName === filters.salesRep;
-      const matchesStatus = !filters.status || filters.status === 'all' || order.FinalOrderStatusValue === filters.status;
+      const matchesStatus = !filters.status || filters.status === 'all' || order.orderStatus === filters.status;
+      const matchesFinalOrderStatus = !filters.finalOrderStatus || filters.finalOrderStatus === 'all' || order.FinalOrderStatusValue === filters.finalOrderStatus;
       
-      return matchesSearch && matchesArea && matchesSalesRep && matchesStatus;
+      return matchesSearch && matchesPharmacyName && matchesArea && matchesSalesRep && matchesStatus && matchesFinalOrderStatus;
     });
   }, [ordersData, filters]);
 
@@ -167,21 +184,8 @@ const AdminDashboard: React.FC = () => {
       return acc;
     }, {} as Record<string, { orders: number; revenue: number }>);
 
-    // أداء المنتجات
-    const productSales = ordersData.reduce((acc, order) => {
-      order.products.forEach(product => {
-        const brand = product.productBrand;
-        if (!acc[brand]) {
-          acc[brand] = { quantity: 0, revenue: 0 };
-        }
-        acc[brand].quantity += product.quantity;
-        acc[brand].revenue += product.totalValue;
-      });
-      return acc;
-    }, {} as Record<string, { quantity: number; revenue: number }>);
-
-    // أداء الصيدليات
-    const pharmacyPerformance = ordersData.reduce((acc, order) => {
+    // أداء الصيدليات - يجب أن يستخدم filteredData بدلاً من ordersData
+    const pharmacyPerformance = filteredData.reduce((acc, order) => {
       const pharmacy = order.pharmacyName;
       if (!acc[pharmacy]) {
         acc[pharmacy] = { orders: 0, revenue: 0 };
@@ -190,6 +194,19 @@ const AdminDashboard: React.FC = () => {
       acc[pharmacy].revenue += order.totalOrderValue;
       return acc;
     }, {} as Record<string, { orders: number; revenue: number }>);
+
+    // أداء المنتجات - يجب أن يستخدم filteredData بدلاً من ordersData
+    const productSales = filteredData.reduce((acc, order) => {
+      order.products.forEach(product => {
+        const brand = product.productName;
+        if (!acc[brand]) {
+          acc[brand] = { quantity: 0, revenue: 0 };
+        }
+        acc[brand].quantity += product.quantity;
+        acc[brand].revenue += product.totalValue;
+      });
+      return acc;
+    }, {} as Record<string, { quantity: number; revenue: number }>);
 
     return {
       salesRepPerformance,
@@ -202,29 +219,58 @@ const AdminDashboard: React.FC = () => {
   // جلب البيانات من API
   const AdminId = user.user._id
   console.log(AdminId)
-  const fetchOrders = async (page: number = 1) => {
+  const fetchOrders = async (page: number = 1, limit: number = 10) => {
     try {
       setLoading(true);
-      const result: ApiResponse = await getSalesRepFinalOrders(AdminId, page, 10);
+      
+      // إعداد المعاملات للـ API
+      const params = {
+        page,
+        limit,
+        pharmacyName: filters.pharmacyName !== 'all' ? filters.pharmacyName : '',
+        orderStatus: filters.status !== 'all' ? filters.status : '',
+        finalOrderStatus: filters.finalOrderStatus !== 'all' ? filters.finalOrderStatus : '',
+        area: filters.area !== 'all' ? filters.area : '',
+        salesRep: filters.salesRep !== 'all' ? filters.salesRep : '',
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo
+      };
+      
+      const result: ApiResponse = await getSalesRepFinalOrders(AdminId, page, limit, params);
       
       if (result.success) {
-        setOrdersData(result.data);
+        console.log(result)
+        setData(result.data);
+        setOrdersData(result.data); // إضافة تحديث ordersData
         setCurrentPage(result.pagination.currentPage);
         setTotalPages(result.pagination.totalPages);
         setTotalRecords(result.pagination.totalRecords);
+        
+        // استخراج القيم الفريدة للفلاتر
+        const areasData = [...new Set(result.data.map(order => order.pharmacyArea))];
+        const salesRepsData = [...new Set(result.data.map(order => order.salesRepName))];
+        const pharmaciesData = [...new Set(result.data.map(order => order.pharmacyName))];
+        const orderStatusesData = [...new Set(result.data.map(order => order.orderStatus))];
+        const finalOrderStatusesData = [...new Set(result.data.map(order => order.FinalOrderStatusValue))];
+        
+        setUniqueAreas(areasData);
+        setUniqueSalesReps(salesRepsData);
+        setUniquePharmacies(pharmaciesData);
+        setUniqueOrderStatuses(orderStatusesData);
+        setUniqueFinalOrderStatuses(finalOrderStatusesData);
       } else {
         toast({
-          title: 'خطأ',
-          description: result.message || 'فشل في جلب البيانات',
-          variant: 'destructive'
+          title: "خطأ",
+          description: result.message,
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('خطأ في جلب البيانات:', error);
       toast({
-        title: 'خطأ في الاتصال',
-        description: 'تعذر الاتصال بالخادم',
-        variant: 'destructive'
+        title: "خطأ",
+        description: "حدث خطأ في جلب البيانات",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -232,30 +278,57 @@ const AdminDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    fetchOrders(currentPage);
+  }, [filters]);
 
   // تصفية البيانات
 
-
-  // الحصول على القيم الفريدة للفلاتر
-  const uniqueAreas = [...new Set(ordersData.map(order => order.pharmacyArea))];
-  const uniqueSalesReps = [...new Set(ordersData.map(order => order.salesRepName))];
-  const uniqueStatuses = [...new Set(ordersData.map(order => order.FinalOrderStatusValue))];
-
   const handlePageChange = (page: number) => {
+    setCurrentPage(page);
     fetchOrders(page);
   };
 
   const resetFilters = () => {
     setFilters({
       search: '',
+      pharmacyName: 'all',
       area: 'all',
       salesRep: 'all',
       status: 'all',
+      finalOrderStatus: 'all',
       dateFrom: '',
       dateTo: ''
     });
+  };
+
+  // دالة لترجمة حالات الطلبات
+  const getStatusLabel = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      'pending': 'انتظار مالي',
+      'approved': 'مقبول مالي',
+      'rejected': 'مرفوض مالي'
+    };
+    return statusMap[status] || status;
+  };
+
+  // دالة لترجمة حالات الطلبيات النهائية
+  const getFinalOrderStatusLabel = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      'pending': 'انتظار طلبيات',
+      'approved': 'موافق طلبيات',
+      'rejected': 'مرفوض طلبيات'
+    };
+    return statusMap[status] || status;
+  };
+
+  // دالة لتحديد لون الحالة
+  const getStatusColor = (status: string) => {
+    const colorMap: { [key: string]: string } = {
+      'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      'approved': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'rejected': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    };
+    return colorMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
   };
 
   if (loading) {
@@ -349,9 +422,9 @@ const AdminDashboard: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">البحث</label>
+              <label className="text-sm font-medium">البحث العام</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -361,6 +434,21 @@ const AdminDashboard: React.FC = () => {
                   className="pl-10"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">اسم الصيدلية</label>
+              <Select value={filters.pharmacyName} onValueChange={(value) => setFilters(prev => ({ ...prev, pharmacyName: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الصيدلية" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الصيدليات</SelectItem>
+                  {uniquePharmacies.map(pharmacy => (
+                    <SelectItem key={pharmacy} value={pharmacy}>{pharmacy}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -394,16 +482,31 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">الحالة</label>
+              <label className="text-sm font-medium">الحالة المالية</label>
               <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر الحالة" />
+                  <SelectValue placeholder="اختر الحالة المالية" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  {uniqueStatuses.map(status => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
+                  <SelectItem value="all">جميع الحالات المالية</SelectItem>
+                  <SelectItem value="pending">انتظار مالي</SelectItem>
+                  <SelectItem value="approved">مقبول مالي</SelectItem>
+                  <SelectItem value="rejected">مرفوض مالي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">حالة الطلبيات</label>
+              <Select value={filters.finalOrderStatus} onValueChange={(value) => setFilters(prev => ({ ...prev, finalOrderStatus: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر حالة الطلبيات" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع حالات الطلبيات</SelectItem>
+                  <SelectItem value="pending">انتظار طلبيات</SelectItem>
+                  <SelectItem value="approved">موافق طلبيات</SelectItem>
+                  <SelectItem value="rejected">مرفوض طلبيات</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -691,39 +794,337 @@ const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* أفضل المناطق أداءً */}
+      {/* أفضل المناطق أداءً - Chart احترافي */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+            <BarChart3 className="h-5 w-5 text-blue-600" />
             أفضل المناطق أداءً
           </CardTitle>
-          <CardDescription>المناطق الأكثر إيراداً وطلبات</CardDescription>
+          <CardDescription>المناطق الأكثر إيراداً وطلبات مع رسم بياني تفاعلي</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(chartData.areaPerformance)
-              .sort(([,a], [,b]) => b.revenue - a.revenue)
-              .slice(0, 3)
-              .map(([area, data], index) => (
-                <div key={area} className={`p-4 rounded-lg border-2 ${
-                  index === 0 ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-300 dark:from-yellow-950 dark:to-yellow-900 dark:border-yellow-700' :
-                  index === 1 ? 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300 dark:from-gray-950 dark:to-gray-900 dark:border-gray-700' :
-                  'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 dark:from-orange-950 dark:to-orange-900 dark:border-orange-700'
-                }`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-sm">{area}</h3>
-                    <Badge variant={index === 0 ? 'default' : 'secondary'}>
-                      #{index + 1}
-                    </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* الرسم البياني */}
+            <div className="h-80">
+              <Bar
+                data={{
+                  labels: Object.keys(chartData.areaPerformance).slice(0, 6),
+                  datasets: [
+                    {
+                      label: 'الإيرادات (د.ل)',
+                      data: Object.values(chartData.areaPerformance).slice(0, 6).map(area => area.revenue),
+                      backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)'
+                      ],
+                      borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(139, 92, 246, 1)',
+                        'rgba(236, 72, 153, 1)'
+                      ],
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      borderSkipped: false,
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: false
+                    },
+                    tooltip: {
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      titleColor: 'white',
+                      bodyColor: 'white',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      borderWidth: 1,
+                      callbacks: {
+                        label: function(context) {
+                          const areaName = context.label;
+                          const areaData = chartData.areaPerformance[areaName];
+                          return [
+                            `الإيرادات: ${context.parsed.y.toLocaleString()} د.ل`,
+                            `عدد الطلبات: ${areaData.orders}`
+                          ];
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                      },
+                      ticks: {
+                        callback: function(value) {
+                          return value.toLocaleString() + ' د.ل';
+                        }
+                      }
+                    },
+                    x: {
+                      grid: {
+                        display: false
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+            
+            {/* قائمة أفضل 3 مناطق */}
+            <div className="space-y-4">
+              {Object.entries(chartData.areaPerformance)
+                .sort(([,a], [,b]) => b.revenue - a.revenue)
+                .slice(0, 3)
+                .map(([area, data], index) => (
+                  <div key={area} className={`p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${
+                    index === 0 ? 'bg-gradient-to-r from-yellow-50 via-yellow-100 to-amber-50 border-yellow-300 dark:from-yellow-950 dark:to-amber-900 dark:border-yellow-700' :
+                    index === 1 ? 'bg-gradient-to-r from-gray-50 via-slate-100 to-gray-50 border-gray-300 dark:from-gray-950 dark:to-slate-900 dark:border-gray-700' :
+                    'bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-orange-300 dark:from-orange-950 dark:to-amber-900 dark:border-orange-700'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0 ? 'bg-gradient-to-r from-yellow-500 to-amber-500' :
+                          index === 1 ? 'bg-gradient-to-r from-gray-500 to-slate-500' :
+                          'bg-gradient-to-r from-orange-500 to-amber-500'
+                        }`}>
+                          #{index + 1}
+                        </div>
+                        <h3 className="font-bold text-lg">{area}</h3>
+                      </div>
+                      <Badge variant={index === 0 ? 'default' : 'secondary'} className="text-xs">
+                        {index === 0 ? '🏆 الأول' : index === 1 ? '🥈 الثاني' : '🥉 الثالث'}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-2 bg-white/50 rounded-lg dark:bg-black/20">
+                        <p className="text-2xl font-bold text-green-600">{data.revenue.toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">إجمالي الإيرادات (د.ل)</p>
+                      </div>
+                      <div className="text-center p-2 bg-white/50 rounded-lg dark:bg-black/20">
+                        <p className="text-2xl font-bold text-blue-600">{data.orders}</p>
+                        <p className="text-xs text-muted-foreground">عدد الطلبات</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">الإيرادات: {data.revenue.toLocaleString()} د.ل</p>
-                    <p className="text-xs text-muted-foreground">الطلبات: {data.orders}</p>
+                ))
+              }
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* أفضل الصيدليات أداءً */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-green-600" />
+            أفضل الصيدليات أداءً
+          </CardTitle>
+          <CardDescription>الصيدليات الأكثر إيراداً وطلبات</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* الرسم البياني الدائري */}
+            <div className="h-80">
+              <Doughnut
+                data={{
+                  labels: Object.keys(chartData.pharmacyPerformance).slice(0, 5),
+                  datasets: [{
+                    data: Object.values(chartData.pharmacyPerformance).slice(0, 5).map(pharmacy => pharmacy.revenue),
+                    backgroundColor: [
+                      'rgba(34, 197, 94, 0.8)',
+                      'rgba(59, 130, 246, 0.8)',
+                      'rgba(245, 158, 11, 0.8)',
+                      'rgba(239, 68, 68, 0.8)',
+                      'rgba(139, 92, 246, 0.8)'
+                    ],
+                    borderColor: [
+                      'rgba(34, 197, 94, 1)',
+                      'rgba(59, 130, 246, 1)',
+                      'rgba(245, 158, 11, 1)',
+                      'rgba(239, 68, 68, 1)',
+                      'rgba(139, 92, 246, 1)'
+                    ],
+                    borderWidth: 3,
+                    hoverOffset: 10
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: {
+                          size: 12
+                        }
+                      }
+                    },
+                    tooltip: {
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      titleColor: 'white',
+                      bodyColor: 'white',
+                      callbacks: {
+                        label: function(context) {
+                          const pharmacyName = context.label;
+                          const pharmacyData = chartData.pharmacyPerformance[pharmacyName];
+                          const total = Object.values(chartData.pharmacyPerformance).reduce((sum, p) => sum + p.revenue, 0);
+                          const percentage = ((pharmacyData.revenue / total) * 100).toFixed(1);
+                          return [
+                            `${pharmacyName}`,
+                            `الإيرادات: ${pharmacyData.revenue.toLocaleString()} د.ل`,
+                            `النسبة: ${percentage}%`,
+                            `الطلبات: ${pharmacyData.orders}`
+                          ];
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+            
+            {/* قائمة أفضل الصيدليات */}
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {Object.entries(chartData.pharmacyPerformance)
+                .sort(([,a], [,b]) => b.revenue - a.revenue)
+                .slice(0, 8)
+                .map(([pharmacy, data], index) => (
+                  <div key={pharmacy} className="p-3 rounded-lg border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-900 hover:shadow-md transition-all duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm">{pharmacy}</h4>
+                          <p className="text-xs text-muted-foreground">{data.orders} طلب</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-green-600">{data.revenue.toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">د.ل</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
-            }
+                ))
+              }
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* أفضل المنتجات مبيعاً */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-purple-600" />
+            أفضل المنتجات مبيعاً
+          </CardTitle>
+          <CardDescription>المنتجات الأكثر مبيعاً من حيث الكمية والإيرادات</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* الرسم البياني الأفقي */}
+            <div className="h-80">
+              <Bar
+                data={{
+                  labels: Object.keys(chartData.productSales).slice(0, 6),
+                  datasets: [
+                    {
+                      label: 'الكمية المباعة',
+                      data: Object.values(chartData.productSales).slice(0, 6).map(product => product.quantity),
+                      backgroundColor: 'rgba(147, 51, 234, 0.8)',
+                      borderColor: 'rgba(147, 51, 234, 1)',
+                      borderWidth: 2,
+                      borderRadius: 6,
+                    }
+                  ]
+                }}
+                options={{
+                  indexAxis: 'y',
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: false
+                    },
+                    tooltip: {
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      titleColor: 'white',
+                      bodyColor: 'white',
+                      callbacks: {
+                        label: function(context) {
+                          const productName = context.label;
+                          const productData = chartData.productSales[productName];
+                          return [
+                            `الكمية: ${productData.quantity.toLocaleString()}`,
+                            `الإيرادات: ${productData.revenue.toLocaleString()} د.ل`
+                          ];
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    x: {
+                      beginAtZero: true,
+                      grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                      }
+                    },
+                    y: {
+                      grid: {
+                        display: false
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+            
+            {/* قائمة أفضل المنتجات */}
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {Object.entries(chartData.productSales)
+                .sort(([,a], [,b]) => b.quantity - a.quantity)
+                .slice(0, 8)
+                .map(([product, data], index) => (
+                  <div key={product} className="p-3 rounded-lg border bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-900 hover:shadow-md transition-all duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm">{product}</h4>
+                          <p className="text-xs text-muted-foreground">{data.revenue.toLocaleString()} د.ل</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-purple-600">{data.quantity.toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">قطعة</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -748,8 +1149,10 @@ const AdminDashboard: React.FC = () => {
                   <th className="text-start p-3 font-medium">مندوب المبيعات</th>
                   <th className="text-start p-3 font-medium">الصيدلية</th>
                   <th className="text-start p-3 font-medium">المنطقة</th>
+                  <th className="text-start p-3 font-medium">الحالة المالية</th>
+                  <th className="text-start p-3 font-medium">حالة الطلبيات</th>
                   <th className="text-start p-3 font-medium">قيمة الطلب</th>
-               
+                  <th className="text-start p-3 font-medium">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -775,26 +1178,37 @@ const AdminDashboard: React.FC = () => {
                     <td className="p-3">
                       <div className="max-w-xs">
                         <div className="font-medium text-sm">{order.pharmacyName}</div>
-                        {order.pharmacyAddress && (
-                          <div className="text-xs text-muted-foreground mt-1">{order.pharmacyAddress}</div>
-                        )}
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {order.pharmacyAddress}
+                        </div>
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{order.pharmacyArea}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {order.pharmacyArea}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <Badge className={`text-xs ${getStatusColor(order.orderStatus)}`}>
+                        {getStatusLabel(order.orderStatus)}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <Badge className={`text-xs ${getStatusColor(order.FinalOrderStatusValue)}`}>
+                        {getFinalOrderStatusLabel(order.FinalOrderStatusValue)}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-semibold text-sm">
+                        {order.totalOrderValue.toLocaleString()} د.ل
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="flex items-end gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="font-semibold text-green-700 dark:text-green-400">
-                          {order.totalOrderValue.toLocaleString()} د.ل
-                        </span>
-                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </td>
-             
                   </tr>
                 ))}
               </tbody>
@@ -803,40 +1217,92 @@ const AdminDashboard: React.FC = () => {
 
           {/* التنقل بين الصفحات */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 bg-muted/30 rounded-lg">
               <div className="text-sm text-muted-foreground">
                 عرض {((currentPage - 1) * 10) + 1} إلى {Math.min(currentPage * 10, totalRecords)} من {totalRecords} نتيجة
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  السابق
-                </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                  return (
-                    <Button
-                      key={page}
-                      variant={page === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </Button>
-                  );
-                })}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  التالي
-                </Button>
+              
+              <div className="flex items-center gap-4">
+                {/* اختيار عدد العناصر في الصفحة */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">عرض:</span>
+                  <Select 
+                    value="10" 
+                    onValueChange={(value) => {
+                      const newLimit = parseInt(value);
+                      fetchOrders(1, newLimit);
+                    }}
+                  >
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* أزرار التنقل */}
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className="px-2"
+                  >
+                    الأولى
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3"
+                  >
+                    السابق
+                  </Button>
+                  
+                  {/* أرقام الصفحات */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      return (
+                        <Button
+                          key={page}
+                          variant={page === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(page)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3"
+                  >
+                    التالي
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-2"
+                  >
+                    الأخيرة
+                  </Button>
+                </div>
               </div>
             </div>
           )}
