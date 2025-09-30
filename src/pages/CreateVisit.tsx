@@ -473,24 +473,40 @@ const CreateVisit: React.FC = () => {
                 />
               </div>
 
+              {/* Supervisor Selection - Show only when withSupervisor is true */}
               {formData.withSupervisor && (
                 <div className="space-y-2">
-                  <Label className="text-right block">اختر المشرف *</Label>
+                  <Label className="flex items-center gap-2 justify-end">
+                    <span>اختر المشرف *</span>
+                    <User className="h-4 w-4" />
+                  </Label>
                   <Select
                     value={formData.supervisorId}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, supervisorId: value }))}
                   >
-                    <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg">
+                    <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg shadow-sm">
                       <SelectValue placeholder="اختر المشرف" />
                     </SelectTrigger>
                     <SelectContent>
                       {supervisors.map((supervisor) => (
-                        <SelectItem key={supervisor._id} value={supervisor._id} className="text-right">
-                          {supervisor.firstName} {supervisor.lastName} ({supervisor.username})
+                        <SelectItem key={supervisor._id} value={supervisor._id}>
+                          <div className="flex flex-col text-right">
+                            <span className="font-medium">
+                              {supervisor.firstName} {supervisor.lastName}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {supervisor.username}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {supervisors.length === 0 && formData.withSupervisor && (
+                    <p className="text-sm text-muted-foreground text-right">
+                      جاري تحميل قائمة المشرفين...
+                    </p>
+                  )}
                 </div>
               )}
             </div>

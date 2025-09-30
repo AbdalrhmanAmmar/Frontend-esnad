@@ -272,14 +272,15 @@ const EditEmployee: React.FC = () => {
                     <SelectValue placeholder="اختر الدور" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ADMIN">مدير</SelectItem>
+                    <SelectItem value="ASSITANT">مساعد</SelectItem>
                     <SelectItem value="SUPERVISOR">مشرف</SelectItem>
                     <SelectItem value="MEDICAL REP">مندوب طبي</SelectItem>
                     <SelectItem value="SALES REP">مندوب مبيعات</SelectItem>
-                    <SelectItem value="MANAGER">مدير عام</SelectItem>
-                    <SelectItem value="TEAM_LEAD">قائد فريق</SelectItem>
-                    <SelectItem value="FINANCE">مالية</SelectItem>
-                    <SelectItem value="WAREHOUSE">مخازن</SelectItem>
+                    <SelectItem value="GENERAL MANAGER">مدير عام</SelectItem>
+                    <SelectItem value="SALES SUPERVISOR">مدير مبيعات</SelectItem>
+                    <SelectItem value="FINANCIAL MANAGER">مدير مالي</SelectItem>
+                    <SelectItem value="FINANCIAL OFFICER">مالية</SelectItem>
+                    <SelectItem value="ORDERS OFFICERS">طلبيات</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.role && (
