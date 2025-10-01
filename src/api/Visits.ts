@@ -241,7 +241,15 @@ export interface GetVisitsBySupervisorParams {
 }
 
 // API Functions
-export const createVisit = async (medicalRepId: string, visitData: CreateVisitRequest): Promise<ApiResponse<VisitResponse>> => {
+// export const createVisit = async (medicalRepId: string, visitData: CreateVisitRequest): Promise<ApiResponse<VisitResponse>> => {
+//   try {
+//     const response = await api.post(`/visit-forms/medical-rep/${medicalRepId}/visits`, visitData);
+//     return response.data;
+//   } catch (error: any) {
+//     throw new Error(error.response?.data?.message || 'حدث خطأ أثناء إنشاء الزيارة');
+//   }
+// };
+export const createVisit = async (medicalRepId: string, visitData) => {
   try {
     const response = await api.post(`/visit-forms/medical-rep/${medicalRepId}/visits`, visitData);
     return response.data;

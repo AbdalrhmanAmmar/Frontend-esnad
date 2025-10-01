@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   getSalesRepProductsData, 
   exportOrdersData, 
@@ -595,16 +596,14 @@ const totalRefuse = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            الطلبيات ({orders.length} من {pagination.totalCount})
+            بيانات الطلبيات ({orders.length} من {pagination.totalCount})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                <p className="text-muted-foreground animate-pulse">جاري تحميل الطلبات...</p>
-              </div>
+            <div className="flex justify-center items-center py-8">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+              <span className="mr-2">جاري تحميل البيانات...</span>
             </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-12">
@@ -619,128 +618,81 @@ const totalRefuse = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {orders.map((order, index) => (
-                <Card 
-                  key={order.id} 
-                  className="border-l-4 border-l-primary/20 hover:shadow-md transition-all duration-200 hover:border-l-primary/40"
-                  style={{
-                    animationDelay: `${index * 50}ms`,
-                    animation: 'fadeInUp 0.5s ease-out forwards'
-                  }}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-3 flex-1">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <Badge variant="outline" className="font-mono">
-                            #{order.orderId.slice(-8)}
-                          </Badge>
-                          {getStatusBadge(order.orderStatus || 'pending')}
-                          <Badge variant="outline" className="text-xs">
-                            {formatDate(order.visitDate)}
-                          </Badge>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>تاريخ الزيارة</TableHead>
+                    <TableHead>المندوب</TableHead>
+                    <TableHead>الصيدلية</TableHead>
+                    <TableHead>المنطقة</TableHead>
+                    <TableHead>المبلغ</TableHead>
+                    <TableHead>رقم الطلب</TableHead>
+                    <TableHead>الحالة</TableHead>
+                    <TableHead>الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{formatDate(order.visitDate)}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.salesRepName}</div>
+                          <div className="text-sm text-muted-foreground">{order.salesRepEmail}</div>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="font-medium text-muted-foreground">المندوب:</span>
-                            <span className="font-semibold">{order.salesRepName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="font-medium text-muted-foreground">الصيدلية:</span>
-                            <span className="font-semibold">{order.pharmacyName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            <span className="font-medium text-muted-foreground">المنطقة:</span>
-                            <span className="font-semibold">{order.pharmacyArea} - {order.pharmacyCity}</span>
-                          </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.pharmacyName}</div>
+                          <div className="text-sm text-muted-foreground">{order.pharmacyCity}</div>
                         </div>
-                        
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>تم الإنشاء: {formatDate(order.createdAt)}</span>
+                      </TableCell>
+                      <TableCell>{order.pharmacyArea}</TableCell>
+                      <TableCell className="font-bold text-primary">{formatCurrency(order.totalOrderValue)}</TableCell>
+                      <TableCell>#{order.orderId.slice(-8)}</TableCell>
+                      <TableCell>{getStatusBadge(order.orderStatus || 'pending')}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditOrder(order)}
+                            className="gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            عرض
+                          </Button>
+                          {(!order.orderStatus || order.orderStatus === 'pending') && ifFinancialRole && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStatusUpdate(order.id, 'approve', order)}
+                                disabled={updating === order.id}
+                                className="gap-1 text-green-600 border-green-200 hover:bg-green-50"
+                              >
+                                <Check className="w-3 h-3" />
+                                قبول
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStatusUpdate(order.id, 'reject', order)}
+                                disabled={updating === order.id}
+                                className="gap-1 text-red-600 border-red-200 hover:bg-red-50"
+                              >
+                                <X className="w-3 h-3" />
+                                رفض
+                              </Button>
+                            </>
+                          )}
                         </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditOrder(order)}
-                          className="hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          عرض التفاصيل
-                        </Button>
-                        
-                        {(!order.orderStatus || order.orderStatus === 'pending') && ifFinancialRole && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleStatusUpdate(order.id, 'approve', order)}
-                              disabled={updating === order.id}
-                              className="h-10 w-10 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleStatusUpdate(order.id, 'reject', order)}
-                              disabled={updating === order.id}
-                              className="h-10 w-10 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <Separator className="my-4" />
-
-                    <div>
-                      <h4 className="font-medium mb-3">تفاصيل المنتجات:</h4>
-                      <div className="space-y-2">
-                        {order.products.map((product) => (
-                          <div key={product.productId} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <Package className="w-4 h-4 text-muted-foreground" />
-                                <span className="font-medium">{product.productName}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {product.productCode}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs">
-                                  {product.productBrand}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <span>السعر: {formatCurrency(product.productPrice)}</span>
-                                <span>الكمية: <span className="font-medium">{product.quantity}</span></span>
-                                <span>المجموع: {formatCurrency(product.totalValue)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t flex justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        القيمة الإجمالية للطلب: <span className="font-medium text-foreground">{formatCurrency(order.totalOrderValue)}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        الحالة: {getStatusBadge(order.orderStatus || 'pending')}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

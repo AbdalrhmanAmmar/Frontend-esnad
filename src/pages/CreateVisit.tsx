@@ -369,7 +369,7 @@ const CreateVisit: React.FC = () => {
                       <SelectContent>
                         {getProductMessages(selectedProduct).map((message: any, index: number) => (
                           <SelectItem key={index} value={index.toString()} className="text-right">
-                            {message.text}
+                            {message.tag}
                           </SelectItem>
                         ))}
                       </SelectContent>
