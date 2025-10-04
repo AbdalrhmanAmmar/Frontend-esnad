@@ -51,30 +51,7 @@ const ClinicVisitForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Mock data - في التطبيق الحقيقي ستأتي من API
-  const doctors = [
-    { id: '1', name: 'د. أحمد محمد', specialty: 'باطنة' },
-    { id: '2', name: 'د. فاطمة علي', specialty: 'أطفال' },
-    { id: '3', name: 'د. محمد حسن', specialty: 'جراحة' },
-  ];
-
-  const clinics = [
-    { id: '1', name: 'عيادة الشفاء', location: 'الرياض' },
-    { id: '2', name: 'مستشفى الملك فهد', location: 'جدة' },
-    { id: '3', name: 'عيادة النور', location: 'الدمام' },
-  ];
-
-  const medicines = [
-    { id: '1', name: 'باراسيتامول', type: 'مسكن' },
-    { id: '2', name: 'أموكسيسيلين', type: 'مضاد حيوي' },
-    { id: '3', name: 'أوميبرازول', type: 'مثبط حموضة' },
-    { id: '4', name: 'ميتفورمين', type: 'سكري' },
-  ];
-
-  const messages = [
-    { id: '1', title: 'رسالة ترحيبية', content: 'مرحباً بكم في عيادتنا' },
-    { id: '2', title: 'تعليمات الدواء', content: 'يرجى اتباع تعليمات الطبيب' },
-    { id: '3', title: 'موعد المتابعة', content: 'لا تنسوا موعد المتابعة' },
-  ];
+  
 
   const addProduct = () => {
     const newProduct: Product = {
@@ -316,7 +293,7 @@ const ClinicVisitForm: React.FC = () => {
                                 {messages.map((message) => (
                                   <SelectItem key={message.id} value={message.title}>
                                     <div className="flex flex-col items-start">
-                                      <span className="font-medium">{message.title}</span>
+                                      <span className="font-medium">{message.text}</span>
                                       <span className="text-xs text-gray-500">{message.content}</span>
                                     </div>
                                   </SelectItem>

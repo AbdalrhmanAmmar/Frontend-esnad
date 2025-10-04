@@ -480,7 +480,7 @@ const ClinicsAnalytics: React.FC = () => {
               <SelectItem value="yearly">سنوي</SelectItem>
             </SelectContent>
           </Select>
-          <Button 
+          {/* <Button 
             onClick={handleExportToExcel} 
             disabled={exportLoading}
             variant="outline" 
@@ -488,7 +488,7 @@ const ClinicsAnalytics: React.FC = () => {
           >
             <Download className={`h-4 w-4 ${exportLoading ? 'animate-spin' : ''}`} />
             {exportLoading ? 'جاري التصدير...' : 'تصدير إلى Excel'}
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -969,7 +969,7 @@ const ClinicsAnalytics: React.FC = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Trends */}
-        <Card className="shadow-lg border-0">
+        {/* <Card className="shadow-lg border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-500" />
@@ -990,7 +990,7 @@ const ClinicsAnalytics: React.FC = () => {
               }} options={chartOptions} />
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Specialty Distribution */}
         <Card className="shadow-lg border-0">
@@ -1136,36 +1136,7 @@ const ClinicsAnalytics: React.FC = () => {
       </div>
 
       {/* Summary Statistics */}
-      <Card className="shadow-lg border-0">
-        <CardHeader>
-          <CardTitle>ملخص الإحصائيات</CardTitle>
-          <CardDescription>
-            نظرة عامة على الأداء العام للعيادات
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 mb-2">
-                {updatedAnalyticsData.kpis.avgVisitsPerDay}
-              </div>
-              <div className="text-sm text-gray-600">متوسط الزيارات اليومية</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 mb-2">
-                {updatedAnalyticsData.kpis.totalVisits > 0 ? (updatedAnalyticsData.kpis.totalRevenue / updatedAnalyticsData.kpis.totalVisits).toFixed(0) : '0'} ر.س
-              </div>
-              <div className="text-sm text-gray-600">متوسط الإيراد لكل زيارة</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 mb-2">
-                {updatedAnalyticsData.kpis.growthRate}%
-              </div>
-              <div className="text-sm text-gray-600">معدل النمو الشهري</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Visits Table */}
       <Card className="shadow-lg border-0">

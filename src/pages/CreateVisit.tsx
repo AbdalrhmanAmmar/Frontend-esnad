@@ -241,7 +241,7 @@ const CreateVisit: React.FC = () => {
   const getMessageTitle = (productId: string, messageId: string) => {
     const messages = getProductMessages(productId);
     const message = messages.find((m: any, index: number) => index.toString() === messageId);
-    return message ? message.tag : 'رسالة غير معروفة';
+    return message ? message.text || message.tag : 'رسالة غير معروفة';
   };
 
   const getDoctorName = (doctorId: string) => {
@@ -369,7 +369,7 @@ const CreateVisit: React.FC = () => {
                       <SelectContent>
                         {getProductMessages(selectedProduct).map((message: any, index: number) => (
                           <SelectItem key={index} value={index.toString()} className="text-right">
-                            {message.tag}
+                            {message.text || message.tag}
                           </SelectItem>
                         ))}
                       </SelectContent>
