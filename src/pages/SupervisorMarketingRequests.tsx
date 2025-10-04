@@ -598,26 +598,7 @@ const SupervisorMarketingRequests: React.FC = () => {
       )}
 
       {/* Medical Reps Info */}
-      {medicalReps.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              مندوبي المبيعات ({medicalRepsCount})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {medicalReps.map((rep) => (
-                <div key={rep._id} className="p-3 border rounded-lg">
-                  <p className="font-medium">{rep.name}</p>
-                  <p className="text-sm text-gray-500">@{rep.username}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+  
 
       {/* Confirmation Modal */}
       <ConfirmationModal

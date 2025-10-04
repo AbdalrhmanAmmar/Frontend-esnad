@@ -312,7 +312,7 @@ const ProductDetailsView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {[
             { label: 'زيارات الأطباء', value: searchResults.data.summary.totalDoctorVisits, icon: User, color: 'from-blue-500 to-cyan-600' },
-            { label: 'الطلبات البسيطة', value: searchResults.data.summary.totalSimpleRequests, icon: FileText, color: 'from-green-500 to-emerald-600' },
+            { label: 'طلبات العينات', value: searchResults.data.summary.totalSimpleRequests, icon: FileText, color: 'from-green-500 to-emerald-600' },
             { label: 'طلبات الصيدليات', value: searchResults.data.summary.totalPharmacyRequests, icon: MapPin, color: 'from-purple-500 to-violet-600' },
             { label: 'إجمالي العينات', value: searchResults.data.summary.totalSamples, icon: Package, color: 'from-orange-500 to-red-600' },
             { label: 'الكمية المطلوبة', value: searchResults.data.summary.totalQuantityRequested, icon: TrendingUp, color: 'from-pink-500 to-rose-600' }
@@ -388,7 +388,7 @@ const ProductDetailsView: React.FC = () => {
             <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-3 text-2xl">
                 <FileText className="w-6 h-6" />
-                الطلبات البسيطة ({searchResults.data.simpleFormRequests.length})
+                طلبات العينات ({searchResults.data.simpleFormRequests.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
