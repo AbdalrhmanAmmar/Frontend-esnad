@@ -260,7 +260,7 @@ export const exportFinalOrdersToExcel = async (params: FilteredOrdersParams = {}
     if (params.endDate) queryParams.append('endDate', params.endDate);
     if (params.search) queryParams.append('search', params.search);
 
-    const response = await api.get(`/order-collector/export-final-orders?${queryParams.toString()}`, {
+    const response = await api.get(`/order-collector/final-orders/export?${queryParams.toString()}`, {
       responseType: 'blob'
     });
     
