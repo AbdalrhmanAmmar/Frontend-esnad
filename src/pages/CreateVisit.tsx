@@ -220,7 +220,15 @@ const CreateVisit: React.FC = () => {
           title: 'نجح',
           description: 'تم إنشاء الزيارة بنجاح',
         });
-        navigate('/visits'); // Navigate to visits list
+        setFormData({
+          visitDate: new Date().toISOString(),
+          doctorId: '',
+          products: [],
+          notes: '',
+          withSupervisor: false,
+          supervisorId: ''
+        });
+      
       }
     } catch (error: any) {
       toast({
