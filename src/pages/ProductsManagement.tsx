@@ -57,6 +57,10 @@ function ProductsManagement() {
         limit: 10,
         sortField: 'createdAt',
         sortOrder: 'desc',
+        q: searchTerm, // إرسال البحث إلى الخادم
+        brand: filterBrand !== 'all' ? filterBrand : undefined,
+        company: filterCompany !== 'all' ? filterCompany : undefined,
+        type: filterType !== 'all' ? filterType : undefined,
         ...params
       });
       
@@ -80,32 +84,56 @@ function ProductsManagement() {
 
   useEffect(() => {
     fetchProducts();
-  }, [currentPage]);
+  }, [currentPage, searchTerm, filterBrand, filterCompany, filterType]);
 
-  // Filter products based on search and filters
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.PRODUCT.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.CODE.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.BRAND.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesBrand = filterBrand === 'all' || product.BRAND === filterBrand;
-    const matchesCompany = filterCompany === 'all' || product.COMPANY === filterCompany;
-    const matchesType = filterType === 'all' || product.PRODUCT_TYPE === filterType;
-    
-    return matchesSearch && matchesBrand && matchesCompany && matchesType;
-  });
+  // إزالة الفلترة المحلية لأن الخادم يتولى الفلترة الآن
+  const filteredProducts = products;
 
-  // Get unique values for filters
-  const uniqueBrands = [...new Set(products.map(p => p.BRAND))].filter(Boolean);
-  const uniqueCompanies = [...new Set(products.map(p => p.COMPANY))].filter(Boolean);
-  const uniqueTypes = [...new Set(products.map(p => p.PRODUCT_TYPE))].filter(Boolean);
+  // Get unique values for filters - نحتاج لجلب جميع البيانات للفلاتر
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    const fetchAllProductsForFilters = async () => {
+      try {
+        const response = await getProducts({ limit: 10000 }); // جلب جميع المنتجات للفلاتر
+        if (response.success) {
+          setAllProducts(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching all products for filters:', error);
+      }
+    };
+    fetchAllProductsForFilters();
+  }, []);
+
+  const uniqueBrands = [...new Set(allProducts.map(p => p.BRAND))].filter(Boolean);
+  const uniqueCompanies = [...new Set(allProducts.map(p => p.COMPANY))].filter(Boolean);
+  const uniqueTypes = [...new Set(allProducts.map(p => p.PRODUCT_TYPE))].filter(Boolean);
 
   const handleRefresh = () => {
+    setCurrentPage(1); // إعادة تعيين الصفحة للأولى
     fetchProducts();
   };
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
+    setCurrentPage(1); // إعادة تعيين الصفحة للأولى عند البحث
+  };
+
+  // تحديث الفلاتر لإعادة تعيين الصفحة
+  const handleBrandFilter = (value: string) => {
+    setFilterBrand(value);
+    setCurrentPage(1);
+  };
+
+  const handleCompanyFilter = (value: string) => {
+    setFilterCompany(value);
+    setCurrentPage(1);
+  };
+
+  const handleTypeFilter = (value: string) => {
+    setFilterType(value);
+    setCurrentPage(1);
   };
 
   // تصدير المنتجات كملف Excel
@@ -234,7 +262,7 @@ function ProductsManagement() {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={filterBrand} onValueChange={setFilterBrand}>
+              <Select value={filterBrand} onValueChange={handleBrandFilter}>
                 <SelectTrigger className="w-48">
                   <Tag className="h-4 w-4 ml-2" />
                   <SelectValue placeholder="العلامة التجارية" />
@@ -246,7 +274,7 @@ function ProductsManagement() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={filterCompany} onValueChange={setFilterCompany}>
+              <Select value={filterCompany} onValueChange={handleCompanyFilter}>
                 <SelectTrigger className="w-48">
                   <Building2 className="h-4 w-4 ml-2" />
                   <SelectValue placeholder="الشركة" />
@@ -258,7 +286,7 @@ function ProductsManagement() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={filterType} onValueChange={setFilterType}>
+              <Select value={filterType} onValueChange={handleTypeFilter}>
                 <SelectTrigger className="w-48">
                   <Filter className="h-4 w-4 ml-2" />
                   <SelectValue placeholder="نوع المنتج" />
