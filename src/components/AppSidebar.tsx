@@ -351,7 +351,6 @@ export function AppSidebar() {
     if (user?.role === "ADMIN") {
       return [
         { id: "home", title: "الصفحة الرئيسية", url: "/", icon: Home, color: "text-blue-500" },
-          { id: "product-search", title: "باحث المنتجات", url: "/product-details", icon: Package, color: "text-indigo-500" },
 
         { 
           id: "admin-dashboard", 
