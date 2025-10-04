@@ -338,7 +338,7 @@ export const updateSupervisorMarketingActivityRequestStatus = async (
   status: 'pending' | 'approved' | 'rejected'
 ): Promise<{ success: boolean; message: string; data: SupervisorMarketingActivityRequest }> => {
   try {
-    const response = await api.patch(`/marketing-activity-requests/supervisor/${requestId}/status`, {
+    const response = await api.patch(`/marketing-activity-requests/supervisor/status/${requestId}`, {
       status
     });
     return response.data;
