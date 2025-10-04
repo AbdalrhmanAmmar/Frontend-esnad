@@ -136,7 +136,7 @@ const ClinicsAnalytics: React.FC = () => {
       clinicName: visit.doctorId.organizationName,
       classification: visit.doctorId.segment,
       brand: visit.doctorId.brand,
-      products: visit.products.map(p => p.productId.PRODUCT),
+      products: visit.products.map(p => p.productId?.PRODUCT || 'غير محدد'),
       samplesCount: visit.products.reduce((sum, p) => sum + p.samplesCount, 0),
       notes: visit.notes,
       medicalRepName: `${visit.medicalRepId.firstName} ${visit.medicalRepId.lastName}`,
