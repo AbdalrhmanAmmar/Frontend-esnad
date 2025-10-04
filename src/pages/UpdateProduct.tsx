@@ -46,10 +46,16 @@ const UpdateProduct = () => {
       }
 
       try {
-        const response = await getProducts();
+        // تحميل جميع المنتجات بدون حد أقصى للعدد
+        const response = await getProducts({ limit: 10000 });
         if (response.success) {
-          const product = response.data.find((p: Product) => p.CODE === code);
+          // البحث عن المنتج باستخدام trim() لإزالة المسافات الإضافية
+          const product = response.data.find((p: any) => 
+            p.CODE && p.CODE.toString().trim() === code.trim()
+          );
+          
           if (product) {
+            console.log('Product found:', product); // للتشخيص
             setFormData({
               CODE: product.CODE || '',
               PRODUCT: product.PRODUCT || '',
@@ -63,14 +69,18 @@ const UpdateProduct = () => {
               ) : ['', '', '']
             });
           } else {
-            toast.error('المنتج غير موجود');
+            console.log('Product not found. Available products:', response.data.map(p => p.CODE)); // للتشخيص
+            toast.error(`المنتج بالكود ${code} غير موجود`);
             navigate('/management/data/products');
           }
         } else {
           toast.error('فشل في تحميل بيانات المنتج');
+          navigate('/management/data/products');
         }
       } catch (error) {
+        console.error('Error loading product:', error);
         toast.error('حدث خطأ في تحميل بيانات المنتج');
+        navigate('/management/data/products');
       } finally {
         setLoadingProduct(false);
       }
