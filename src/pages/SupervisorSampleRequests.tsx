@@ -11,7 +11,6 @@ import { ar } from 'date-fns/locale';
 import { CalendarIcon, Search, Filter, RefreshCw, Package, Users, TrendingUp, Clock, CheckCircle, XCircle, MoreVertical, Check, X, AlertTriangle, Download } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { getSupervisorSampleRequests, SupervisorSampleRequest, SupervisorSampleRequestsResponse, updateSampleRequestBySupervisor, exportSupervisorSampleRequestsToExcel } from '@/api/SampleRequests';
-import { getSupervisorMarketingActivityRequests, SupervisorMarketingActivityRequest, SupervisorMarketingActivityRequestsResponse } from '@/api/MarketingActivities';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,35 +48,9 @@ const SupervisorSampleRequests: React.FC = () => {
     cancelled: 0
   });
   const [medicalRepsCount, setMedicalRepsCount] = useState(0);
-
-  // Marketing Activity Requests State
-  const [marketingRequests, setMarketingRequests] = useState<SupervisorMarketingActivityRequest[]>([]);
-  const [marketingLoading, setMarketingLoading] = useState(true);
-  const [marketingPagination, setMarketingPagination] = useState({
-    currentPage: 1,
-    totalPages: 0,
-    totalRequests: 0,
-    hasNext: false,
-    hasPrev: false
-  });
-  const [marketingStats, setMarketingStats] = useState({
-    pending: 0,
-    approved: 0,
-    rejected: 0
-  });
   
   // Filters
   const [filters, setFilters] = useState({
-    status: 'all',
-    startDate: undefined as Date | undefined,
-    endDate: undefined as Date | undefined,
-    search: '',
-    page: 1,
-    limit: 10
-  });
-
-  // Marketing Activity Filters
-  const [marketingFilters, setMarketingFilters] = useState({
     status: 'all',
     startDate: undefined as Date | undefined,
     endDate: undefined as Date | undefined,
@@ -133,39 +106,9 @@ const SupervisorSampleRequests: React.FC = () => {
     }
   };
 
-  const fetchMarketingRequests = async () => {
-    if (!user?._id) return;
-
-    setMarketingLoading(true);
-    try {
-      const params = {
-        page: marketingFilters.page,
-        limit: marketingFilters.limit,
-        status: marketingFilters.status !== 'all' ? marketingFilters.status : undefined,
-        startDate: marketingFilters.startDate?.toISOString(),
-        endDate: marketingFilters.endDate?.toISOString(),
-        search: marketingFilters.search || undefined
-      };
-
-      const response = await getSupervisorMarketingActivityRequests(user._id, params);
-      setMarketingRequests(response.data);
-      setMarketingPagination(response.pagination);
-      setMarketingStats(response.stats);
-    } catch (error: any) {
-      console.error('Error fetching marketing requests:', error);
-      toast.error(error.message || 'حدث خطأ في جلب طلبات الأنشطة التسويقية');
-    } finally {
-      setMarketingLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchRequests();
   }, [filters.page, filters.limit, filters.status]);
-
-  useEffect(() => {
-    fetchMarketingRequests();
-  }, [marketingFilters.page, marketingFilters.limit, marketingFilters.status]);
 
   const handleSearch = () => {
     setFilters(prev => ({ ...prev, page: 1 }));
@@ -183,40 +126,6 @@ const SupervisorSampleRequests: React.FC = () => {
     });
   };
 
-  const handleMarketingSearch = () => {
-    setMarketingFilters(prev => ({ ...prev, page: 1 }));
-    fetchMarketingRequests();
-  };
-
-  const handleMarketingReset = () => {
-    setMarketingFilters({
-      status: 'all',
-      startDate: undefined,
-      endDate: undefined,
-      search: '',
-      page: 1,
-      limit: 10
-    });
-    fetchMarketingRequests();
-  };
-
-  const handleMarketingPageChange = (newPage: number) => {
-    setMarketingFilters(prev => ({ ...prev, page: newPage }));
-  };
-
-  const getMarketingStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" />قيد الانتظار</Badge>;
-      case 'approved':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />موافق عليه</Badge>;
-      case 'rejected':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" />مرفوض</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -231,7 +140,10 @@ const SupervisorSampleRequests: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd/MM/yyyy', { locale: ar });
+    if (!dateString) return 'غير محدد';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'تاريخ غير صحيح';
+    return format(date, 'dd/MM/yyyy', { locale: ar });
   };
 
   const handleActionRequest = (request: SupervisorSampleRequest, action: 'approve' | 'reject') => {
@@ -245,62 +157,55 @@ const SupervisorSampleRequests: React.FC = () => {
     setActionLoading(true);
     try {
       const status = actionType === 'approve' ? 'approved' : 'cancelled';
-      await updateSampleRequestBySupervisor(
-        user._id,
-        selectedRequest._id,
-        status
-      );
-
-      toast.success(
-        actionType === 'approve' 
-          ? 'تم الموافقة على الطلب بنجاح' 
-          : 'تم رفض الطلب بنجاح'
-      );
-
+      
+      console.log('Calling updateSampleRequestBySupervisor with:', {
+        supervisorId: user._id,
+        requestId: selectedRequest._id,
+        status: status
+      });
+      
+      const result = await updateSampleRequestBySupervisor(user._id, selectedRequest._id, status);
+      console.log('Update result:', result);
+      
+      toast.success(`تم ${actionType === 'approve' ? 'الموافقة على' : 'رفض'} الطلب بنجاح`);
+      
       // Refresh the requests list
       await fetchRequests();
       
-      // Reset states
+      // Reset selection
       setSelectedRequest(null);
       setActionType(null);
     } catch (error: any) {
-      toast.error(error.message || 'حدث خطأ أثناء تحديث الطلب');
+      console.error('Error updating request:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error(error.message || 'حدث خطأ في تحديث الطلب');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const cancelAction = () => {
-    setSelectedRequest(null);
-    setActionType(null);
-  };
-
-  const handleExportToExcel = async () => {
+  const handleExport = async () => {
     if (!user?._id) return;
-    
+
+    setExportLoading(true);
     try {
-      setExportLoading(true);
-      
-      const exportParams = {
+      const params = {
         status: filters.status !== 'all' ? filters.status : undefined,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
+        startDate: filters.startDate?.toISOString().split('T')[0],
+        endDate: filters.endDate?.toISOString().split('T')[0],
         search: filters.search || undefined
       };
-      
-      const blob = await exportSupervisorSampleRequestsToExcel(user._id, exportParams);
+
+      const blob = await exportSupervisorSampleRequestsToExcel(user._id, params);
       
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Generate filename with current date
       const currentDate = new Date().toISOString().split('T')[0];
-      const statusText = filters.status !== 'all' ? `_${filters.status}` : '';
-      link.download = `sample_requests_export${statusText}_${currentDate}.xlsx`;
+      link.download = `sample-requests-${currentDate}.xlsx`;
       
-      // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -308,47 +213,22 @@ const SupervisorSampleRequests: React.FC = () => {
       
       toast.success('تم تصدير البيانات بنجاح');
     } catch (error: any) {
-      console.error('Export error:', error);
-      toast.error(error.message || 'حدث خطأ أثناء تصدير البيانات');
+      console.error('Error exporting data:', error);
+      toast.error('حدث خطأ في تصدير البيانات');
     } finally {
       setExportLoading(false);
     }
   };
 
-
-
-  if (loading && requests.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-lg text-muted-foreground">جاري تحميل الطلبات...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">قائمة طلبات العينات</h1>
-          <p className="text-muted-foreground mt-1">إدارة ومتابعة طلبات العينات للمندوبين التابعين</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            onClick={handleExportToExcel} 
-            disabled={exportLoading || loading}
-            variant="outline"
-            className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
-          >
-            {exportLoading ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            {exportLoading ? 'جاري التصدير...' : 'تصدير إلى Excel'}
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">طلبات العينات</h1>
+        <div className="flex gap-2">
+          <Button onClick={handleExport} disabled={exportLoading} className="gap-2">
+            <Download className={`w-4 h-4 ${exportLoading ? 'animate-spin' : ''}`} />
+            تصدير
           </Button>
           <Button onClick={fetchRequests} disabled={loading} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -358,63 +238,51 @@ const SupervisorSampleRequests: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">إجمالي الطلبات</p>
+                <p className="text-sm font-medium text-muted-foreground">إجمالي الطلبات</p>
                 <p className="text-2xl font-bold text-blue-700">{pagination.totalRequests}</p>
               </div>
               <Package className="w-8 h-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
-          <CardContent className="p-4">
+
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-600">قيد الانتظار</p>
+                <p className="text-sm font-medium text-muted-foreground">قيد الانتظار</p>
                 <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-4">
+
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">موافق عليها</p>
+                <p className="text-sm font-medium text-muted-foreground">موافق عليها</p>
                 <p className="text-2xl font-bold text-green-700">{stats.approved}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-4">
+
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-red-600">مرفوضة</p>
-                <p className="text-2xl font-bold text-red-700">{stats.cancelled || 0}</p>
+                <p className="text-sm font-medium text-muted-foreground">ملغية</p>
+                <p className="text-2xl font-bold text-red-700">{stats.cancelled}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-600">المندوبين</p>
-                <p className="text-2xl font-bold text-purple-700">{medicalRepsCount}</p>
-              </div>
-              <Users className="w-8 h-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
@@ -425,31 +293,27 @@ const SupervisorSampleRequests: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="w-5 h-5" />
-            فلاتر البحث
+            الفلاتر
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">البحث</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="البحث في الملاحظات..."
-                  value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="pl-10"
-                />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <Input
+                placeholder="البحث..."
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+                className="w-full"
+              />
             </div>
 
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">الحالة</label>
-              <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value, page: 1 }))}>
+            <div>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value, page: 1 }))}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="جميع الحالات" />
+                  <SelectValue placeholder="الحالة" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الحالات</SelectItem>
@@ -460,9 +324,7 @@ const SupervisorSampleRequests: React.FC = () => {
               </Select>
             </div>
 
-            {/* Start Date */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">من تاريخ</label>
+            <div>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -470,7 +332,7 @@ const SupervisorSampleRequests: React.FC = () => {
                     {filters.startDate ? formatDate(filters.startDate.toISOString()) : "اختر التاريخ"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={filters.startDate}
@@ -481,9 +343,7 @@ const SupervisorSampleRequests: React.FC = () => {
               </Popover>
             </div>
 
-            {/* End Date */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">إلى تاريخ</label>
+            <div>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -491,7 +351,7 @@ const SupervisorSampleRequests: React.FC = () => {
                     {filters.endDate ? formatDate(filters.endDate.toISOString()) : "اختر التاريخ"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={filters.endDate}
@@ -501,16 +361,16 @@ const SupervisorSampleRequests: React.FC = () => {
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
-          
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleSearch} className="gap-2">
-              <Search className="w-4 h-4" />
-              بحث
-            </Button>
-            <Button variant="outline" onClick={handleReset}>
-              إعادة تعيين
-            </Button>
+
+            <div className="flex gap-2">
+              <Button onClick={handleSearch} className="gap-2">
+                <Search className="w-4 h-4" />
+                بحث
+              </Button>
+              <Button variant="outline" onClick={handleReset}>
+                إعادة تعيين
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -518,90 +378,72 @@ const SupervisorSampleRequests: React.FC = () => {
       {/* Requests Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة الطلبات</CardTitle>
+          <CardTitle>طلبات العينات</CardTitle>
         </CardHeader>
         <CardContent>
-          {requests.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+              <span className="mr-2">جاري التحميل...</span>
+            </div>
+          ) : requests.length === 0 ? (
             <div className="text-center py-8">
-              <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg font-medium text-muted-foreground">لا توجد طلبات</p>
-              <p className="text-sm text-muted-foreground">لم يتم العثور على أي طلبات بالفلاتر المحددة</p>
+              <Package className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">لا توجد طلبات</p>
             </div>
           ) : (
             <div className="space-y-4">
               {requests.map((request) => (
-                <Card key={request._id} className="border-l-4 border-l-primary">
+                <Card key={request._id} className="border-l-4 border-l-blue-500">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">المنتج</p>
-                          <p className="font-semibold">{request.product.PRODUCT}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">الطبيب</p>
-                          <p className="font-semibold">{request.doctor.drName}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">المندوب</p>
-                          <p className="font-semibold">{request.medicalRep.username}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">الحالة</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{request.medicalRep?.username || 'غير محدد'}</h3>
                           {getStatusBadge(request.status)}
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          التاريخ: {formatDate(request.requestDate)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          الطبيب: {request.doctor?.drName || 'غير محدد'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          المنتج: {request.product?.PRODUCT || 'غير محدد'} - الكمية: {request.quantity}
+                        </p>
                       </div>
                       
-                      {/* Actions Button - Only for pending requests */}
                       {request.status === 'pending' && (
-                        <div className="flex-shrink-0">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem
-                                onClick={() => handleActionRequest(request, 'approve')}
-                                className="text-green-600 focus:text-green-600 focus:bg-green-50"
-                              >
-                                <Check className="mr-2 h-4 w-4" />
-                                الموافقة على الطلب
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleActionRequest(request, 'reject')}
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                              >
-                                <X className="mr-2 h-4 w-4" />
-                                رفض الطلب
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleActionRequest(request, 'approve')}
+                              className="text-green-600"
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              موافقة
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleActionRequest(request, 'reject')}
+                              className="text-red-600"
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              رفض
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
-
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">تاريخ الطلب</p>
-                        <p className="font-semibold">{formatDate(request.requestDate)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">تاريخ التسليم</p>
-                        <p className="font-semibold">{formatDate(request.deliveryDate)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">الكمية</p>
-                        <p className="font-semibold">{request.quantity}</p>
-                      </div>
                     </div>
                     
                     {request.notes && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-muted-foreground">الملاحظات</p>
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">الملاحظات:</p>
                         <p className="text-sm bg-muted p-2 rounded">{request.notes}</p>
                       </div>
                     )}
@@ -638,8 +480,40 @@ const SupervisorSampleRequests: React.FC = () => {
         </div>
       )}
 
-      {/* Marketing Activity Requests Section */}
-
+      {/* Action Confirmation Dialog */}
+      <AlertDialog open={!!selectedRequest && !!actionType} onOpenChange={() => {
+        setSelectedRequest(null);
+        setActionType(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              تأكيد العملية
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من {actionType === 'approve' ? 'الموافقة على' : 'رفض'} طلب العينة من {selectedRequest?.medicalRepName}؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmAction}
+              disabled={actionLoading}
+              className={actionType === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+            >
+              {actionLoading ? (
+                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+              ) : actionType === 'approve' ? (
+                <Check className="w-4 h-4 mr-2" />
+              ) : (
+                <X className="w-4 h-4 mr-2" />
+              )}
+              {actionType === 'approve' ? 'موافقة' : 'رفض'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

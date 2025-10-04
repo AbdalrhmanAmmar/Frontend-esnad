@@ -91,12 +91,24 @@ export const updateSampleRequestBySupervisor = async (
   notes?: string
 ): Promise<SampleRequestResponse> => {
   try {
+    console.log('API call - updateSampleRequestBySupervisor:', {
+      supervisorId,
+      requestId,
+      status,
+      notes,
+      url: `/sample-requests/supervisor/${supervisorId}/${requestId}/status`
+    });
+
     const response = await api.put(`/sample-requests/supervisor/${supervisorId}/${requestId}/status`, {
       status,
       notes
     });
+
+    console.log('API response:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('API error:', error);
+    console.error('Error response:', error.response?.data);
     throw new Error(error.response?.data?.message || 'حدث خطأ أثناء تحديث حالة الطلب');
   }
 };
