@@ -204,7 +204,7 @@ function ProductsManagement() {
 
   const getProductTypeBadge = (type: string) => {
     const typeMap: { [key: string]: { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } } = {
-      'P': { label: 'منتج', variant: 'default' },
+      'P': { label: 'P', variant: 'default' },
       'M': { label: 'دواء', variant: 'secondary' },
       'S': { label: 'مكمل', variant: 'outline' }
     };
