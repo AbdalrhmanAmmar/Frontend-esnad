@@ -232,7 +232,7 @@ export function AppSidebar() {
         },
       ];
     }
-    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER" || user?.role === "ASSITANT" || user?.role === "GM") {
+    if (user?.role === "SALES SUPERVISOR" || user?.role === "FINANCIAL MANAGER" || user?.role === "ASSITANT" || user?.role === "GENERAL MANAGER") {
       return  [
                { 
           id: "dashboards", 
