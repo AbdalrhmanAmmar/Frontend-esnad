@@ -179,22 +179,22 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/money-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT' , 'GENARL MANAGER']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT' , 'GENERAL MANAGER']}>
                         <MoneyCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/orders-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT','GENARL MANAGER']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'SALES SUPERVISOR', 'FINANCIAL OFFICER', 'ASSITANT','GENERAL MANAGER']}>
                         <OrdersCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/financial-collector/financial-orders-collection" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'manager', 'FINANCIAL OFFICER' , 'ASSITANT' , 'GENARL MANAGER']}>
+                      <ProtectedRoute requiredRoles={['ADMIN', 'FINANCIAL MANAGER', 'manager', 'FINANCIAL OFFICER' , 'ASSITANT' , 'GENERAL MANAGER']}>
                         <FinancialOrdersCollection />
                       </ProtectedRoute>
                     } />
                     <Route path="/orders-collector" element={
-                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS','ADMIN', 'SALES SUPERVISOR','FINANCIAL MANAGER', 'ASSITANT', 'GENARL MANAGER']}>
+                      <ProtectedRoute requiredRoles={['ORDERS OFFICERS','ADMIN', 'SALES SUPERVISOR','FINANCIAL MANAGER', 'ASSITANT', 'GENERAL MANAGER']}>
                         <OrdersCollector />
                       </ProtectedRoute>
                     } />
