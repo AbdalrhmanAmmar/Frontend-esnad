@@ -83,7 +83,7 @@ const App = () => (
                   <div className="flex items-center gap-2 px-4" style={{ direction: 'rtl' }}>
                     <h1 className="text-lg font-semibold text-foreground">نظام إدارة المندوبين الطبيين</h1>
                   </div>
-                  <SidebarTrigger className="mr-4 ml-auto" />
+                  <SidebarTrigger className="mr-4 ml-auto " />
                 </header>
                 
                 <main className="flex-1 p-6 overflow-auto">

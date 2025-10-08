@@ -514,9 +514,9 @@ export function AppSidebar() {
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="h-8 w-8 p-0 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="h-12 w-12 p-0 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 bg-[#ff6347]"
           >
-            {isCollapsed ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+            {isCollapsed ? <ChevronLeft size={32} /> : <ChevronRight size={32} />}
           </Button>
         </div>
         
@@ -547,6 +547,8 @@ export function AppSidebar() {
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedItems.includes(item.id);
               const active = item.url ? isActive(item.url) : false;
+
+
               
               return (
                 <SidebarMenuItem key={item.id}>
@@ -620,7 +622,7 @@ export function AppSidebar() {
                                       `}
                                     >
                                       <subItem.icon 
-                                        size={16} 
+                                        size={32} 
                                         className="flex-shrink-0 transition-colors text-gray-500"
                                       />
                                       <span className="text-sm font-medium text-right flex-1 truncate">
