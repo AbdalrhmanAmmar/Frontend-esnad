@@ -194,7 +194,7 @@ const managementItems = [
 ];
 
 export function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -202,6 +202,13 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
+
+  // Auto-close sidebar on mobile when navigating to a new page
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, isMobile, setOpenMobile]);
 
   const isActive = (path: string) => currentPath === path;
   

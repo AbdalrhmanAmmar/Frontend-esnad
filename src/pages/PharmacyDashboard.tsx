@@ -286,24 +286,26 @@ const PharmacyDashboard = () => {
                 placeholder="ابحث عن صيدلية..."
                 value={filters.pharmacyName}
                 onChange={(e) => handleFilterChange('pharmacyName', e.target.value)}
+                className="text-sm"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="productName">اسم المنتج</Label>
+              <Label htmlFor="productName" className="text-sm">اسم المنتج</Label>
               <Input
                 id="productName"
                 type="text"
                 placeholder="ابحث عن منتج..."
                 value={filters.productName}
                 onChange={(e) => handleFilterChange('productName', e.target.value)}
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>حالة الطلب</Label>
+              <Label className="text-sm">حالة الطلب</Label>
               <Select value={filters.orderStatus} onValueChange={(value) => handleFilterChange('orderStatus', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="اختر حالة الطلب" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,9 +319,9 @@ const PharmacyDashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>عدد النتائج</Label>
+              <Label className="text-sm">عدد النتائج</Label>
               <Select value={filters.limit.toString()} onValueChange={(value) => handleFilterChange('limit', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="اختر العدد" />
                 </SelectTrigger>
                 <SelectContent>
@@ -332,8 +334,8 @@ const PharmacyDashboard = () => {
             </div>
           </div>
           
-          <div className="flex gap-2 mt-4">
-            <Button onClick={applyFilters} disabled={loading}>
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
+            <Button onClick={applyFilters} disabled={loading} className="w-full sm:w-auto">
                {loading ? (
                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                ) : (
@@ -341,7 +343,7 @@ const PharmacyDashboard = () => {
                )}
                تطبيق الفلاتر
              </Button>
-            <Button onClick={clearFilters} variant="outline" size="sm" disabled={loading}>
+            <Button onClick={clearFilters} variant="outline" size="sm" disabled={loading} className="w-full sm:w-auto">
               مسح الفلاتر
             </Button>
           </div>
@@ -349,14 +351,14 @@ const PharmacyDashboard = () => {
       </Card>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي الإيرادات</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {formatCurrency(statistics.totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -371,7 +373,7 @@ const PharmacyDashboard = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">
               {statistics.totalQuantity.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -386,7 +388,7 @@ const PharmacyDashboard = () => {
             <Pill className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">
               {statistics.totalOrders}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -401,7 +403,7 @@ const PharmacyDashboard = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">
               {formatCurrency(statistics.averageOrderValue)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -412,24 +414,24 @@ const PharmacyDashboard = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         {/* Pharmacy Revenue Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle>إيرادات الصيدليات</CardTitle>
-            <CardDescription>توزيع الإيرادات حسب الصيدلية</CardDescription>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg sm:text-xl">إيرادات الصيدليات</CardTitle>
+            <CardDescription className="text-sm">توزيع الإيرادات حسب الصيدلية</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {chartData.pharmacyRevenue.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600`} />
-                    <span className="text-sm font-medium">{item.name}</span>
+                    <div className={`w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex-shrink-0`} />
+                    <span className="text-sm font-medium truncate">{item.name}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold">{formatCurrency(item.value)}</div>
-                    <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                    <div className="w-full sm:w-32 bg-gray-200 rounded-full h-2 mt-1">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(item.value / Math.max(...chartData.pharmacyRevenue.map(d => d.value))) * 100}%` }}
@@ -444,21 +446,21 @@ const PharmacyDashboard = () => {
 
         {/* Brand Performance Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle>أداء العلامات التجارية</CardTitle>
-            <CardDescription>إيرادات العلامات التجارية</CardDescription>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg sm:text-xl">أداء العلامات التجارية</CardTitle>
+            <CardDescription className="text-sm">إيرادات العلامات التجارية</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {chartData.brandPerformance.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-teal-600`} />
-                    <span className="text-sm font-medium">{item.name}</span>
+                    <div className={`w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-teal-600 flex-shrink-0`} />
+                    <span className="text-sm font-medium truncate">{item.name}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold">{formatCurrency(item.value)}</div>
-                    <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                    <div className="w-full sm:w-32 bg-gray-200 rounded-full h-2 mt-1">
                       <div 
                         className="bg-gradient-to-r from-green-500 to-teal-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(item.value / Math.max(...chartData.brandPerformance.map(d => d.value))) * 100}%` }}
@@ -472,20 +474,20 @@ const PharmacyDashboard = () => {
         </Card>
 
         {/* Product Sales Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>مبيعات المنتجات</CardTitle>
-            <CardDescription>الكميات المباعة حسب المنتج</CardDescription>
+        <Card className="xl:col-span-2">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg sm:text-xl">مبيعات المنتجات</CardTitle>
+            <CardDescription className="text-sm">الكميات المباعة حسب المنتج</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {chartData.productSales.map((item, index) => (
-                <div key={index} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                <div key={index} className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
-                    <Package className="w-5 h-5 text-orange-500" />
-                    <Badge variant="outline">{item.value} وحدة</Badge>
+                    <Package className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 flex-shrink-0" />
+                    <Badge variant="outline" className="text-xs">{item.value} وحدة</Badge>
                   </div>
-                  <h4 className="font-medium text-sm mb-2">{item.name}</h4>
+                  <h4 className="font-medium text-sm mb-2 truncate" title={item.name}>{item.name}</h4>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-gradient-to-r from-orange-500 to-red-600 h-2 rounded-full transition-all duration-300"
@@ -594,12 +596,9 @@ const PharmacyDashboard = () => {
 
         {/* Pharmacy Performance - Bar Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-green-500" />
-              أداء الصيدليات
-            </CardTitle>
-            <CardDescription>مقارنة إيرادات الصيدليات</CardDescription>
+          <CardHeader className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-green-500" />
+            أداء الصيدليات
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -681,18 +680,15 @@ const PharmacyDashboard = () => {
       </div>
 
       {/* Product Distribution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Product Sales Distribution - Doughnut Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Pill className="w-5 h-5 text-purple-500" />
-              توزيع مبيعات المنتجات
-            </CardTitle>
-            <CardDescription>نسبة مبيعات كل منتج</CardDescription>
+          <CardHeader className="flex items-center gap-2 text-lg sm:text-xl">
+            <Pill className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+            توزيع مبيعات المنتجات
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-center justify-center">
+            <div className="h-64 sm:h-80 flex items-center justify-center">
               <Doughnut
                 data={{
                   labels: ordersData.flatMap(order => order.products)
@@ -780,15 +776,12 @@ const PharmacyDashboard = () => {
 
         {/* Brand Revenue Distribution - Pie Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-emerald-500" />
-              توزيع إيرادات العلامات التجارية
-            </CardTitle>
-            <CardDescription>نسبة إيرادات كل علامة تجارية</CardDescription>
+          <CardHeader className="flex items-center gap-2 text-lg sm:text-xl">
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+            توزيع إيرادات العلامات التجارية
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-center justify-center">
+            <div className="h-64 sm:h-80 flex items-center justify-center">
               <Pie
                 data={{
                   labels: chartData.brandPerformance.map(item => item.name),
@@ -796,6 +789,7 @@ const PharmacyDashboard = () => {
                     {
                       data: chartData.brandPerformance.map(item => item.value),
                       backgroundColor: [
+
                         'rgba(16, 185, 129, 0.8)',
                         'rgba(59, 130, 246, 0.8)',
                         'rgba(245, 158, 11, 0.8)',
@@ -870,57 +864,41 @@ const PharmacyDashboard = () => {
               <Bar
                 data={{
                   labels: (() => {
-                    const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number } }, order) => {
+                    const areaStats = ordersData.reduce((acc: { [key: string]: number }, order) => {
                       const area = order.pharmacyArea || 'غير محدد';
-                      if (!acc[area]) {
-                        acc[area] = { orders: 0, value: 0 };
-                      }
-                      acc[area].orders += 1;
-                      acc[area].value += order.totalOrderValue;
+                      acc[area] = (acc[area] || 0) + order.totalOrderValue;
                       return acc;
                     }, {});
-                    return Object.keys(areaStats).slice(0, 8);
+                    return Object.keys(areaStats).slice(0, 6);
                   })(),
                   datasets: [
                     {
-                      label: 'عدد الطلبات',
                       data: (() => {
-                        const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number } }, order) => {
+                        const areaStats = ordersData.reduce((acc: { [key: string]: number }, order) => {
                           const area = order.pharmacyArea || 'غير محدد';
-                          if (!acc[area]) {
-                            acc[area] = { orders: 0, value: 0 };
-                          }
-                          acc[area].orders += 1;
-                          acc[area].value += order.totalOrderValue;
+                          acc[area] = (acc[area] || 0) + order.totalOrderValue;
                           return acc;
                         }, {});
-                        return Object.keys(areaStats).slice(0, 8).map(area => areaStats[area].orders);
+                        return Object.keys(areaStats).slice(0, 6).map(area => areaStats[area]);
                       })(),
-                      backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                      borderColor: 'rgb(59, 130, 246)',
-                      borderWidth: 2,
-                      borderRadius: 8,
-                      borderSkipped: false,
-                    },
-                    {
-                      label: 'قيمة المبيعات (بالآلاف)',
-                      data: (() => {
-                        const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number } }, order) => {
-                          const area = order.pharmacyArea || 'غير محدد';
-                          if (!acc[area]) {
-                            acc[area] = { orders: 0, value: 0 };
-                          }
-                          acc[area].orders += 1;
-                          acc[area].value += order.totalOrderValue;
-                          return acc;
-                        }, {});
-                        return Object.keys(areaStats).slice(0, 8).map(area => Math.round(areaStats[area].value / 1000));
-                      })(),
-                      backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                      borderColor: 'rgb(16, 185, 129)',
-                      borderWidth: 2,
-                      borderRadius: 8,
-                      borderSkipped: false,
+                      backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(168, 85, 247, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(6, 182, 212, 0.8)'
+                      ],
+                      borderColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(16, 185, 129)',
+                        'rgb(245, 158, 11)',
+                        'rgb(168, 85, 247)',
+                        'rgb(239, 68, 68)',
+                        'rgb(6, 182, 212)'
+                      ],
+                      borderWidth: 3,
+                      hoverOffset: 15
                     }
                   ]
                 }}
@@ -999,50 +977,39 @@ const PharmacyDashboard = () => {
           <CardContent>
             <div className="space-y-4">
               {(() => {
-                const areaStats = ordersData.reduce((acc: { [key: string]: { orders: number; value: number; pharmacies: Set<string> } }, order) => {
+                const areaStats = ordersData.reduce((acc: { [key: string]: { value: number; orders: number; pharmacies: Set<string> } }, order) => {
                   const area = order.pharmacyArea || 'غير محدد';
                   if (!acc[area]) {
-                    acc[area] = { orders: 0, value: 0, pharmacies: new Set() };
+                    acc[area] = { value: 0, orders: 0, pharmacies: new Set() };
                   }
-                  acc[area].orders += 1;
                   acc[area].value += order.totalOrderValue;
+                  acc[area].orders += 1;
                   acc[area].pharmacies.add(order.pharmacyName);
                   return acc;
                 }, {});
                 
+                const totalValue = Object.values(areaStats).reduce((sum, stat) => sum + stat.value, 0);
+                
                 return Object.entries(areaStats)
                   .sort(([,a], [,b]) => b.value - a.value)
-                  .slice(0, 5)
-                  .map(([area, stats], index) => (
-                    <div key={area} className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                          {index + 1}
-                        </div>
+                  .slice(0, 6)
+                  .map(([area, stats]) => {
+                    const percentage = ((stats.value / totalValue) * 100).toFixed(1);
+                    return (
+                      <div key={area} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <h4 className="font-semibold text-gray-900">{area}</h4>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <span className="flex items-center gap-1">
-                              <Package className="w-3 h-3" />
-                              {stats.orders} طلب
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {stats.pharmacies.size} صيدلية
-                            </span>
+                          <div className="font-medium text-gray-900 text-sm sm:text-base">{area}</div>
+                          <div className="text-xs sm:text-sm text-gray-600">
+                            {stats.orders} طلب • {stats.pharmacies.size} صيدلية
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-green-600">
-                          {formatCurrency(stats.value)}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          متوسط: {formatCurrency(stats.value / stats.orders)}
+                        <div className="text-right">
+                          <div className="font-semibold text-green-600 text-sm sm:text-base">{formatCurrency(stats.value)}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{percentage}%</div>
                         </div>
                       </div>
-                    </div>
-                  ));
+                    );
+                  });
               })()}
             </div>
           </CardContent>
@@ -1139,7 +1106,7 @@ const PharmacyDashboard = () => {
               />
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <h4 className="font-semibold text-lg mb-4">إحصائيات تفصيلية للمناطق</h4>
               {(() => {
                 const areaStats = ordersData.reduce((acc: { [key: string]: { value: number; orders: number; pharmacies: Set<string> } }, order) => {
@@ -1161,16 +1128,16 @@ const PharmacyDashboard = () => {
                   .map(([area, stats]) => {
                     const percentage = ((stats.value / totalValue) * 100).toFixed(1);
                     return (
-                      <div key={area} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div key={area} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <div className="font-medium text-gray-900">{area}</div>
-                          <div className="text-sm text-gray-600">
+                          <div className="font-medium text-gray-900 text-sm sm:text-base">{area}</div>
+                          <div className="text-xs sm:text-sm text-gray-600">
                             {stats.orders} طلب • {stats.pharmacies.size} صيدلية
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-green-600">{formatCurrency(stats.value)}</div>
-                          <div className="text-sm text-gray-500">{percentage}%</div>
+                          <div className="font-semibold text-green-600 text-sm sm:text-base">{formatCurrency(stats.value)}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{percentage}%</div>
                         </div>
                       </div>
                     );
