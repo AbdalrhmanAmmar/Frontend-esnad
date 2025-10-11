@@ -108,25 +108,56 @@ startDate.setDate(startDate.getDate() - 7);
     
     setLoading(true);
     try {
-      const params: any = {
-        page,
-        limit: 10,
-        ...(currentFilters.search && { search: currentFilters.search }),
-        ...(currentFilters.status && currentFilters.status !== 'all' && { status: currentFilters.status as 'pending' | 'approved' | 'rejected' }),
-        ...(currentFilters.salesRep && currentFilters.salesRep !== 'all' && { salesRep: currentFilters.salesRep }),
-        ...(currentFilters.pharmacy && currentFilters.pharmacy !== 'all' && { pharmacy: currentFilters.pharmacy }),
-        ...(currentFilters.startDate && { 
-          startDate: new Date(currentFilters.startDate.getFullYear(), currentFilters.startDate.getMonth(), currentFilters.startDate.getDate(), 0, 0, 0).toISOString()
-        }),
-        ...(currentFilters.endDate && { 
-          endDate: new Date(currentFilters.endDate.getFullYear(), currentFilters.endDate.getMonth(), currentFilters.endDate.getDate(), 23, 59, 59, 999).toISOString()
-        })
-      };
-
-      console.log('Filters being sent to API:', params);
-      console.log('Current filters state:', currentFilters);
-
-      const response = await getSalesRepProductsData(id, params);
+      // جلب جميع البيانات بدون فلاتر من الـ API
+      const response = await getSalesRepProductsData(id, { page: 1, limit: 1000 });
+      
+      // تطبيق الفلاتر محلياً
+      let filteredData = response.data;
+      
+      // فلتر البحث
+      if (currentFilters.search) {
+        const searchTerm = currentFilters.search.toLowerCase();
+        filteredData = filteredData.filter(order => 
+          order.pharmacyName.toLowerCase().includes(searchTerm) ||
+          order.salesRepName.toLowerCase().includes(searchTerm) ||
+          order.orderId.toLowerCase().includes(searchTerm) ||
+          order.pharmacyArea.toLowerCase().includes(searchTerm) ||
+          order.pharmacyCity.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // فلتر الحالة
+      if (currentFilters.status && currentFilters.status !== 'all') {
+        filteredData = filteredData.filter(order => order.orderStatus === currentFilters.status);
+      }
+      
+      // فلتر المندوب
+      if (currentFilters.salesRep && currentFilters.salesRep !== 'all') {
+        filteredData = filteredData.filter(order => order.salesRepName === currentFilters.salesRep);
+      }
+      
+      // فلتر الصيدلية
+      if (currentFilters.pharmacy && currentFilters.pharmacy !== 'all') {
+        filteredData = filteredData.filter(order => order.pharmacyName === currentFilters.pharmacy);
+      }
+      
+      // فلتر التاريخ
+      if (currentFilters.startDate) {
+        const startDate = new Date(currentFilters.startDate.getFullYear(), currentFilters.startDate.getMonth(), currentFilters.startDate.getDate());
+        filteredData = filteredData.filter(order => new Date(order.visitDate) >= startDate);
+      }
+      
+      if (currentFilters.endDate) {
+        const endDate = new Date(currentFilters.endDate.getFullYear(), currentFilters.endDate.getMonth(), currentFilters.endDate.getDate(), 23, 59, 59, 999);
+        filteredData = filteredData.filter(order => new Date(order.visitDate) <= endDate);
+      }
+      
+      // تطبيق الـ pagination محلياً
+      const totalRecords = filteredData.length;
+      const totalPages = Math.ceil(totalRecords / 10);
+      const startIndex = (page - 1) * 10;
+      const endIndex = startIndex + 10;
+      const paginatedData = filteredData.slice(startIndex, endIndex);
 
       const uniqueSalesReps = Array.from(
             new Set(response.data.map((order) => order.salesRepName))
@@ -150,38 +181,31 @@ startDate.setDate(startDate.getDate() - 7);
               setPharmacies(uniquePharmacies);
 
 
-      console.log(response.data)
+      console.log(paginatedData)
       
-      setOrders(response.data);
+      setOrders(paginatedData);
       setPagination({
-        currentPage: response.pagination.currentPage,
-        totalPages: response.pagination.totalPages,
-        totalCount: response.pagination.totalRecords,
-        hasNextPage: response.pagination.currentPage < response.pagination.totalPages,
-        hasPrevPage: response.pagination.currentPage > 1,
-        limit: response.pagination.limit
+        currentPage: page,
+        totalPages: totalPages,
+        totalCount: totalRecords,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+        limit: 10
       });
 
-      // حساب الإحصائيات
+      // حساب الإحصائيات من البيانات المفلترة
       const stats = {
-        totalOrders: response.statistics.summary.totalOrders,
-        pendingOrders: 0, // سيتم حسابها من البيانات
-        approvedOrders: 0, // سيتم حسابها من البيانات
-        rejectedOrders: 0, // سيتم حسابها من البيانات
-        totalValue: response.statistics.summary.totalValue,
-        totalQuantity: response.statistics.summary.totalQuantity,
-        uniqueProductsCount: response.statistics.summary.uniqueProductsCount
+        totalOrders: filteredData.length,
+        pendingOrders: 0,
+        approvedOrders: 0,
+        rejectedOrders: 0,
+        totalValue: filteredData.reduce((sum, order) => sum + order.totalOrderValue, 0),
+        totalQuantity: filteredData.reduce((sum, order) => sum + order.products.reduce((pSum, product) => pSum + product.quantity, 0), 0),
+        uniqueProductsCount: new Set(filteredData.flatMap(order => order.products.map(p => p.productId))).size
       };
 
-// let filteredData = response.data;
-// if (currentFilters.status && currentFilters.status !== 'all') {
-//   filteredData = filteredData.filter(order => order.orderStatus === currentFilters.status);
-// }
-
-      
-
-      // حساب الطلبات حسب الحالة
-      response.data.forEach(order => {
+      // حساب الطلبات حسب الحالة من البيانات المفلترة
+      filteredData.forEach(order => {
         switch (order.orderStatus) {
           case 'pending':
             stats.pendingOrders++;
@@ -196,18 +220,22 @@ startDate.setDate(startDate.getDate() - 7);
       });
 
       setStatistics(stats);
-      setStatusBreakdown(response.statistics.statusBreakdown || {
-        totalAmount: 0,
-        pendingAmount: 0,
-        approvedAmount: 0,
-        rejectedAmount: 0,
-        totalRecords: 0
-      });
+      
+      // حساب تفصيل المبالغ حسب الحالة من البيانات المفلترة
+      const statusBreakdown = {
+        totalAmount: filteredData.reduce((sum, order) => sum + order.totalOrderValue, 0),
+        pendingAmount: filteredData.filter(o => o.orderStatus === 'pending').reduce((sum, order) => sum + order.totalOrderValue, 0),
+        approvedAmount: filteredData.filter(o => o.orderStatus === 'approved').reduce((sum, order) => sum + order.totalOrderValue, 0),
+        rejectedAmount: filteredData.filter(o => o.orderStatus === 'rejected').reduce((sum, order) => sum + order.totalOrderValue, 0),
+        totalRecords: filteredData.length
+      };
+      
+      setStatusBreakdown(statusBreakdown);
       
       if (page === 1) {
         toast({
           title: 'تم تحميل الطلبات بنجاح',
-          description: `تم العثور على ${response.pagination.totalRecords} طلب`,
+          description: `تم العثور على ${totalRecords} طلب`,
         });
       }
     } catch (error: any) {
@@ -252,10 +280,11 @@ startDate.setDate(startDate.getDate() - 7);
     
     setExportLoading(true);
     try {
+      // استخدام نفس الفلاتر المطبقة محلياً
       const params: any = {
         ...(filters.search && { search: filters.search }),
-        ...(filters.status && filters.status !== 'all' && { status: filters.status as 'pending' | 'approved' | 'rejected' }),
-        ...(filters.salesRep && filters.salesRep !== 'all' && { salesRep: filters.salesRep }),
+        ...(filters.status && filters.status !== 'all' && { orderStatus: filters.status as 'pending' | 'approved' | 'rejected' }),
+        ...(filters.salesRep && filters.salesRep !== 'all' && { SalesRepName: filters.salesRep }),
         ...(filters.pharmacy && filters.pharmacy !== 'all' && { pharmacy: filters.pharmacy }),
         ...(filters.startDate && { startDate: filters.startDate.toISOString().split('T')[0] }),
         ...(filters.endDate && { endDate: filters.endDate.toISOString().split('T')[0] })
