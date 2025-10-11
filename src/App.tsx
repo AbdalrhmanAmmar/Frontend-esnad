@@ -7,7 +7,7 @@ import { HashRouter, Routes, Route, BrowserRouter } from "react-router-dom";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/AppSidebar";
-import FloatingChatbot from "@/components/FloatingChatbot";
+import { MobileNavbar } from "@/components/MobileNavbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -463,6 +463,7 @@ const App = () => (
                 </main>
               </SidebarInset>
               <AppSidebar />
+              <MobileNavbar />
             </div>
           </SidebarProvider>
           <Toaster />
@@ -507,7 +508,6 @@ const App = () => (
                },
              }}
            />
-          <FloatingChatbot />
         </TooltipProvider>
       </ThemeProvider>
     </BrowserRouter>
