@@ -36,7 +36,8 @@ import {
   TrendingUp,
   BookA,
   CalendarDays,
-  Stars
+  Stars,
+  DollarSignIcon
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
@@ -325,6 +326,7 @@ export function AppSidebar() {
         
        
             { id: "clinic-analytics", title: "لوحه تحكم العيادات", url: "/analytics/clinics", icon: Building2 },
+            { id: "medical-sales", title: "لوحه تحكم المبيعات", url: "/analytics/medical-sales", icon: DollarSignIcon },
           
         
         { 

@@ -67,6 +67,7 @@ import DoctorCard from "./pages/DoctorCard";
 import MedicalRepMarketing from "./pages/marketing/MedicalRep";
 import Medicalcoah from "./pages/Medicalcoah";
 import AnalyticsClincsSupervisor from "./pages/AnalyticsClincsSupervisor";
+import MedicalSalesdata from "./pages/MedicalSalesdata";
 
 
 const queryClient = new QueryClient();
@@ -361,6 +362,11 @@ const App = () => (
                     <Route path="/analytics/clinics/supervisor" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'MEDICAL REP', 'medical rep', 'SUPERVISOR', 'supervisor']}>
                         <AnalyticsClincsSupervisor />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/analytics/medical-sales" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep', 'ADMIN', 'SALES SUPERVISOR']}>
+                        <MedicalSalesdata />
                       </ProtectedRoute>
                     } />
                     <Route path="/profile" element={
