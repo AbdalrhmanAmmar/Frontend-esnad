@@ -52,23 +52,29 @@ export const OrdersFilter: React.FC<OrdersFilterProps> = ({
   const clearFilters = () => {
     onFiltersChange({
       search: '',
-      status: '',
-      salesRep: '',
-      pharmacy: '',
+      status: 'all',
+      salesRep: 'all',
+      pharmacy: 'all',
       startDate: null,
       endDate: null
     });
   };
 
   const hasActiveFilters = () => {
-    return filters.search || filters.status || filters.salesRep || 
-           filters.pharmacy || filters.startDate || filters.endDate;
+    return (
+      !!filters.search ||
+      (!!filters.status && filters.status !== 'all') ||
+      !!filters.salesRep ||
+      !!filters.pharmacy ||
+      !!filters.startDate ||
+      !!filters.endDate
+    );
   };
 
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.search) count++;
-    if (filters.status) count++;
+    if (filters.status && filters.status !== 'all') count++;
     if (filters.salesRep) count++;
     if (filters.pharmacy) count++;
     if (filters.startDate) count++;
@@ -288,13 +294,13 @@ export const OrdersFilter: React.FC<OrdersFilterProps> = ({
                 />
               </Badge>
             )}
-            {filters.status && (
+            {filters.status && filters.status !== 'all' && (
               <Badge variant="secondary" className="gap-1">
                 الحالة: {filters.status === 'pending' ? 'في الانتظار' : 
                         filters.status === 'approved' ? 'مقبولة' : 'مرفوضة'}
                 <X 
                   className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                  onClick={() => handleFilterChange('status', '')}
+                  onClick={() => handleFilterChange('status', 'all')}
                 />
               </Badge>
             )}
