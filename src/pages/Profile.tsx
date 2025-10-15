@@ -23,6 +23,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { getSupervisorTeam, SupervisorTeamMember } from '@/api/Supervisor';
 import { useToast } from '@/hooks/use-toast';
+import ChangePassword from './ChangePassword';
 
 const Profile = () => {
   const { user, logout } = useAuthStore();
@@ -30,6 +31,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [teamMembers, setTeamMembers] = useState<SupervisorTeamMember[]>([]);
   const [loadingTeam, setLoadingTeam] = useState(false);
+  const [open, SetOpen] = useState(false)
 
   const handleLogout = () => {
     logout();
@@ -64,6 +66,10 @@ const Profile = () => {
       setLoadingTeam(false);
     }
   };
+
+  const handleropenModal=()=>{
+    SetOpen(true)
+  }
 
   useEffect(() => {
     fetchTeamMembers();
@@ -132,14 +138,11 @@ const Profile = () => {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">إدارة معلوماتك الشخصية وإعداداتك</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
+            <Button onClick={handleropenModal} variant="outline" size="sm" className="gap-2 w-full sm:w-auto bg-indigo-600 text-white">
               <Edit className="h-4 w-4" />
-              تعديل
+              تعديل كلمة المرور
             </Button>
-            <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
-              <Settings className="h-4 w-4" />
-              الإعدادات
-            </Button>
+   
             <Button variant="destructive" size="sm" className="gap-2 w-full sm:w-auto" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
               تسجيل الخروج
@@ -387,6 +390,7 @@ const Profile = () => {
           </Card>
         </div>
       </div>
+      <ChangePassword open={open} onOpenChange={SetOpen} />
     </div>
   );
 };
