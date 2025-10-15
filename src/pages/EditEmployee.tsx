@@ -192,7 +192,7 @@ const EditEmployee: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div dir='rtl' className="container mx-auto p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button
@@ -210,12 +210,19 @@ const EditEmployee: React.FC = () => {
 
       {/* Form */}
       <Card>
+        <Card className='flex justify-between items-center mx-10 border-none'>
         <CardHeader>
           <CardTitle>بيانات الموظف</CardTitle>
           <CardDescription>
             قم بتعديل البيانات المطلوبة وانقر على حفظ التغييرات
           </CardDescription>
         </CardHeader>
+        <Button>
+          اعادة تعيين كلمة المرور
+        </Button>
+
+        </Card>
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information */}
