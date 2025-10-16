@@ -24,7 +24,9 @@ import {
   Users,
   ShoppingCart,
   Building2,
-  Activity
+  Activity,
+  CalendarIcon,
+  X
 } from 'lucide-react';
 import { Bar, Pie, Doughnut } from 'react-chartjs-2';
 import {
@@ -38,7 +40,11 @@ import {
   ArcElement,
 } from 'chart.js';
 import { useAuthStore } from '@/stores/authStore';
-
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -88,11 +94,11 @@ interface ApiResponse {
 
 interface Filters {
   search: string;
-  pharmacyName: string; // إضافة فلتر اسم الصيدلية
+  pharmacyName: string;
   area: string;
   salesRep: string;
   status: string;
-  finalOrderStatus: string; // إضافة فلتر حالة الطلبية النهائية
+  finalOrderStatus: string;
   dateFrom: string;
   dateTo: string;
 }
@@ -105,6 +111,10 @@ const AdminDashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  
+  // Date states for the date picker
+  const [dateFrom, setDateFrom] = useState<Date>();
+  const [dateTo, setDateTo] = useState<Date>();
   
   // متغيرات للقيم الفريدة للفلاتر
   const [uniqueAreas, setUniqueAreas] = useState<string[]>([]);
@@ -124,7 +134,16 @@ const AdminDashboard: React.FC = () => {
     dateTo: ''
   });
 
-      const filteredData = React.useMemo(() => {
+  // Update filters when date picker values change
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      dateFrom: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : '',
+      dateTo: dateTo ? format(dateTo, 'yyyy-MM-dd') : ''
+    }));
+  }, [dateFrom, dateTo]);
+
+  const filteredData = React.useMemo(() => {
     return ordersData.filter(order => {
       const matchesSearch = !filters.search || 
         order.pharmacyName.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -139,7 +158,21 @@ const AdminDashboard: React.FC = () => {
       const matchesStatus = !filters.status || filters.status === 'all' || order.orderStatus === filters.status;
       const matchesFinalOrderStatus = !filters.finalOrderStatus || filters.finalOrderStatus === 'all' || order.FinalOrderStatusValue === filters.finalOrderStatus;
       
-      return matchesSearch && matchesPharmacyName && matchesArea && matchesSalesRep && matchesStatus && matchesFinalOrderStatus;
+      // Date filtering
+      const orderDate = new Date(order.visitDate);
+      const fromDate = filters.dateFrom ? new Date(filters.dateFrom) : null;
+      const toDate = filters.dateTo ? new Date(filters.dateTo) : null;
+      
+      let matchesDate = true;
+      if (fromDate && toDate) {
+        matchesDate = orderDate >= fromDate && orderDate <= toDate;
+      } else if (fromDate) {
+        matchesDate = orderDate >= fromDate;
+      } else if (toDate) {
+        matchesDate = orderDate <= toDate;
+      }
+      
+      return matchesSearch && matchesPharmacyName && matchesArea && matchesSalesRep && matchesStatus && matchesFinalOrderStatus && matchesDate;
     });
   }, [ordersData, filters]);
 
@@ -184,7 +217,7 @@ const AdminDashboard: React.FC = () => {
       return acc;
     }, {} as Record<string, { orders: number; revenue: number }>);
 
-    // أداء الصيدليات - يجب أن يستخدم filteredData بدلاً من ordersData
+    // أداء الصيدليات
     const pharmacyPerformance = filteredData.reduce((acc, order) => {
       const pharmacy = order.pharmacyName;
       if (!acc[pharmacy]) {
@@ -193,9 +226,9 @@ const AdminDashboard: React.FC = () => {
       acc[pharmacy].orders += 1;
       acc[pharmacy].revenue += order.totalOrderValue;
       return acc;
-    }, {} as Record<string, { orders: number; revenue: number }>);
+    }, {} as Record<string, { orders: 0; revenue: 0 }>);
 
-    // أداء المنتجات - يجب أن يستخدم filteredData بدلاً من ordersData
+    // أداء المنتجات
     const productSales = filteredData.reduce((acc, order) => {
       order.products.forEach(product => {
         const brand = product.productName;
@@ -241,7 +274,7 @@ const AdminDashboard: React.FC = () => {
       if (result.success) {
         console.log(result)
         setData(result.data);
-        setOrdersData(result.data); // إضافة تحديث ordersData
+        setOrdersData(result.data);
         setCurrentPage(result.pagination.currentPage);
         setTotalPages(result.pagination.totalPages);
         setTotalRecords(result.pagination.totalRecords);
@@ -281,8 +314,6 @@ const AdminDashboard: React.FC = () => {
     fetchOrders(currentPage);
   }, [filters]);
 
-  // تصفية البيانات
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     fetchOrders(page);
@@ -299,6 +330,13 @@ const AdminDashboard: React.FC = () => {
       dateFrom: '',
       dateTo: ''
     });
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
+
+  const clearDateFilters = () => {
+    setDateFrom(undefined);
+    setDateTo(undefined);
   };
 
   // دالة لترجمة حالات الطلبات
@@ -512,9 +550,80 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Date Range Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 bg-muted/30 rounded-lg">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">من تاريخ</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateFrom && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="ml-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, "yyyy-MM-dd") : "اختر التاريخ"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    initialFocus
+                    locale={ar}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">إلى تاريخ</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="ml-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, "yyyy-MM-dd") : "اختر التاريخ"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    initialFocus
+                    locale={ar}
+                    disabled={dateFrom ? { before: dateFrom } : undefined}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2 flex items-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearDateFilters}
+                className="w-full"
+                disabled={!dateFrom && !dateTo}
+              >
+                <X className="h-4 w-4 ml-2" />
+                مسح التواريخ
+              </Button>
+            </div>
+          </div>
+
           <div className="flex gap-2 mt-4">
             <Button onClick={resetFilters} variant="outline" size="sm">
-              إعادة تعيين الفلاتر
+              إعادة تعيين جميع الفلاتر
             </Button>
           </div>
         </CardContent>
