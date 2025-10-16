@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Loader2 } from 'lucide-react';
+import { ArrowRight, Save, Loader2, Eye, EyeOff, LockKeyhole } from 'lucide-react';
 import { getEmployeeById, updateEmployee, UpdateEmployeeData } from '@/api/Users';
 import { Employee } from '@/api/Users';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { adminChangeUserPassword } from '@/api/auth';
 
 interface EditEmployeeFormData {
   firstName: string;
@@ -44,6 +46,14 @@ const EditEmployee: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<EditEmployeeFormData>>({});
+
+  // Reset password modal state
+  const [resetOpen, setResetOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Fetch employee data on component mount
   useEffect(() => {
@@ -217,14 +227,14 @@ const EditEmployee: React.FC = () => {
             قم بتعديل البيانات المطلوبة وانقر على حفظ التغييرات
           </CardDescription>
         </CardHeader>
-        <Button>
+        <Button onClick={() => setResetOpen(true)}>
           اعادة تعيين كلمة المرور
         </Button>
 
         </Card>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -400,8 +410,114 @@ const EditEmployee: React.FC = () => {
                 إلغاء
               </Button>
             </div>
+        </form>
+      </CardContent>
+
+      {/* Reset Password Modal */}
+      <Dialog open={resetOpen} onOpenChange={(open) => {
+        if (!open) {
+          setNewPassword('');
+          setConfirmPassword('');
+          setShowNew(false);
+          setShowConfirm(false);
+        }
+        setResetOpen(open);
+      }}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden" style={{ direction: 'rtl' }}>
+          <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-600 p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                <LockKeyhole className="h-5 w-5" />
+                اعادة تعيين كلمة المرور للموظف
+              </DialogTitle>
+              <DialogDescription className="text-indigo-100">
+                قم بإدخال كلمة مرور جديدة قوية للموظف ثم تأكيدها
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!id) {
+                toast({ title: 'خطأ', description: 'معرّف الموظف غير موجود', variant: 'destructive' });
+                return;
+              }
+              if (!newPassword) {
+                toast({ title: 'تحقق من الحقول', description: 'يرجى إدخال كلمة المرور الجديدة', variant: 'destructive' });
+                return;
+              }
+              if (newPassword.length < 8) {
+                toast({ title: 'كلمة المرور ضعيفة', description: 'كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف', variant: 'destructive' });
+                return;
+              }
+              if (newPassword !== confirmPassword) {
+                toast({ title: 'تأكيد غير متطابق', description: 'تأكيد كلمة المرور غير متطابق', variant: 'destructive' });
+                return;
+              }
+              try {
+                setResetLoading(true);
+                const res = await adminChangeUserPassword(id, newPassword);
+                if (res?.success) {
+                  toast({ title: 'تم التحديث بنجاح', description: res.message || 'تم تغيير كلمة مرور الموظف بنجاح' });
+                  setResetOpen(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                } else {
+                  toast({ title: 'فشل العملية', description: res?.message || 'تعذر تغيير كلمة المرور للموظف', variant: 'destructive' });
+                }
+              } catch (err: any) {
+                toast({ title: 'خطأ', description: err?.message || 'حدث خطأ أثناء إعادة التعيين', variant: 'destructive' });
+              } finally {
+                setResetLoading(false);
+              }
+            }}
+            className="p-6 space-y-5 bg-white"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="newPasswordReset" className="text-sm font-semibold">كلمة المرور الجديدة</Label>
+              <div className="relative">
+                <Input
+                  id="newPasswordReset"
+                  type={showNew ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور الجديدة"
+                  className="pr-10"
+                />
+                <button type="button" className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowNew((v) => !v)}>
+                  {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPasswordReset" className="text-sm font-semibold">تأكيد كلمة المرور الجديدة</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPasswordReset"
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="أدخل تأكيد كلمة المرور"
+                  className="pr-10"
+                />
+                <button type="button" className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowConfirm((v) => !v)}>
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setResetOpen(false)}>
+                إلغاء
+              </Button>
+              <Button type="submit" disabled={resetLoading} className="w-full sm:w-auto bg-indigo-600 text-white hover:bg-indigo-700">
+                {resetLoading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </Button>
+            </div>
           </form>
-        </CardContent>
+        </DialogContent>
+      </Dialog>
       </Card>
     </div>
   );

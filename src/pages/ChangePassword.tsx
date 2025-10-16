@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Eye, EyeOff, LockKeyhole, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { changePassword } from '@/api/auth';
 
 interface ChangePasswordProps {
   open: boolean;
@@ -74,14 +75,25 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ open, onOpenChange }) =
     }
     try {
       setLoading(true);
-      // TODO: استدعاء API لتغيير كلمة المرور
-      await new Promise((res) => setTimeout(res, 1000));
-      toast({
-        title: 'تم التحديث بنجاح',
-        description: 'تم تغيير كلمة المرور بنجاح',
+      const response = await changePassword({
+        currentPassword: oldPassword,
+        newPassword: newPassword,
       });
-      resetForm();
-      onOpenChange(false);
+
+      if (response?.success) {
+        toast({
+          title: 'تم التحديث بنجاح',
+          description: response.message || 'تم تغيير كلمة المرور بنجاح',
+        });
+        resetForm();
+        onOpenChange(false);
+      } else {
+        toast({
+          title: 'فشل العملية',
+          description: response?.message || 'تعذر تغيير كلمة المرور',
+          variant: 'destructive',
+        });
+      }
     } catch (err: any) {
       toast({ title: 'خطأ', description: err?.message || 'فشل تغيير كلمة المرور', variant: 'destructive' });
     } finally {
