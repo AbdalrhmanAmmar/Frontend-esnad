@@ -45,6 +45,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 ChartJS.register(
   CategoryScale,
@@ -104,6 +105,7 @@ interface Filters {
 }
 
 const AdminDashboard: React.FC = () => {
+  const naviagte=useNavigate()
   const user = useAuthStore()
   const [data, setData] = useState<OrderData[]>([]);
   const [ordersData, setOrdersData] = useState<OrderData[]>([]);
@@ -1253,7 +1255,6 @@ const AdminDashboard: React.FC = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-start p-3 font-medium">رقم الطلب</th>
                   <th className="text-start p-3 font-medium">تاريخ الزيارة</th>
                   <th className="text-start p-3 font-medium">مندوب المبيعات</th>
                   <th className="text-start p-3 font-medium">الصيدلية</th>
@@ -1267,9 +1268,7 @@ const AdminDashboard: React.FC = () => {
               <tbody>
                 {filteredData.map((order) => (
                   <tr key={order.orderId} className="border-b hover:bg-muted/50">
-                    <td className="p-3">
-                      <div className="font-mono text-sm">{order.orderId.slice(-8)}</div>
-                    </td>
+            
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -1314,7 +1313,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <Button variant="ghost" size="sm">
+                      <Button onClick={()=>naviagte(`${order.orderId}`)} variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </td>

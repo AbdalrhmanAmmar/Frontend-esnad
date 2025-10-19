@@ -68,6 +68,7 @@ import MedicalRepMarketing from "./pages/marketing/MedicalRep";
 import Medicalcoah from "./pages/Medicalcoah";
 import AnalyticsClincsSupervisor from "./pages/AnalyticsClincsSupervisor";
 import MedicalSalesdata from "./pages/MedicalSalesdata";
+import PharmacyCard from "./pages/PharmacyCard";
 
 
 const queryClient = new QueryClient();
@@ -116,6 +117,11 @@ const App = () => (
                     <Route path="/dashboards/admin" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'SALES SUPERVISOR', 'FINANCIAL OFFICER','FINANCIAL MANAGER','ASSITANT' ,'GENERAL MANAGER']}>
                         <AdminDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboards/admin/:id" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'SALES SUPERVISOR', 'FINANCIAL OFFICER','FINANCIAL MANAGER','ASSITANT' ,'GENERAL MANAGER']}>
+                        <PharmacyCard />
                       </ProtectedRoute>
                     } />
                     <Route path="/reports" element={
