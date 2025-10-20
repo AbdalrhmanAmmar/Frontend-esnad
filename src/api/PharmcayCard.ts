@@ -52,7 +52,7 @@ export interface PharmacyCardResponse {
 export const getPharmacyCardById = async (cardId: string): Promise<PharmacyCardResponse> => {
   try {
     // NOTE: تأكد من أن هذا المسار يتوافق مع الـ API في الخادم لديك
-    const response = await api.get(`/pharmacy-card/${cardId}`);
+    const response = await api.get(`/pharmacyCard/${cardId}`);
     return response.data as PharmacyCardResponse;
   } catch (error: any) {
     console.error('Error fetching pharmacy card:', error);
