@@ -22,9 +22,13 @@ import {
   UserCheck,
   Star,
   Award,
-  Target
+  Target,
+  User,
+  Stethoscope
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { toast } from 'sonner';
+import { getCoachingBySupervisor, CoachingEntry } from '@/api/Coaching';
 
 interface MedicalRepEvaluation {
   _id: string;
@@ -41,7 +45,7 @@ interface MedicalRepEvaluation {
 
 const Medicalcoah: React.FC = () => {
   const { user } = useAuthStore();
-  const [evaluations, setEvaluations] = useState<MedicalRepEvaluation[]>([]);
+  const [coachings, setCoachings] = useState<CoachingEntry[]>([]);
   const [loading, setLoading] = useState(false);
   
   const [stats, setStats] = useState({
@@ -60,21 +64,46 @@ const Medicalcoah: React.FC = () => {
     region: 'all'
   });
 
-  // Mock data - replace with actual API call
   useEffect(() => {
-    // Simulate loading
-    setLoading(true);
-    setTimeout(() => {
-      setEvaluations([]);
-      setStats({
-        totalReps: 0,
-        pendingEvaluations: 0,
-        completedEvaluations: 0,
-        inProgressEvaluations: 0
-      });
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const loadCoachings = async () => {
+      try {
+        setLoading(true);
+        const response = await getCoachingBySupervisor();
+        if (response.success) {
+          let data = response.data || [];
+          // Apply simple client-side filters (search by doctor/rep/supervisor name)
+          if (filters.search) {
+            const q = filters.search.toLowerCase();
+            data = data.filter(c => {
+              const doc = c.visit?.doctor?.name?.toLowerCase() || '';
+              const rep = c.visit?.medicalRep?.name?.toLowerCase() || c.visit?.medicalRep?.username?.toLowerCase() || '';
+              const sup = c.visit?.supervisor?.name?.toLowerCase() || c.visit?.supervisor?.username?.toLowerCase() || '';
+              return doc.includes(q) || rep.includes(q) || sup.includes(q);
+            });
+          }
+          setCoachings(data);
+          const completed = data.filter(c => c.isCompleted).length;
+          const pending = data.length - completed;
+          setStats({
+            totalReps: data.length,
+            pendingEvaluations: pending,
+            completedEvaluations: completed,
+            inProgressEvaluations: 0,
+          });
+        } else {
+          toast.error(response.message || 'فشل في جلب بيانات الكوتشينغ');
+        }
+      } catch (error: any) {
+        console.error('Error loading coachings:', error);
+        toast.error(error.message || 'حدث خطأ أثناء تحميل بيانات الكوتشينغ');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCoachings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search]);
 
   const handleReset = () => {
     setFilters({
@@ -85,19 +114,6 @@ const Medicalcoah: React.FC = () => {
       department: 'all',
       region: 'all'
     });
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">قيد الانتظار</Badge>;
-      case 'completed':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300">مكتمل</Badge>;
-      case 'in_progress':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-300">قيد التنفيذ</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
   };
 
   if (loading) {
@@ -116,8 +132,8 @@ const Medicalcoah: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">تقييم المندوبين الطبيين</h1>
-          <p className="text-gray-600 mt-1">إدارة وتقييم أداء المندوبين الطبيين</p>
+          <h1 className="text-3xl font-bold text-gray-900">جلسات الكوتشينغ للمشرف</h1>
+          <p className="text-gray-600 mt-1">عرض ومتابعة جلسات الكوتشينغ المرتبطة بزيارات المندوبين</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleReset} variant="outline" size="sm">
@@ -126,21 +142,21 @@ const Medicalcoah: React.FC = () => {
           </Button>
           <Button size="sm" disabled>
             <Target className="w-4 h-4 mr-2" />
-            إضافة تقييم
+            إضافة جلسة
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">إجمالي المندوبين</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-700">إجمالي الجلسات</CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-800">{stats.totalReps}</div>
-            <p className="text-xs text-blue-600 mt-1">جميع المندوبين</p>
+            <p className="text-xs text-blue-600 mt-1">جميع الجلسات</p>
           </CardContent>
         </Card>
 
@@ -151,11 +167,9 @@ const Medicalcoah: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-800">{stats.pendingEvaluations}</div>
-            <p className="text-xs text-yellow-600 mt-1">تقييمات معلقة</p>
+            <p className="text-xs text-yellow-600 mt-1">جلسات غير مكتملة</p>
           </CardContent>
         </Card>
-
-        
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -164,7 +178,7 @@ const Medicalcoah: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-800">{stats.completedEvaluations}</div>
-            <p className="text-xs text-green-600 mt-1">تقييمات مكتملة</p>
+            <p className="text-xs text-green-600 mt-1">جلسات مكتملة</p>
           </CardContent>
         </Card>
       </div>
@@ -183,7 +197,7 @@ const Medicalcoah: React.FC = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="البحث في أسماء المندوبين..."
+                placeholder="البحث في أسماء الطبيب/المندوب/المشرف..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 className="pl-10"
@@ -193,19 +207,14 @@ const Medicalcoah: React.FC = () => {
             {/* Status Filter */}
             <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
               <SelectTrigger>
-                <SelectValue placeholder="حالة التقييم" />
+                <SelectValue placeholder="حالة الجلسة" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="pending">قيد الانتظار</SelectItem>
-                <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                <SelectItem value="completed">مكتمل</SelectItem>
+                <SelectItem value="pending">غير مكتملة</SelectItem>
+                <SelectItem value="completed">مكتملة</SelectItem>
               </SelectContent>
             </Select>
-
-   
-
-        
 
             {/* Start Date */}
             <Popover>
@@ -246,45 +255,125 @@ const Medicalcoah: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Main Content */}
+      {/* Coaching Sessions List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="w-5 h-5" />
-            تقييمات المندوبين الطبيين
+            قائمة جلسات الكوتشينغ
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Empty State */}
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-              <UserCheck className="w-12 h-12 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              لا يوجد مندوب حالياً بحاجة إلى تقييم
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md">
-              جميع المندوبين الطبيين قد تم تقييمهم مؤخراً. ستظهر هنا التقييمات الجديدة عند استحقاقها.
-            </p>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4" />
-                <span>تقييمات دورية</span>
+          {coachings.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <UserCheck className="w-12 h-12 text-gray-400" />
               </div>
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4" />
-                <span>متابعة الأداء</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4" />
-                <span>تحسين الجودة</span>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">لا توجد جلسات كوتشينغ حالياً</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">ستظهر هنا جلسات الكوتشينغ المرتبطة بزيارات المندوبين الطبيين عند توفرها.</p>
+              <div className="flex items-center gap-4 text-sm text-gray-500 justify-center">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4" />
+                  <span>تطوير الأداء</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4" />
+                  <span>تحسين الجودة</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  <span>تحقيق الأهداف</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {coachings.map((c) => {
+                const visitDate = c.visit?.visitDate ? format(new Date(c.visit.visitDate), 'dd/MM/yyyy', { locale: ar }) : '-';
+                return (
+                  <Card key={c.coachingId} className="border">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <CalendarIcon className="w-4 h-4" /> {visitDate}
+                        </span>
+                        <Badge className={c.isCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                          {c.isCompleted ? 'مكتملة' : 'غير مكتملة'}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Stethoscope className="w-4 h-4" />
+                          <span className="text-muted-foreground">الطبيب:</span>
+                          <span className="font-medium">{c.visit?.doctor?.name || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <User className="w-4 h-4" />
+                          <span className="text-muted-foreground">المندوب الطبي:</span>
+                          <span className="font-medium">{c.visit?.medicalRep?.name || c.visit?.medicalRep?.username || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <User className="w-4 h-4" />
+                          <span className="text-muted-foreground">المشرف:</span>
+                          <span className="font-medium">{c.visit?.supervisor?.name || c.visit?.supervisor?.username || '-'}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">الملاحظات:</span>
+                          <span className="font-medium ms-2">{c.visit?.notes || '-'}</span>
+                        </div>
+                      </div>
+
+                      <div className="border rounded-md p-3">
+                        <p className="text-sm font-semibold mb-2">التقييم الإجمالي</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">التخطيط</span>
+                            <Badge variant="outline">{c.totals.TotalPlanning}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">المهارات الشخصية</span>
+                            <Badge variant="outline">{c.totals.TotalPersonalSkills}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">المعرفة</span>
+                            <Badge variant="outline">{c.totals.TotalKnowledge}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">مهارات البيع</span>
+                            <Badge variant="outline">{c.totals.TotalSellingSkills}</Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-muted-foreground">المجموع</span>
+                          <Badge>{c.totals.TotalScore}</Badge>
+                        </div>
+                      </div>
+
+                      {c.title || c.Recommendations || c.note ? (
+                        <div className="space-y-2">
+                          {c.title && (
+                            <p className="text-sm"><span className="text-muted-foreground">العنوان:</span> <span className="font-medium">{c.title}</span></p>
+                          )}
+                          {c.Recommendations && (
+                            <p className="text-sm"><span className="text-muted-foreground">التوصيات:</span> <span className="font-medium">{c.Recommendations}</span></p>
+                          )}
+                          {c.note && (
+                            <p className="text-sm"><span className="text-muted-foreground">ملاحظة:</span> <span className="font-medium">{c.note}</span></p>
+                          )}
+                        </div>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
+      {/* Quick Actions (optional) */}
       {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-6">
