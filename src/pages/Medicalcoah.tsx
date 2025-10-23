@@ -29,6 +29,7 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import { getCoachingBySupervisor, CoachingEntry } from '@/api/Coaching';
+import { useNavigate } from 'react-router-dom';
 
 interface MedicalRepEvaluation {
   _id: string;
@@ -47,6 +48,7 @@ const Medicalcoah: React.FC = () => {
   const { user } = useAuthStore();
   const [coachings, setCoachings] = useState<CoachingEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   
   const [stats, setStats] = useState({
     totalReps: 0,
@@ -291,7 +293,11 @@ const Medicalcoah: React.FC = () => {
               {coachings.map((c) => {
                 const visitDate = c.visit?.visitDate ? format(new Date(c.visit.visitDate), 'dd/MM/yyyy', { locale: ar }) : '-';
                 return (
-                  <Card key={c.coachingId} className="border">
+                  <Card
+                    key={c.coachingId}
+                    className="border hover:shadow-md cursor-pointer"
+                    onClick={() => navigate(`/CoachingReport/${c.coachingId}`)}
+                  >
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center justify-between">
                         <span className="flex items-center gap-2">

@@ -59,6 +59,63 @@ export const getCoachingBySupervisor = async (): Promise<CoachingResponse> => {
   }
 };
 
+// الحقول المسموح تعديلها في التقييم (مطابقة للباك إند)
+export interface UpdateCoachingPayload {
+  title?: string;
+  Recommendations?: string;
+  note?: string;
+  // التخطيط
+  previousCalls?: number;
+  callOrganization?: number;
+  TargetingCustomer?: number;
+  // المهارات الشخصية
+  Appearance?: number;
+  Confidence?: number;
+  AdherenceToReporting?: number;
+  TotalVisits?: number;
+  // المعرفة
+  CustomerDistribution?: number;
+  ProductKnowledge?: number;
+  // مهارات البيع
+  ClearAndDirect?: number;
+  ProductRelated?: number;
+  CustomerAcceptance?: number;
+  InquiryApproach?: number;
+  ListeningSkills?: number;
+  SupportingCustomer?: number;
+  UsingPresentationTools?: number;
+  SolicitationAtClosing?: number;
+  GettingPositiveFeedback?: number;
+  HandlingObjections?: number;
+  // قفل التقييم
+  isCompleted?: boolean;
+}
+
+export interface UpdateCoachingResponse {
+  success: boolean;
+  message?: string;
+  data?: CoachingEntry;
+}
+
+// تحديث تقييم الكوتشينغ حسب المعرّف
+export const updateCoaching = async (
+  id: string,
+  payload: UpdateCoachingPayload
+): Promise<UpdateCoachingResponse> => {
+  if (!id) {
+    throw new Error('معرّف التقييم مفقود');
+  }
+  try {
+    // هذه الدالة تتواصل مع الباك إند الذي يُطبق جميع شروط التحقق والصلاحيات
+    const response = await api.patch(`/coach/${id}`, payload);
+    return response.data as UpdateCoachingResponse;
+  } catch (error: any) {
+    const message = error?.response?.data?.message || 'فشل في تعديل التقييم';
+    throw new Error(message);
+  }
+};
+
 export default {
   getCoachingBySupervisor,
+  updateCoaching,
 };

@@ -69,6 +69,7 @@ import Medicalcoah from "./pages/Medicalcoah";
 import AnalyticsClincsSupervisor from "./pages/AnalyticsClincsSupervisor";
 import MedicalSalesdata from "./pages/MedicalSalesdata";
 import PharmacyCard from "./pages/PharmacyCard";
+import CoachingReport from "./pages/CoachingReport";
 
 
 const queryClient = new QueryClient();
@@ -250,41 +251,41 @@ const App = () => (
                         <ProductsManagement />
                       </ProtectedRoute>
                     } />
-            <Route path="/management/data/products/add" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <AddProduct />
-              </ProtectedRoute>
-            } />
-            <Route path="/management/data/products/update/:code" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <UpdateProduct />
-              </ProtectedRoute>
-            } />
-            <Route path="/management/data/doctors" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <DoctorsManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/management/doctors-upload" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <DoctorsUpload />
-              </ProtectedRoute>
-            } />
-            <Route path="/management/pharmacies-upload" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <PharmaciesUpload />
-              </ProtectedRoute>
-            } />
-            <Route path="/management/data/pharmacies" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <PharmaciesManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/management/pharmacies/add" element={
-              <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
-                <AddPharmacy />
-              </ProtectedRoute>
-            } />
+                    <Route path="/management/data/products/add" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <AddProduct />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/data/products/update/:code" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <UpdateProduct />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/data/doctors" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <DoctorsManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/doctors-upload" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <DoctorsUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/pharmacies-upload" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <PharmaciesUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/data/pharmacies" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <PharmaciesManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/management/pharmacies/add" element={
+                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
+                        <AddPharmacy />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/management/documents" element={
                       <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager']}>
                         <DocumentsManagement />
@@ -361,18 +362,8 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/analytics/clinics" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'MEDICAL REP', 'medical rep', 'SUPERVISOR', 'supervisor']}>
+                      <ProtectedRoute requiredRoles={['ADMIN']}>
                         <ClinicsAnalytics />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/analytics/clinics/supervisor" element={
-                      <ProtectedRoute requiredRoles={['ADMIN', 'admin', 'manager', 'MEDICAL REP', 'medical rep', 'SUPERVISOR', 'supervisor']}>
-                        <AnalyticsClincsSupervisor />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/analytics/medical-sales" element={
-                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep', 'ADMIN', 'SALES SUPERVISOR']}>
-                        <MedicalSalesdata />
                       </ProtectedRoute>
                     } />
                     <Route path="/profile" element={
@@ -380,18 +371,8 @@ const App = () => (
                         <Profile />
                       </ProtectedRoute>
                     } />
-                    <Route path="/work-day-calender" element={
-                      <ProtectedRoute>
-                        <WorkCalendar />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/work-day" element={
-                      <ProtectedRoute>
-                        <WorkItemCalendar />
-                      </ProtectedRoute>
-                    } />
                     <Route path="/my-data" element={
-                      <ProtectedRoute requiredRoles={['MEDICAL REP', 'medical rep']}>
+                      <ProtectedRoute>
                         <MyDataList />
                       </ProtectedRoute>
                     } />
@@ -470,6 +451,16 @@ const App = () => (
                         <Medicalcoah />
                       </ProtectedRoute>
                     } />
+                    <Route path="/CoachingReport" element={
+                      <ProtectedRoute>
+                        <CoachingReport />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/CoachingReport/:id" element={
+                      <ProtectedRoute>
+                        <CoachingReport />
+                      </ProtectedRoute>
+                    } />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
@@ -487,7 +478,6 @@ const App = () => (
              containerClassName=""
              containerStyle={{}}
              toastOptions={{
-               // Define default options
                className: '',
                duration: 4000,
                style: {
@@ -500,7 +490,6 @@ const App = () => (
                  direction: 'rtl',
                  textAlign: 'right'
                },
-               // Default options for specific types
                success: {
                  duration: 3000,
                  iconTheme: {
