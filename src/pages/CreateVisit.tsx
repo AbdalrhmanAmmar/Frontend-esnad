@@ -42,7 +42,6 @@ const CreateVisit: React.FC = () => {
     products: [],
     notes: '',
     withSupervisor: false,
-    supervisorId: ''
   });
   
   // Data state
@@ -99,27 +98,7 @@ const CreateVisit: React.FC = () => {
   }, [storeDoctors, storeProducts, user?._id, toast]);
 
   // Load supervisors when needed
-  useEffect(() => {
-    const loadSupervisors = async () => {
-      if (formData.withSupervisor && user?._id && supervisors.length === 0) {
-        try {
-          const response = await getSupervisors(user._id);
-          if (response.success) {
-            setSupervisors(response.data);
-          }
-        } catch (error) {
-          console.error('Error fetching supervisors:', error);
-          toast({
-            title: 'خطأ',
-            description: 'حدث خطأ في تحميل قائمة المشرفين',
-            variant: 'destructive',
-          });
-        }
-      }
-    };
 
-    loadSupervisors();
-  }, [formData.withSupervisor, user?._id, supervisors.length, toast]);
 
   // Get product messages from store data
   const getProductMessages = (productId: string) => {
@@ -202,14 +181,7 @@ const CreateVisit: React.FC = () => {
       return;
     }
     
-    if (formData.withSupervisor && !formData.supervisorId) {
-      toast({
-        title: 'خطأ في البيانات',
-        description: 'يرجى اختيار المشرف',
-        variant: 'destructive'
-      });
-      return;
-    }
+
     
     try {
       setLoading(true);
@@ -226,7 +198,7 @@ const CreateVisit: React.FC = () => {
           products: [],
           notes: '',
           withSupervisor: false,
-          supervisorId: ''
+          
         });
       
       }
@@ -474,7 +446,6 @@ const CreateVisit: React.FC = () => {
                     setFormData(prev => ({
                       ...prev,
                       withSupervisor: checked as boolean,
-                      supervisorId: checked ? prev.supervisorId : ''
                     }));
                   }}
                   className="border-2 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
@@ -482,41 +453,7 @@ const CreateVisit: React.FC = () => {
               </div>
 
               {/* Supervisor Selection - Show only when withSupervisor is true */}
-              {formData.withSupervisor && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2 justify-end">
-                    <span>اختر المشرف *</span>
-                    <User className="h-4 w-4" />
-                  </Label>
-                  <Select
-                    value={formData.supervisorId}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, supervisorId: value }))}
-                  >
-                    <SelectTrigger className="text-right border-2 border-border hover:border-primary focus:border-primary transition-colors rounded-lg shadow-sm">
-                      <SelectValue placeholder="اختر المشرف" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supervisors.map((supervisor) => (
-                        <SelectItem key={supervisor._id} value={supervisor._id}>
-                          <div className="flex flex-col text-right">
-                            <span className="font-medium">
-                              {supervisor.firstName} {supervisor.lastName}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {supervisor.username}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {supervisors.length === 0 && formData.withSupervisor && (
-                    <p className="text-sm text-muted-foreground text-right">
-                      جاري تحميل قائمة المشرفين...
-                    </p>
-                  )}
-                </div>
-              )}
+              
             </div>
 
             <Separator className="bg-border" />
