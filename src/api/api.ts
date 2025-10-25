@@ -6,7 +6,7 @@ import { useAuthStore } from "../stores/authStore";
 const api = axios.create({
   // baseURL: "http://localhost:4000/api",
   // baseURL:"https://esnad-serevr.onrender.com/api",
-  baseURL:"http://157.173.119.236:4000/api",
+  baseURL:"http://157.173.119.236/api",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
