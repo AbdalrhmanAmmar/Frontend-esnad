@@ -93,6 +93,7 @@ const PharmacyCard: React.FC = () => {
       setLoading(true);
       const res = await getPharmacyCardById(cardId);
       if (res.success) {
+        console.log(res.data)
         setCard(res.data);
       } else {
         toast.error(res.message || 'فشل في جلب بيانات بطاقة الصيدلية');
