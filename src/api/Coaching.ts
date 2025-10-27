@@ -48,6 +48,12 @@ export interface CoachingResponse {
   message?: string;
 }
 
+export interface CoachingDetailResponse {
+  success: boolean;
+  data: CoachingEntry;
+  message?: string;
+}
+
 // Fetch coaching entries for the authenticated supervisor
 export const getCoachingBySupervisor = async (): Promise<CoachingResponse> => {
   try {
@@ -115,7 +121,22 @@ export const updateCoaching = async (
   }
 };
 
+// جلب تقييم كوتشينغ محدد بواسطة المعرّف
+export const getCoachingById = async (id: string): Promise<CoachingDetailResponse> => {
+  if (!id) {
+    throw new Error('معرّف التقييم مفقود');
+  }
+  try {
+    const response = await api.get(`/coach/${id}`);
+    return response.data;
+  } catch (error: any) {
+    const message = error?.response?.data?.message || 'فشل في جلب بيانات التقييم';
+    throw new Error(message);
+  }
+};
+
 export default {
   getCoachingBySupervisor,
   updateCoaching,
+  getCoachingById,
 };

@@ -129,6 +129,17 @@ const Medicalcoah: React.FC = () => {
     );
   }
 
+
+  const handleNavigate=(iscomplete:boolean, id:string)=>{
+    if(iscomplete){
+      navigate(`/coaching-view/${id}`);
+    }else{
+       navigate(`/CoachingReport/${id}`);
+    }
+
+
+  }
+  
   return (
     <div className="container mx-auto p-6 space-y-6" dir="rtl">
       {/* Header */}
@@ -262,7 +273,7 @@ const Medicalcoah: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="w-5 h-5" />
-            قائمة جلسات الكوتشينغ
+            قائمة جلسات التقييم
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -296,7 +307,9 @@ const Medicalcoah: React.FC = () => {
                   <Card
                     key={c.coachingId}
                     className="border hover:shadow-md cursor-pointer"
-                    onClick={() => navigate(`/CoachingReport/${c.coachingId}`)}
+                    onClick={() => {
+                     handleNavigate(c.isCompleted , c.coachingId);
+                    }}
                   >
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center justify-between">

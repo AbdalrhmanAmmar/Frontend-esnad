@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Star, Save } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { updateCoaching, UpdateCoachingPayload } from '@/api/Coaching';
 
@@ -11,28 +11,29 @@ interface EvaluationCriteria {
   title: string;
   category: string;
   maxScore: number;
+  categoryArabic: string;
 }
 
 const evaluationCriteria: EvaluationCriteria[] = [
-  { id: 'previous_followup', title: 'مراجعة المكالمة السابقة ومتابعة ما تم فيها', category: 'PLANNING', maxScore: 5 },
-  { id: 'organize_call', title: 'تنظيم المكالمة: الأهداف، المواد الترويجية، تسلسل العرض', category: 'PLANNING', maxScore: 5 },
-  { id: 'targeting', title: 'استهداف العملاء: عادات الوصف، العلامة التجارية المستهدفة', category: 'PLANNING', maxScore: 5 },
-  { id: 'presentation', title: 'الاهتمام بالمظهر والعرض', category: 'PERSONAL TRAIT', maxScore: 5 },
-  { id: 'area_knowledge', title: 'معرفة توزيع العملاء والوعي بإدارة المنطقة', category: 'KNOWLEDGE', maxScore: 5 },
-  { id: 'opening_subject', title: 'الافتتاحية: واضحة ومباشرة للموضوع', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'opening_products', title: 'الافتتاحية: متعلقة بالمنتجات', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'customer_accept', title: 'قبول العميل للافتتاحية', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'probe_use', title: 'استخدام أسلوب التحقيق', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'listening', title: 'مهارات الإصغاء', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'product_knowledge', title: 'المعرفة بالمنتج ورسائله خلال المكالمة', category: 'KNOWLEDGE', maxScore: 5 },
-  { id: 'customer_need', title: 'دعم احتياجات العميل الصحيحة', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'confident_voice', title: 'الثقة، نبرة الصوت، استخدام الأقلام، تدفق المكالمة ونغمتها', category: 'PERSONAL TRAIT', maxScore: 5 },
-  { id: 'detailing_aids', title: 'استخدام وسائل العرض بشكل صحيح', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'closing_business', title: 'طلب الأعمال عند الإغلاق', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'closing_feedback', title: 'الحصول على تغذية راجعة إيجابية عند الإغلاق', category: 'SELLING SKILLS', maxScore: 10 },
-  { id: 'resolving_objection', title: 'معالجة الاعتراضات والمخاوف', category: 'SELLING SKILLS', maxScore: 5 },
-  { id: 'reporting_punctuality', title: 'الالتزام بمواعيد التقارير قبل وبعد الموعد النهائي', category: 'PERSONAL TRAIT', maxScore: 5 },
-  { id: 'total_visits', title: 'إجمالي عدد الزيارات والمكالمات (6 زيارات، 3 صيدليات)', category: 'PERSONAL TRAIT', maxScore: 5 }
+  { id: 'previous_followup', title: 'مراجعة الزيارة السابقة ومتابعة ما تم فيها', category: 'PLANNING', maxScore: 5, categoryArabic: 'التخطيط' },
+  { id: 'organize_call', title: 'تنظيم الزيارة: الأهداف، المواد الترويجية، تسلسل العرض', category: 'PLANNING', maxScore: 5, categoryArabic: 'التخطيط' },
+  { id: 'targeting', title: 'استهداف العملاء: عادات الوصف، العلامة التجارية المستهدفة', category: 'PLANNING', maxScore: 5, categoryArabic: 'التخطيط' },
+  { id: 'presentation', title: 'الاهتمام بالمظهر والعرض', category: 'PERSONAL TRAIT', maxScore: 5, categoryArabic: 'السمات الشخصية' },
+  { id: 'area_knowledge', title: 'معرفة توزيع العملاء والوعي بإدارة المنطقة', category: 'KNOWLEDGE', maxScore: 5, categoryArabic: 'المعرفة' },
+  { id: 'opening_subject', title: 'الافتتاحية: واضحة ومباشرة للموضوع', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'opening_products', title: 'الافتتاحية: متعلقة بالمنتجات', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'customer_accept', title: 'قبول العميل للافتتاحية', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'probe_use', title: 'استخدام أسلوب التحقيق', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'listening', title: 'مهارات الإصغاء', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'product_knowledge', title: 'المعرفة بالمنتج ورسائله خلال الزيارة', category: 'KNOWLEDGE', maxScore: 5, categoryArabic: 'المعرفة' },
+  { id: 'customer_need', title: 'دعم احتياجات العميل الصحيحة', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'confident_voice', title: 'الثقة، نبرة الصوت، استخدام الأقلام، تدفق الزيارة ونغمتها', category: 'PERSONAL TRAIT', maxScore: 5, categoryArabic: 'السمات الشخصية' },
+  { id: 'detailing_aids', title: 'استخدام وسائل العرض بشكل صحيح', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'closing_business', title: 'طلب الأعمال عند الإغلاق', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'closing_feedback', title: 'الحصول على تغذية راجعة إيجابية عند الإغلاق', category: 'SELLING SKILLS', maxScore: 10, categoryArabic: 'مهارات البيع' },
+  { id: 'resolving_objection', title: 'معالجة الاعتراضات والمخاوف', category: 'SELLING SKILLS', maxScore: 5, categoryArabic: 'مهارات البيع' },
+  { id: 'reporting_punctuality', title: 'الالتزام بمواعيد التقارير قبل وبعد الموعد النهائي', category: 'PERSONAL TRAIT', maxScore: 5, categoryArabic: 'السمات الشخصية' },
+  { id: 'total_visits', title: 'إجمالي عدد الزيارات والمكالمات (6 زيارات، 3 صيدليات)', category: 'PERSONAL TRAIT', maxScore: 5, categoryArabic: 'السمات الشخصية' }
 ];
 
 interface ScoreBreakdown {
@@ -239,6 +240,8 @@ export default function CoachingReport() {
 
     return payload;
   };
+      const navigate = useNavigate();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,7 +257,12 @@ export default function CoachingReport() {
       const payload = buildPayload();
       const res = await updateCoaching(id, payload);
       if (res?.success) {
-        toast.success(res.message || 'تم حفظ التقييم وتحديثه بنجاح', { id: loadingId });
+        toast.success('تم حفظ التقييم وتحديثه بنجاح', { id: loadingId });
+        setTimeout(() => {
+                      navigate(-1);
+
+          
+        }, 2000);
       } else {
         toast.error(res?.message || 'لم يتم حفظ التقييم', { id: loadingId });
       }
@@ -292,25 +300,30 @@ export default function CoachingReport() {
                 acc[criteria.category].push(criteria);
                 return acc;
               }, {})
-            ).map(([category, criteriaList]) => (
-              <div key={category} className="border-b pb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">{category}</h2>
-                <div className="space-y-4">
-                  {criteriaList.map(criteria => (
-                    <div key={criteria.id} className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-700">{criteria.title}</span>
-                        <span className="text-sm text-gray-500">({criteria.maxScore} نقاط)</span>
+            ).map(([category, criteriaList]) => {
+              // استخدام categoryArabic بدلاً من category الإنجليزية
+              const categoryName = criteriaList[0]?.categoryArabic || category;
+              
+              return (
+                <div key={category} className="border-b pb-6">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">{categoryName}</h2>
+                  <div className="space-y-4">
+                    {criteriaList.map(criteria => (
+                      <div key={criteria.id} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-gray-700">{criteria.title}</span>
+                          <span className="text-sm text-gray-500">({criteria.maxScore} نقاط)</span>
+                        </div>
+                        {renderStars(criteria.id, criteria.maxScore)}
+                        <div className="mt-1 text-sm text-gray-500 text-left">
+                          {ratings[criteria.id] ? `${ratings[criteria.id]} / ${criteria.maxScore}` : ''}
+                        </div>
                       </div>
-                      {renderStars(criteria.id, criteria.maxScore)}
-                      <div className="mt-1 text-sm text-gray-500 text-left">
-                        {ratings[criteria.id] ? `${ratings[criteria.id]} / ${criteria.maxScore}` : ''}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-8">

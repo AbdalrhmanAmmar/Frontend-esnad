@@ -70,6 +70,7 @@ import AnalyticsClincsSupervisor from "./pages/AnalyticsClincsSupervisor";
 import MedicalSalesdata from "./pages/MedicalSalesdata";
 import PharmacyCard from "./pages/PharmacyCard";
 import CoachingReport from "./pages/CoachingReport";
+import CoachingView from "./pages/CoachingView";
 
 
 const queryClient = new QueryClient();
@@ -459,6 +460,11 @@ const App = () => (
                     <Route path="/CoachingReport/:id" element={
                       <ProtectedRoute>
                         <CoachingReport />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/coaching-view/:id" element={
+                      <ProtectedRoute>
+                        <CoachingView />
                       </ProtectedRoute>
                     } />
                     <Route path="*" element={<NotFound />} />
