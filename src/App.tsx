@@ -71,6 +71,7 @@ import MedicalSalesdata from "./pages/MedicalSalesdata";
 import PharmacyCard from "./pages/PharmacyCard";
 import CoachingReport from "./pages/CoachingReport";
 import CoachingView from "./pages/CoachingView";
+import NewClinicalReps from "./pages/NewClinicalReps";
 
 
 const queryClient = new QueryClient();
@@ -363,8 +364,18 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/analytics/clinics" element={
-                      <ProtectedRoute requiredRoles={['ADMIN']}>
+                      <ProtectedRoute requiredRoles={['MEDICAL REP']}>
                         <ClinicsAnalytics />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/analytics/medical-sales" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP']}>
+                        <MedicalSalesdata />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/analytics/clinics/new" element={
+                      <ProtectedRoute requiredRoles={['MEDICAL REP']}>
+                        <NewClinicalReps />
                       </ProtectedRoute>
                     } />
                     <Route path="/profile" element={
