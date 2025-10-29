@@ -145,8 +145,8 @@ const Medicalcoah: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">جلسات الكوتشينغ للمشرف</h1>
-          <p className="text-gray-600 mt-1">عرض ومتابعة جلسات الكوتشينغ المرتبطة بزيارات المندوبين</p>
+          <h1 className="text-3xl font-bold text-gray-900">جلسات التقييم للمشرف</h1>
+          <p className="text-gray-600 mt-1">عرض ومتابعة جلسات التقييم المرتبطة بزيارات المندوبين</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleReset} variant="outline" size="sm">
