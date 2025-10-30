@@ -81,6 +81,7 @@ interface Filters {
   pharmacyName: string;
   productName: string;
   orderStatus: string;
+  FinalOrderStatusValue: string;
 }
 
 const PharmacyDashboard = () => {
@@ -90,7 +91,8 @@ const PharmacyDashboard = () => {
     limit: 10,
     pharmacyName: '',
     productName: '',
-    orderStatus: 'all'
+    orderStatus: 'all',
+    FinalOrderStatusValue: 'all'
   });
 
   const [ordersData, setOrdersData] = useState<OrderData[]>([]);
@@ -141,6 +143,12 @@ const PharmacyDashboard = () => {
         if (filters.orderStatus !== 'all') {
           filteredOrders = filteredOrders.filter(order => 
             order.orderStatus === filters.orderStatus
+          );
+        }
+        
+        if (filters.FinalOrderStatusValue !== 'all') {
+          filteredOrders = filteredOrders.filter(order => 
+            order.FinalOrderStatusValue === filters.FinalOrderStatusValue
           );
         }
         
@@ -201,7 +209,8 @@ const PharmacyDashboard = () => {
       limit: 10,
       pharmacyName: '',
       productName: '',
-      orderStatus: 'all'
+      orderStatus: 'all',
+      FinalOrderStatusValue: 'all'
     });
   };
 
@@ -303,7 +312,7 @@ const PharmacyDashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">حالة الطلب</Label>
+              <Label className="text-sm">الحاله الماليه</Label>
               <Select value={filters.orderStatus} onValueChange={(value) => handleFilterChange('orderStatus', value)}>
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="اختر حالة الطلب" />
@@ -313,7 +322,21 @@ const PharmacyDashboard = () => {
                   <SelectItem value="pending">قيد الانتظار</SelectItem>
                   <SelectItem value="approved">موافق عليه</SelectItem>
                   <SelectItem value="rejected">مرفوض</SelectItem>
-                  <SelectItem value="completed">مكتمل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm">حاله الطلبيات</Label>
+              <Select value={filters.FinalOrderStatusValue} onValueChange={(value) => handleFilterChange('FinalOrderStatusValue', value)}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="اختر حالة الطلب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">قيد الانتظار</SelectItem>
+                  <SelectItem value="approved">موافق عليه</SelectItem>
+                  <SelectItem value="rejected">مرفوض</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1159,12 +1182,13 @@ const PharmacyDashboard = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-right p-2 font-medium">تاريخ الزيارة</th>
-                  <th className="text-right p-2 font-medium">الصيدلية</th>
-                  <th className="text-right p-2 font-medium">المنطقة</th>
-                  <th className="text-right p-2 font-medium">عدد المنتجات</th>
-                  <th className="text-right p-2 font-medium">قيمة الطلب</th>
-                  <th className="text-right p-2 font-medium">حالة الطلب</th>
+                  <th className="text-start p-2 font-medium">تاريخ الزيارة</th>
+                  <th className="text-start p-2 font-medium">الصيدلية</th>
+                  <th className="text-start p-2 font-medium">المنطقة</th>
+                  <th className="text-start p-2 font-medium">عدد المنتجات</th>
+                  <th className="text-start p-2 font-medium">قيمة الطلب</th>
+                  <th className="text-start p-2 font-medium">حالة مالي</th>
+                  <th className="text-start p-2 font-medium">حالة الطلب نهائي</th>
                 </tr>
               </thead>
               <tbody>
@@ -1192,6 +1216,11 @@ const PharmacyDashboard = () => {
                       <td className="p-2">
                         <Badge variant={order.orderStatus === 'approved' ? 'default' : order.orderStatus === 'pending' ? 'secondary' : 'destructive'}>
                           {order.orderStatus === 'approved' ? 'موافق عليه' : order.orderStatus === 'pending' ? 'قيد الانتظار' : 'مرفوض'}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <Badge variant={order.FinalOrderStatusValue === 'approved' ? 'default' : order.FinalOrderStatusValue === 'pending' ? 'secondary' : 'destructive'}>
+                          {order.FinalOrderStatusValue === 'approved' ? 'موافق عليه' : order.FinalOrderStatusValue === 'pending' ? 'قيد الانتظار' : 'مرفوض'}
                         </Badge>
                       </td>
                     </tr>
