@@ -1519,85 +1519,14 @@ const AnalyticsClincsSupervisor: React.FC = () => {
       </Card>
 
       {/* Products Performance Chart */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-orange-500" />
-            أداء المنتجات
-          </CardTitle>
-          <CardDescription>
-            مقارنة أداء المنتجات الثلاثة
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <Bar 
-                data={{
-                labels: ['المنتج الأول', 'المنتج الثاني', 'المنتج الثالث'],
-                datasets: [
-                    {
-                      label: 'عدد مرات الاستخدام',
-                      data: [
-                        filteredVisits.filter(v => v.product1).length,
-                        filteredVisits.filter(v => v.product2).length,
-                        filteredVisits.filter(v => v.product3).length
-                      ],
-                      backgroundColor: [
-                        'rgba(245, 101, 101, 0.8)',
-                        'rgba(251, 191, 36, 0.8)',
-                        'rgba(16, 185, 129, 0.8)'
-                      ],
-                      borderColor: [
-                        'rgb(245, 101, 101)',
-                        'rgb(251, 191, 36)',
-                        'rgb(16, 185, 129)'
-                      ],
-                      borderWidth: 2,
-                      borderRadius: 12
-                    }
-                  ]
-                }} 
-                options={{
-                  ...chartOptions,
-                  plugins: {
-                    ...chartOptions.plugins,
-                    legend: {
-                      display: false
-                    }
-                  }
-                }} 
-              />
-            </div>
-          </CardContent>
-        </Card>
+
      
      
 
     
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Trends */}
-        <Card className="shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
-              اتجاهات الزيارات والإيرادات الشهرية (البيانات المفلترة)
-            </CardTitle>
-            <CardDescription>
-              مقارنة شهرية لعدد الزيارات والإيرادات المحققة - عرض {filteredVisits.length} من أصل {visits.length} زيارة
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <Line data={{
-                ...monthlyTrendsData,
-                datasets: monthlyTrendsData.datasets.map(dataset => ({
-                  ...dataset,
-                  label: dataset.label + ` (${filteredVisits.length} زيارة مفلترة)`
-                }))
-              }} options={chartOptions} />
-            </div>
-          </CardContent>
-        </Card>
+    
 
         {/* Specialty Distribution */}
         <Card className="shadow-lg border-0">
@@ -1691,88 +1620,11 @@ const AnalyticsClincsSupervisor: React.FC = () => {
         </Card>
 
         {/* Product Performance Area Chart */}
-        <Card className="shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-orange-500" />
-              أداء المنتجات
-            </CardTitle>
-            <CardDescription>
-              تحليل شامل لأداء المنتجات ورضا العملاء
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <Line 
-                data={{
-                  labels: calculatedAnalyticsData.productPerformance.labels,
-                  datasets: [
-                    {
-                      label: 'المبيعات (%)',
-                      data: calculatedAnalyticsData.productPerformance.sales,
-                      borderColor: '#f59e0b',
-                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                      borderWidth: 3,
-                      fill: true,
-                      tension: 0.4,
-                      pointBackgroundColor: '#f59e0b',
-                      pointBorderColor: '#ffffff',
-                      pointBorderWidth: 2,
-                      pointRadius: 6
-                    },
-                    {
-                      label: 'رضا العملاء (%)',
-                      data: calculatedAnalyticsData.productPerformance.satisfaction,
-                      borderColor: '#8b5cf6',
-                      backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                      borderWidth: 3,
-                      fill: true,
-                      tension: 0.4,
-                      pointBackgroundColor: '#8b5cf6',
-                      pointBorderColor: '#ffffff',
-                      pointBorderWidth: 2,
-                      pointRadius: 6
-                    }
-                  ]
-                }} 
-                options={chartOptions} 
-              />
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Summary Statistics */}
-      <Card className="shadow-lg border-0">
-        <CardHeader>
-          <CardTitle>ملخص الإحصائيات</CardTitle>
-          <CardDescription>
-            نظرة عامة على الأداء العام للعيادات
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 mb-2">
-                {calculatedAnalyticsData.kpis.avgVisitsPerDay}
-              </div>
-              <div className="text-sm text-gray-600">متوسط الزيارات اليومية</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 mb-2">
-                {calculatedAnalyticsData.kpis.totalVisits > 0 ? (calculatedAnalyticsData.kpis.totalRevenue / calculatedAnalyticsData.kpis.totalVisits).toFixed(0) : '0'} ر.س
-              </div>
-              <div className="text-sm text-gray-600">متوسط الإيراد لكل زيارة</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 mb-2">
-                {calculatedAnalyticsData.kpis.growthRate}%
-              </div>
-              <div className="text-sm text-gray-600">معدل النمو الشهري</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+ 
 
       {/* Visits Table */}
       <Card className="shadow-lg border-0">

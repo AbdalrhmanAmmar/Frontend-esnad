@@ -112,6 +112,11 @@ const App = () => (
                         <Dashboard />
                       </ProtectedRoute>
                     } />
+                    <Route path="/dashboards/clinics/supervisor" element={
+                      <ProtectedRoute>
+                        <AnalyticsClincsSupervisor />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/dashboards/pharmacies" element={
                       <ProtectedRoute>
                         <PharmacyDashboard />
