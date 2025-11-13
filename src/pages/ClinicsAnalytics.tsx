@@ -156,12 +156,20 @@ const ClinicsAnalytics: React.FC = () => {
     }
   }, [visits]);
 
-  const uniqueDoctors = [...new Set(allVisits.map(visit => visit.doctorName))];
-  const uniqueSpecialties = [...new Set(allVisits.map(visit => visit.specialty))];
-  const uniqueSegments = [...new Set(allVisits.map(visit => visit.classification))];
-  const uniqueBrands = [...new Set(allVisits.map(visit => visit.brand))];
-  const uniqueClinics = [...new Set(allVisits.map(visit => visit.clinicName))];
-  const uniqueProducts = [...new Set(allVisits.flatMap(visit => visit.products))];
+  // Helper to sanitize unique lists (remove empty/blank values)
+  const sanitizeUnique = (values: (string | undefined | null)[]) => (
+    [...new Set(
+      values
+        .filter((v): v is string => typeof v === 'string')
+        .map(v => v.trim())
+        .filter(v => v.length > 0)
+    )]
+  );  const uniqueDoctors = sanitizeUnique(allVisits.map(visit => visit.doctorName));
+  const uniqueSpecialties = sanitizeUnique(allVisits.map(visit => visit.specialty));
+  const uniqueSegments = sanitizeUnique(allVisits.map(visit => visit.classification));
+  const uniqueBrands = sanitizeUnique(allVisits.map(visit => visit.brand));
+  const uniqueClinics = sanitizeUnique(allVisits.map(visit => visit.clinicName));
+  const uniqueProducts = sanitizeUnique(allVisits.flatMap(visit => visit.products));
 
   // Fetch data from API
   const fetchVisitsData = async () => {
