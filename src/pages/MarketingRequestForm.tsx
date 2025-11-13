@@ -261,11 +261,9 @@ export default function MarketingRequestForm() {
                           </SelectItem>
                         ))
                     ) : (
-                      !activitiesLoading && (
-                        <SelectItem value="" disabled>
-                          لا توجد أنشطة تسويقية متاحة
-                        </SelectItem>
-                      )
+                      <SelectItem value="no-activities" disabled>
+                        {activitiesLoading ? "جاري تحميل الأنشطة..." : "لا توجد أنشطة تسويقية متاحة"}
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
