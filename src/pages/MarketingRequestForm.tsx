@@ -1,40 +1,29 @@
+// MarketingRequestForm.tsx (المعدل)
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ar } from 'date-fns/locale';
-
-// Register Arabic locale
-registerLocale('ar', ar);
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Calendar, TrendingUp, User, FileText, DollarSign, Activity } from "lucide-react";
+import { ArrowRight, Calendar, TrendingUp, User, FileText, DollarSign, Activity, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { useMedicalRepStore } from "@/stores/medicalRepStore";
-import { MedicalRepDoctor } from "@/api/MedicalRep";
+import { useMedicalRepData } from "@/hooks/useMedicalRepData"; // الهوك الجديد
 import { createMarketingActivityRequest, MarketingActivityRequest, getAllMarketingActivities } from "@/api/MarketingActivities";
 import toast from "react-hot-toast";
 
-interface MarketingRequestData {
-  requestDate: string;
-  activityDate: string;
-  activityType: string;
-  doctorId: string;
-  cost: number;
-  notes: string;
-}
+// ... باقي الـ interfaces نفسها
 
 export default function MarketingRequestForm() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { doctors } = useMedicalRepStore();
-  const [isLoading, setIsLoading] = useState(false);
-
+  const { doctors, products, isLoading: dataLoading, fetchData, hasData } = useMedicalRepData(); // استخدام الهوك الجديد
   
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<MarketingRequestData>({
     requestDate: new Date().toISOString().split('T')[0],
     activityDate: '',
@@ -69,14 +58,9 @@ export default function MarketingRequestForm() {
     }
   };
 
-
-
   useEffect(() => {
-    if (doctors.length === 0) {
-      toast.error("يرجى زيارة صفحة 'بياناتي' أولاً لتحميل بيانات الأطباء");
-    }
     fetchMarketingActivities();
-  }, [doctors.length]);
+  }, []);
 
   const handleInputChange = (field: keyof MarketingRequestData, value: string | number) => {
     setFormData(prev => ({
@@ -88,14 +72,12 @@ export default function MarketingRequestForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if data is loaded
+    // التحقق من وجود البيانات
     if (doctors.length === 0) {
-      toast.error("يرجى زيارة صفحة 'بياناتي' أولاً لتحميل بيانات الأطباء");
+      toast.error("جاري تحميل بيانات الأطباء... يرجى الانتظار");
       return;
     }
 
-
-    
     if (!formData.activityDate || !formData.activityType || !formData.doctorId || formData.cost <= 0) {
       toast.error('يرجى ملء جميع الحقول المطلوبة بشكل صحيح');
       return;
@@ -103,11 +85,6 @@ export default function MarketingRequestForm() {
 
     if (marketingActivities.length === 0) {
       toast.error('لا توجد أنشطة تسويقية متاحة. يرجى المحاولة لاحقاً');
-      return;
-    }
-
-    if (formData.activityDate.trim() === '' || formData.activityType.trim() === '' || formData.doctorId.trim() === '') {
-      toast.error('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
 
@@ -141,7 +118,7 @@ export default function MarketingRequestForm() {
           notes: ''
         });
         setSelectedActivityDate(null);
-        navigate('/dashboard'); // Navigate to dashboard
+        navigate('/dashboard');
       } else {
         toast.error(result.message || 'حدث خطأ أثناء إرسال الطلب');
       }
@@ -153,24 +130,16 @@ export default function MarketingRequestForm() {
     }
   };
 
-  // Show loading state if no data
-  if (doctors.length === 0) {
+  // حالة التحميل
+  if (dataLoading && !hasData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground mb-4">جاري تحميل البيانات...</p>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-yellow-800 mb-3">لا يمكن إنشاء طلب تسويقي بدون تحميل بيانات الأطباء أولاً</p>
-            <Button 
-              onClick={() => navigate('/my-data')}
-              className="w-full"
-              variant="outline"
-            >
-              انتقل إلى صفحة بياناتي
-            </Button>
+          <p className="text-muted-foreground mb-4">جاري تحميل بيانات الأطباء والمنتجات...</p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">يتم تحميل البيانات تلقائياً للمرة الأولى</p>
           </div>
-          <p className="text-xs text-muted-foreground">بعد تحميل البيانات، يمكنك العودة لإنشاء الطلب التسويقي</p>
         </div>
       </div>
     );
@@ -178,13 +147,89 @@ export default function MarketingRequestForm() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">نموذج طلب تسويقي</h1>
+          <div>
+            <h1 className="text-2xl font-bold">نموذج طلب تسويقي</h1>
+            <p className="text-muted-foreground">قم بملء البيانات المطلوبة لطلب النشاط التسويقي</p>
+          </div>
         </div>
-        <p className="text-muted-foreground">قم بملء البيانات المطلوبة لطلب النشاط التسويقي</p>
+        
+        {/* زر تحديث البيانات */}
+        <Button 
+          onClick={fetchData} 
+          variant="outline" 
+          size="sm"
+          disabled={dataLoading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${dataLoading ? 'animate-spin' : ''}`} />
+          {dataLoading ? 'جاري التحديث...' : 'تحديث البيانات'}
+        </Button>
       </div>
+
+      {/* عرض حالة البيانات */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-800">الأطباء المتاحين</p>
+                <p className="text-xl font-bold text-blue-900">{doctors.length}</p>
+              </div>
+              <User className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-800">المنتجات المتاحة</p>
+                <p className="text-xl font-bold text-green-900">{products.length}</p>
+              </div>
+              <FileText className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-orange-50 border-orange-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-orange-800">الأنشطة المتاحة</p>
+                <p className="text-xl font-bold text-orange-900">
+                  {marketingActivities.filter(a => a.isActive).length}
+                </p>
+              </div>
+              <Activity className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* تحذير إذا لم توجد بيانات */}
+      {doctors.length === 0 && !dataLoading && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <RefreshCw className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="mr-3">
+              <h3 className="text-sm font-medium text-yellow-800">بيانات الأطباء غير متاحة</h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>لم يتم تحميل بيانات الأطباء بعد. يرجى:</p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>الضغط على زر "تحديث البيانات" أعلاه</li>
+                  <li>الانتظار بضع ثوانٍ حتى يتم التحميل</li>
+                  <li>التأكد من اتصال الإنترنت</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -278,21 +323,28 @@ export default function MarketingRequestForm() {
                 <Select
                   value={formData.doctorId}
                   onValueChange={(value) => handleInputChange('doctorId', value)}
+                  disabled={doctors.length === 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر الطبيب" />
+                    <SelectValue placeholder={doctors.length === 0 ? "جاري تحميل الأطباء..." : "اختر الطبيب"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor._id} value={doctor._id}>
-                        <div className="flex flex-col text-right">
-                          <span className="font-medium">{doctor.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {doctor.specialty} - {doctor.organizationName}
-                          </span>
-                        </div>
+                    {doctors.length > 0 ? (
+                      doctors.map((doctor) => (
+                        <SelectItem key={doctor._id} value={doctor._id}>
+                          <div className="flex flex-col text-right">
+                            <span className="font-medium">{doctor.name}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {doctor.specialty} - {doctor.organizationName}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-doctors" disabled>
+                        لا توجد أطباء متاحين
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -334,7 +386,7 @@ export default function MarketingRequestForm() {
             <div className="flex gap-4 pt-6">
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || doctors.length === 0}
                 className="flex-1"
               >
                 {isLoading ? 'جاري الإرسال...' : 'إرسال الطلب'}
